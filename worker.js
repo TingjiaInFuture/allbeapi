@@ -6,7 +6,7 @@ async function handleRequest(request) {
   const url = new URL(request.url)
   const targetBaseUrl = 'https://marked-api-cewxmsxevb.cn-hangzhou.fcapp.run'
 
-  if (url.pathname === '/marked/render' && request.method === 'POST') { // 检查请求方法是否为 POST
+  if (url.pathname === '/api/marked/render' && request.method === 'POST') { // 检查请求方法是否为 POST
     const targetUrl = new URL(targetBaseUrl + '/render')
 
     // 复制请求头，移除 Host 和 CF-* headers
