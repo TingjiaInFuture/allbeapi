@@ -113,7 +113,7 @@
                 
                 <p><strong>API 端点:</strong></p>
                 <pre><code>POST /render</code></pre>
-                <p><strong>托管地址:</strong> <a href="https://marked-api-cewxmsxevb.cn-hangzhou.fcapp.run/render" target="_blank">https://marked-api-cewxmsxevb.cn-hangzhou.fcapp.run/render</a></p>
+                <p><strong>托管地址:</strong> <a href="/render" target="_blank">/render</a></p>
 
                 <div class="code-block">
                     <p class="title">请求体 (JSON):</p>
@@ -132,7 +132,7 @@
                 <pre><code>import requests
 import json
 
-api_url = "https://marked-api-cewxmsxevb.cn-hangzhou.fcapp.run/render"
+api_url = "/render"
 markdown_content = {
     "markdown": "# 测试标题\n\n这是从 Python 发送的 **Markdown** 内容。\n\n* 列表项 1\n* 列表项 2"
 }
@@ -150,7 +150,7 @@ else:
                 <p><strong>使用示例 (cURL):</strong></p>
                 <pre><code>curl -X POST -H "Content-Type: application/json" \
 -d '{"markdown": "# Hello World\n\nThis is **bold**."}' \
-https://marked-api-cewxmsxevb.cn-hangzhou.fcapp.run/render</code></pre>
+/render</code></pre>
             </div>
 
             <!-- 未来可以添加更多 API 服务 -->
