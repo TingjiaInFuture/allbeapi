@@ -2,7 +2,7 @@ import requests
 import json
 
 # API 的 URL
-url = "http://localhost:3000/render"
+url = "https://marked-api-cewxmsxevb.cn-hangzhou.fcapp.run/render"
 
 # 要发送的 Markdown 数据
 markdown_payload = {
