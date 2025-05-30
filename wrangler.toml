@@ -1,0 +1,3 @@
+name = "allbeapi"
+compatibility_date = "2025-05-30"
+main = "worker.js"
