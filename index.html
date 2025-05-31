@@ -150,16 +150,109 @@ else:
                 <p><strong>使用示例 (cURL):</strong></p>
                 <pre><code>curl -X POST -H "Content-Type: application/json" \
 -d '{"markdown": "# Hello World\n\nThis is **bold**."}' \
-/render</code></pre>
+/render</code></pre>            </div>
+
+            <div class="api-section">
+                <h2>Beautiful Soup API - HTML 解析与提取</h2>
+                <p>强大的 HTML/XML 解析工具，提供丰富的文档解析和数据提取功能。基于著名的 <a href="https://github.com/waylan/beautifulsoup" target="_blank">Beautiful Soup</a> 库。</p>
+                
+                <h3 style="color: #00e0ff;">1. HTML 解析</h3>
+                <p><strong>API 端点:</strong></p>
+                <pre><code>POST /beautifulsoup/parse</code></pre>
+                
+                <div class="code-block">
+                    <p class="title">请求体 (JSON):</p>
+                    <pre><code>{
+    "html": "&lt;html&gt;&lt;head&gt;&lt;title&gt;页面标题&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;p&gt;内容&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;",
+    "parser": "html.parser"
+}</code></pre>
+                </div>
+
+                <div class="code-block">
+                    <p class="title">响应体 (JSON):</p>
+                    <pre><code>{
+    "title": "页面标题",
+    "text": "页面标题\n内容",
+    "html": "格式化后的HTML"
+}</code></pre>
+                </div>
+
+                <h3 style="color: #00e0ff;">2. 元素提取</h3>
+                <p><strong>API 端点:</strong></p>
+                <pre><code>POST /beautifulsoup/extract</code></pre>
+                
+                <div class="code-block">
+                    <p class="title">请求体 (JSON):</p>
+                    <pre><code>{
+    "html": "HTML内容",
+    "selector": "CSS选择器或标签名",
+    "attribute": "属性名（可选）"
+}</code></pre>
+                </div>
+
+                <h3 style="color: #00e0ff;">3. 链接提取</h3>
+                <p><strong>API 端点:</strong></p>
+                <pre><code>POST /beautifulsoup/links</code></pre>
+                
+                <div class="code-block">
+                    <p class="title">请求体 (JSON):</p>
+                    <pre><code>{
+    "html": "HTML内容",
+    "base_url": "https://example.com"
+}</code></pre>
+                </div>
+
+                <h3 style="color: #00e0ff;">4. 图片提取</h3>
+                <p><strong>API 端点:</strong></p>
+                <pre><code>POST /beautifulsoup/images</code></pre>
+
+                <h3 style="color: #00e0ff;">5. HTML 清理</h3>
+                <p><strong>API 端点:</strong></p>
+                <pre><code>POST /beautifulsoup/clean</code></pre>
+                
+                <div class="code-block">
+                    <p class="title">请求体 (JSON):</p>
+                    <pre><code>{
+    "html": "HTML内容",
+    "remove_tags": ["script", "style"],
+    "remove_comments": true
+}</code></pre>
+                </div>
+
+                <h3 style="color: #00e0ff;">6. 网页抓取</h3>
+                <p><strong>API 端点:</strong></p>
+                <pre><code>POST /beautifulsoup/fetch</code></pre>
+                
+                <div class="code-block">
+                    <p class="title">请求体 (JSON):</p>
+                    <pre><code>{
+    "url": "https://example.com",
+    "selector": "CSS选择器（可选）"
+}</code></pre>
+                </div>
+
+                <p><strong>使用示例 (Python):</strong></p>
+                <pre><code>import requests
+
+# 解析HTML
+response = requests.post('/beautifulsoup/parse', json={
+    "html": "&lt;div&gt;&lt;h1&gt;标题&lt;/h1&gt;&lt;p&gt;段落&lt;/p&gt;&lt;/div&gt;"
+})
+
+# 提取所有链接
+response = requests.post('/beautifulsoup/links', json={
+    "html": "&lt;a href='#'&gt;链接1&lt;/a&gt;&lt;a href='/page'&gt;链接2&lt;/a&gt;",
+    "base_url": "https://example.com"
+})
+
+# 清理HTML
+response = requests.post('/beautifulsoup/clean', json={
+    "html": "&lt;div&gt;&lt;script&gt;alert()&lt;/script&gt;&lt;p&gt;内容&lt;/p&gt;&lt;/div&gt;",
+    "remove_tags": ["script"]
+})</code></pre>
             </div>
 
             <!-- 未来可以添加更多 API 服务 -->
-            <!-- 
-            <div class="api-section">
-                <h2>另一个 API</h2>
-                <p>描述...</p>
-            </div>
-            -->
         </section>
 
         <footer>
