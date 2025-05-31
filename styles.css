@@ -86,6 +86,49 @@ header .tagline {
     line-height: 1.6;
 }
 
+/* API 接入地址信息样式 */
+.api-endpoint-info {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.1));
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    backdrop-filter: blur(5px);
+    text-align: center;
+}
+
+.api-endpoint-info h3 {
+    color: #86efac;
+    font-size: 1.2em;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.api-endpoint-info p {
+    color: #bbf7d0;
+    line-height: 1.6;
+    margin-bottom: 8px;
+}
+
+.api-endpoint-info code {
+    background: rgba(22, 163, 74, 0.2);
+    color: #dcfce7;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    font-size: 1.1em;
+    font-weight: bold;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.endpoint-desc {
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+
 /* 重要说明样式 */
 .important-notice {
     background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
@@ -120,6 +163,44 @@ header .tagline {
     position: relative;
     min-height: 60vh;
     padding: 40px 0;
+    overflow: hidden;
+}
+
+/* 海洋装饰元素 */
+.apis-ocean::before {
+    content: '🌊🐠🌊🐟🌊🦈🌊🐙🌊';
+    position: absolute;
+    top: 20px;
+    left: -100%;
+    width: 200%;
+    text-align: center;
+    font-size: 2em;
+    opacity: 0.3;
+    animation: ocean-decor-flow 20s linear infinite;
+    pointer-events: none;
+}
+
+.apis-ocean::after {
+    content: '🪸🦀🪸🐚🪸🦐🪸🦑🪸';
+    position: absolute;
+    bottom: 20px;
+    right: -100%;
+    width: 200%;
+    text-align: center;
+    font-size: 1.5em;
+    opacity: 0.2;
+    animation: ocean-decor-flow-reverse 25s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes ocean-decor-flow {
+    from { transform: translateX(0); }
+    to { transform: translateX(50%); }
+}
+
+@keyframes ocean-decor-flow-reverse {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
 }
 
 .apis-title {
@@ -143,12 +224,15 @@ header .tagline {
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: 
         0 10px 30px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 0 0 2px rgba(180, 83, 9, 0.2);
     border: 2px solid rgba(180, 83, 9, 0.3);
     animation: float 4s ease-in-out infinite;
     overflow: hidden;
+    transform-style: preserve-3d;
 }
 
+/* 木纹效果 */
 .api-floating-block::before {
     content: '';
     position: absolute;
@@ -160,11 +244,44 @@ header .tagline {
         repeating-linear-gradient(
             90deg,
             transparent,
-            transparent 2px,
-            rgba(0, 0, 0, 0.1) 2px,
-            rgba(0, 0, 0, 0.1) 4px
+            transparent 3px,
+            rgba(0, 0, 0, 0.1) 3px,
+            rgba(0, 0, 0, 0.1) 6px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 1px,
+            rgba(0, 0, 0, 0.05) 1px,
+            rgba(0, 0, 0, 0.05) 2px
         );
     border-radius: 15px;
+    opacity: 0.7;
+}
+
+/* 水波纹效果 */
+.api-floating-block::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 10%;
+    right: 10%;
+    height: 10px;
+    background: radial-gradient(ellipse at center, rgba(56, 189, 248, 0.3) 0%, transparent 70%);
+    border-radius: 50%;
+    animation: water-ripple 3s ease-in-out infinite;
+    filter: blur(2px);
+}
+
+@keyframes water-ripple {
+    0%, 100% { 
+        transform: scaleX(1) scaleY(0.3);
+        opacity: 0.3;
+    }
+    50% { 
+        transform: scaleX(1.2) scaleY(0.6);
+        opacity: 0.6;
+    }
 }
 
 .api-floating-block:nth-child(even) {
@@ -172,12 +289,25 @@ header .tagline {
     animation-direction: reverse;
 }
 
+.api-floating-block:nth-child(3n) {
+    animation-delay: -1s;
+    background: linear-gradient(135deg, #a16207, #ca8a04, #d97706);
+}
+
 .api-floating-block:hover {
-    transform: translateY(-10px) scale(1.05);
+    transform: translateY(-15px) scale(1.05) rotateX(5deg);
     box-shadow: 
-        0 20px 40px rgba(0, 0, 0, 0.4),
-        0 0 30px rgba(56, 189, 248, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 25px 50px rgba(0, 0, 0, 0.4),
+        0 0 40px rgba(56, 189, 248, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        0 0 0 3px rgba(56, 189, 248, 0.3);
+    z-index: 10;
+}
+
+.api-floating-block:hover::after {
+    animation-duration: 1s;
+    transform: scaleX(1.5) scaleY(0.8);
+    opacity: 0.8;
 }
 
 @keyframes float {

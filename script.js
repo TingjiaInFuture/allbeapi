@@ -104,9 +104,7 @@ class OceanAPIExplorer {
         document.querySelector('.modal-close').addEventListener('click', () => {
             this.closeModal();
         });
-    }
-
-    // 打开模态框
+    }    // 打开模态框
     openModal(api) {
         const overlay = document.querySelector('.modal-overlay');
         const title = document.querySelector('.modal-title');
@@ -115,21 +113,67 @@ class OceanAPIExplorer {
         title.textContent = api.title;
         details.innerHTML = api.details;
         
+        // 添加打开动画序列
         overlay.classList.add('active');
         document.body.style.overflow = 'hidden';
         
-        // 添加打开动画
+        // 创建波浪展开效果
+        const content = document.querySelector('.modal-content');
+        content.style.transform = 'translate(-50%, -50%) scale(0.3) rotateY(90deg)';
+        content.style.opacity = '0';
+        
         setTimeout(() => {
-            const content = document.querySelector('.modal-content');
-            content.style.transform = 'translate(-50%, -50%) scale(1)';
-        }, 10);
-    }
-
-    // 关闭模态框
+            content.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+            content.style.transform = 'translate(-50%, -50%) scale(1) rotateY(0deg)';
+            content.style.opacity = '1';
+        }, 50);
+        
+        // 添加内容淡入动画
+        setTimeout(() => {
+            const apiDetails = document.querySelector('.api-details');
+            apiDetails.style.opacity = '0';
+            apiDetails.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                apiDetails.style.transition = 'all 0.4s ease-out';
+                apiDetails.style.opacity = '1';
+                apiDetails.style.transform = 'translateY(0)';
+            }, 200);
+        }, 100);
+        
+        // 添加代码块动画
+        setTimeout(() => {
+            const codeBlocks = document.querySelectorAll('.modal-body pre, .modal-body code');
+            codeBlocks.forEach((block, index) => {
+                block.style.opacity = '0';
+                block.style.transform = 'translateX(-20px)';
+                
+                setTimeout(() => {
+                    block.style.transition = 'all 0.3s ease-out';
+                    block.style.opacity = '1';
+                    block.style.transform = 'translateX(0)';
+                }, index * 100);
+            });
+        }, 400);
+    }    // 关闭模态框
     closeModal() {
         const overlay = document.querySelector('.modal-overlay');
-        overlay.classList.remove('active');
-        document.body.style.overflow = '';
+        const content = document.querySelector('.modal-content');
+        
+        // 添加关闭动画
+        content.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 1, 1)';
+        content.style.transform = 'translate(-50%, -50%) scale(0.8) rotateY(-15deg)';
+        content.style.opacity = '0';
+        
+        setTimeout(() => {
+            overlay.classList.remove('active');
+            document.body.style.overflow = '';
+            
+            // 重置样式
+            content.style.transition = '';
+            content.style.transform = '';
+            content.style.opacity = '';
+        }, 300);
     }
 
     // 创建海洋特效
@@ -280,16 +324,14 @@ class OceanAPIExplorer {
                 cancelAnimationFrame(animationId);
             }
         });
-    }
-
-    // Marked API 详细信息
+    }    // Marked API 详细信息
     getMarkedDetails() {
         return `
             <h3>📝 Markdown 转 HTML 服务</h3>
             <p>将 Markdown 文本实时转换为 HTML。基于强大的 <a href="https://github.com/markedjs/marked" target="_blank">marked</a> 库。</p>
             
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST /marked/render</code></pre>
+            <pre><code>POST https://api.allbeapi.top/marked/render</code></pre>
 
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -308,7 +350,7 @@ class OceanAPIExplorer {
             <pre><code>import requests
 import json
 
-api_url = "/marked/render"
+api_url = "https://api.allbeapi.top/marked/render"
 markdown_content = {
     "markdown": "# 测试标题\\n\\n这是从 Python 发送的 **Markdown** 内容。\\n\\n* 列表项 1\\n* 列表项 2"
 }
@@ -326,11 +368,31 @@ else:
             <h3>🌐 cURL 示例</h3>
             <pre><code>curl -X POST -H "Content-Type: application/json" \\
 -d '{"markdown": "# Hello World\\n\\nThis is **bold**."}' \\
-/marked/render</code></pre>
-        `;
-    }
+https://api.allbeapi.top/marked/render</code></pre>
 
-    // Beautiful Soup API 详细信息
+            <h3>🌐 JavaScript 示例</h3>
+            <pre><code>// 使用 fetch API
+const markdownContent = {
+    markdown: "# 标题\\n\\n这是 **JavaScript** 调用示例。"
+};
+
+fetch('https://api.allbeapi.top/marked/render', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(markdownContent)
+})
+.then(response => response.text())
+.then(html => {
+    console.log('转换后的 HTML:', html);
+    document.getElementById('output').innerHTML = html;
+})
+.catch(error => {
+    console.error('错误:', error);
+});</code></pre>
+        `;
+    }    // Beautiful Soup API 详细信息
     getBeautifulSoupDetails() {
         return `
             <h3>🥄 HTML 解析与提取服务</h3>
@@ -338,7 +400,7 @@ else:
             
             <h3>1. HTML 解析</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST /beautifulsoup/parse</code></pre>
+            <pre><code>POST https://api.allbeapi.top/beautifulsoup/parse</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -359,7 +421,7 @@ else:
 
             <h3>2. 元素提取</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST /beautifulsoup/extract</code></pre>
+            <pre><code>POST https://api.allbeapi.top/beautifulsoup/extract</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -372,7 +434,7 @@ else:
 
             <h3>3. 链接提取</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST /beautifulsoup/links</code></pre>
+            <pre><code>POST https://api.allbeapi.top/beautifulsoup/links</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -384,11 +446,11 @@ else:
 
             <h3>4. 图片提取</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST /beautifulsoup/images</code></pre>
+            <pre><code>POST https://api.allbeapi.top/beautifulsoup/images</code></pre>
 
             <h3>5. HTML 清理</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST /beautifulsoup/clean</code></pre>
+            <pre><code>POST https://api.allbeapi.top/beautifulsoup/clean</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -401,7 +463,7 @@ else:
 
             <h3>6. 网页抓取</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST /beautifulsoup/fetch</code></pre>
+            <pre><code>POST https://api.allbeapi.top/beautifulsoup/fetch</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -415,35 +477,187 @@ else:
             <pre><code>import requests
 
 # 解析HTML
-response = requests.post('/beautifulsoup/parse', json={
+response = requests.post('https://api.allbeapi.top/beautifulsoup/parse', json={
     "html": "&lt;div&gt;&lt;h1&gt;标题&lt;/h1&gt;&lt;p&gt;段落&lt;/p&gt;&lt;/div&gt;"
 })
 
 # 提取所有链接
-response = requests.post('/beautifulsoup/links', json={
+response = requests.post('https://api.allbeapi.top/beautifulsoup/links', json={
     "html": "&lt;a href='#'&gt;链接1&lt;/a&gt;&lt;a href='/page'&gt;链接2&lt;/a&gt;",
     "base_url": "https://example.com"
 })
 
 # 清理HTML
-response = requests.post('/beautifulsoup/clean', json={
+response = requests.post('https://api.allbeapi.top/beautifulsoup/clean', json={
     "html": "&lt;div&gt;&lt;script&gt;alert()&lt;/script&gt;&lt;p&gt;内容&lt;/p&gt;&lt;/div&gt;",
     "remove_tags": ["script"]
 })</code></pre>
+
+            <h3>🌐 JavaScript 示例</h3>
+            <pre><code>// 解析HTML并提取标题
+const htmlContent = {
+    html: "&lt;html&gt;&lt;head&gt;&lt;title&gt;我的网页&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;欢迎&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;"
+};
+
+fetch('https://api.allbeapi.top/beautifulsoup/parse', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(htmlContent)
+})
+.then(response => response.json())
+.then(data => {
+    console.log('页面标题:', data.title);
+    console.log('文本内容:', data.text);
+})
+.catch(error => {
+    console.error('错误:', error);
+});
+
+// 提取所有链接
+const linkExtraction = {
+    html: "&lt;a href='/home'&gt;首页&lt;/a&gt;&lt;a href='/about'&gt;关于我们&lt;/a&gt;",
+    base_url: "https://example.com"
+};
+
+fetch('https://api.allbeapi.top/beautifulsoup/links', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(linkExtraction)
+})
+.then(response => response.json())
+.then(links => {
+    console.log('提取的链接:', links);
+});</code></pre>
         `;
     }
 }
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
-    new OceanAPIExplorer();
-    
     // 添加页面加载动画
     document.body.style.opacity = '0';
+    document.body.style.transform = 'scale(0.95)';
+    
+    // 创建加载效果
+    const loadingOverlay = document.createElement('div');
+    loadingOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #0c4a6e, #0369a1);
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        color: #f0f9ff;
+        font-family: 'SF Mono', Monaco, Consolas, monospace;
+    `;
+    
+    loadingOverlay.innerHTML = `
+        <div style="font-size: 3em; margin-bottom: 20px; animation: pulse 2s ease-in-out infinite;">🌊</div>
+        <div style="font-size: 1.5em; text-align: center;">
+            <div style="margin-bottom: 10px;">开源库API化平台</div>
+            <div style="font-size: 0.8em; opacity: 0.7;">正在加载海洋...</div>
+        </div>
+        <div style="margin-top: 30px; width: 200px; height: 4px; background: rgba(56, 189, 248, 0.2); border-radius: 2px; overflow: hidden;">
+            <div style="width: 0%; height: 100%; background: linear-gradient(90deg, #38bdf8, #60a5fa); border-radius: 2px; animation: loading-bar 2s ease-out forwards;"></div>
+        </div>
+    `;
+    
+    document.body.appendChild(loadingOverlay);
+    
+    // 添加加载动画样式
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        @keyframes loading-bar {
+            to { width: 100%; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // 初始化主应用
     setTimeout(() => {
-        document.body.style.transition = 'opacity 1s ease-in-out';
-        document.body.style.opacity = '1';
-    }, 100);
+        new OceanAPIExplorer();
+        
+        // 移除加载屏幕
+        setTimeout(() => {
+            loadingOverlay.style.transition = 'opacity 0.8s ease-out';
+            loadingOverlay.style.opacity = '0';
+            
+            // 显示主内容
+            document.body.style.transition = 'opacity 1s ease-in-out, transform 1s ease-in-out';
+            document.body.style.opacity = '1';
+            document.body.style.transform = 'scale(1)';
+            
+            setTimeout(() => {
+                if (loadingOverlay.parentNode) {
+                    loadingOverlay.parentNode.removeChild(loadingOverlay);
+                }
+                if (style.parentNode) {
+                    style.parentNode.removeChild(style);
+                }
+            }, 800);
+        }, 500);
+    }, 2000);
+    
+    // 添加鼠标跟踪水波效果
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        
+        // 创建鼠标跟踪的水波纹
+        if (Math.random() < 0.1) { // 减少频率
+            createMouseRipple(mouseX, mouseY);
+        }
+    });
+    
+    function createMouseRipple(x, y) {
+        const ripple = document.createElement('div');
+        ripple.style.cssText = `
+            position: fixed;
+            left: ${x - 10}px;
+            top: ${y - 10}px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(56, 189, 248, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 100;
+            animation: mouse-ripple 1.5s ease-out forwards;
+        `;
+        
+        document.body.appendChild(ripple);
+        
+        setTimeout(() => {
+            if (ripple.parentNode) {
+                ripple.parentNode.removeChild(ripple);
+            }
+        }, 1500);
+    }
+    
+    // 添加鼠标波纹动画
+    const rippleStyle = document.createElement('style');
+    rippleStyle.textContent = `
+        @keyframes mouse-ripple {
+            to {
+                transform: scale(3);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(rippleStyle);
 });
 
 // 导出供其他脚本使用
