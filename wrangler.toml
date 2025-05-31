@@ -1,3 +1,8 @@
 name = "allbeapi"
-compatibility_date = "2025-05-30"
+compatibility_date = "2025-05-31"
 main = "worker.js"
+
+
+[env.production.routes]
+pattern = "api.allbeapi.top/*"
+zone_name = "allbeapi.top"

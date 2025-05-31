@@ -5,8 +5,7 @@ addEventListener('fetch', event => {
 async function handleRequest(request) {
   const url = new URL(request.url)
   const markedBaseUrl = 'https://marked-api-cewxmsxevb.cn-hangzhou.fcapp.run'
-  // TODO: 将此URL替换为您的Beautiful Soup API服务器地址
-  const beautifulsoupBaseUrl = 'https://your-beautifulsoup-api-server.com'
+  const beautifulsoupBaseUrl = 'https://beautifulsoup-njzzhjkxto.cn-beijing.fcapp.run'
 
   // 处理 Marked API 请求
   if (url.pathname === '/marked/render' && request.method === 'POST') {
