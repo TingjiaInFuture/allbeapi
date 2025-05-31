@@ -3,261 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>万物皆可 API - 免费 API 服务</title>
-    <style>
-        body {
-            font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-            background-color: #1a1a1a;
-            color: #e0e0e0;
-            margin: 0;
-            padding: 0;
-            line-height: 1.6;
-        }
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
-            background-color: #2c2c2c;
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            border-bottom: 1px solid #444;
-            padding-bottom: 20px;
-        }
-        header h1 {
-            font-size: 2.8em;
-            color: #00ff9d; /* 亮绿色，极客风 */
-            margin-bottom: 10px;
-            text-shadow: 0 0 5px #00ff9d;
-        }
-        header .tagline {
-            font-size: 1.2em;
-            color: #b0b0b0;
-        }
-        .api-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            background-color: #333;
-            border-left: 4px solid #00ff9d;
-            border-radius: 4px;
-        }
-        .api-section h2 {
-            font-size: 1.8em;
-            color: #00ff9d;
-            margin-top: 0;
-        }
-        .api-section p, .api-section ul {
-            color: #c0c0c0;
-        }
-        .api-section strong {
-            color: #00e0ff; /* 亮蓝色 */
-        }
-        code, pre {
-            font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-            background-color: #222;
-            color: #f0f0f0;
-            padding: 0.2em 0.4em;
-            border-radius: 3px;
-            font-size: 0.9em;
-        }
-        pre {
-            padding: 15px;
-            overflow-x: auto;
-            border: 1px solid #444;
-            border-radius: 5px;
-            white-space: pre-wrap; /* 允许换行 */
-            word-wrap: break-word; /* 强制换行 */
-        }
-        .code-block {
-            margin-top: 10px;
-            margin-bottom: 10px;
-        }
-        .code-block .title {
-            font-weight: bold;
-            color: #00e0ff;
-            margin-bottom: 5px;
-        }
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #444;
-            font-size: 0.9em;
-            color: #888;
-        }
-        a {
-            color: #00ff9d;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
+    <title>开源库API化平台 - 免费 API 服务</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>万物皆可 API</h1>
-            <p class="tagline">无需安装和部署，直接调用 API。让好工具无需安装直接使用，无需部署直接调用。</p>
+            <h1>开源库API化平台</h1>
+            <p class="tagline">无需安装和部署第三方库，直接调用 API。让好工具无需安装直接使用，无需部署直接调用。</p>
+            
+            <div class="important-notice">
+                <h3>重要说明</h3>
+                <p>本项目旨在为快速原型开发提供轻量的代码体验，以及基于网络的简易集成。<strong>不建议在生产环境中使用 API 代替库的直接引入</strong>，因为这可能会带来网络延迟、稳定性和安全性方面的风险。对于生产应用，请考虑直接安装和使用相应的开源库。</p>
+            </div>
         </header>
 
-        <section id="available-apis">
-            <h2>已托管的 API 服务</h2>
-
-            <div class="api-section">
-                <h2>Marked API - Markdown 转 HTML</h2>
-                <p>将 Markdown 文本实时转换为 HTML。基于强大的 <a href="https://github.com/markedjs/marked" target="_blank">marked</a> 库。</p>
-                
-                <p><strong>API 端点:</strong></p>
-                <pre><code>POST /render</code></pre>
-                <p><strong>托管地址:</strong> <a href="/render" target="_blank">/render</a></p>
-
-                <div class="code-block">
-                    <p class="title">请求体 (JSON):</p>
-                    <pre><code>{
-    "markdown": "# 标题\n\n这是一段 **Markdown** 文本。"
-}</code></pre>
-                </div>
-
-                <div class="code-block">
-                    <p class="title">响应体 (HTML):</p>
-                    <pre><code>&lt;h1 id="标题"&gt;标题&lt;/h1&gt;
-&lt;p&gt;这是一段 &lt;strong&gt;Markdown&lt;/strong&gt; 文本。&lt;/p&gt;</code></pre>
-                </div>
-                
-                <p><strong>使用示例 (Python):</strong></p>
-                <pre><code>import requests
-import json
-
-api_url = "/render"
-markdown_content = {
-    "markdown": "# 测试标题\n\n这是从 Python 发送的 **Markdown** 内容。\n\n* 列表项 1\n* 列表项 2"
-}
-
-response = requests.post(api_url, json=markdown_content)
-
-if response.status_code == 200:
-    html_output = response.text
-    print("转换后的 HTML:")
-    print(html_output)
-else:
-    print(f"请求失败，状态码: {response.status_code}")
-    print(response.text)</code></pre>
-
-                <p><strong>使用示例 (cURL):</strong></p>
-                <pre><code>curl -X POST -H "Content-Type: application/json" \
--d '{"markdown": "# Hello World\n\nThis is **bold**."}' \
-/render</code></pre>            </div>
-
-            <div class="api-section">
-                <h2>Beautiful Soup API - HTML 解析与提取</h2>
-                <p>强大的 HTML/XML 解析工具，提供丰富的文档解析和数据提取功能。基于著名的 <a href="https://github.com/waylan/beautifulsoup" target="_blank">Beautiful Soup</a> 库。</p>
-                
-                <h3 style="color: #00e0ff;">1. HTML 解析</h3>
-                <p><strong>API 端点:</strong></p>
-                <pre><code>POST /beautifulsoup/parse</code></pre>
-                
-                <div class="code-block">
-                    <p class="title">请求体 (JSON):</p>
-                    <pre><code>{
-    "html": "&lt;html&gt;&lt;head&gt;&lt;title&gt;页面标题&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;p&gt;内容&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;",
-    "parser": "html.parser"
-}</code></pre>
-                </div>
-
-                <div class="code-block">
-                    <p class="title">响应体 (JSON):</p>
-                    <pre><code>{
-    "title": "页面标题",
-    "text": "页面标题\n内容",
-    "html": "格式化后的HTML"
-}</code></pre>
-                </div>
-
-                <h3 style="color: #00e0ff;">2. 元素提取</h3>
-                <p><strong>API 端点:</strong></p>
-                <pre><code>POST /beautifulsoup/extract</code></pre>
-                
-                <div class="code-block">
-                    <p class="title">请求体 (JSON):</p>
-                    <pre><code>{
-    "html": "HTML内容",
-    "selector": "CSS选择器或标签名",
-    "attribute": "属性名（可选）"
-}</code></pre>
-                </div>
-
-                <h3 style="color: #00e0ff;">3. 链接提取</h3>
-                <p><strong>API 端点:</strong></p>
-                <pre><code>POST /beautifulsoup/links</code></pre>
-                
-                <div class="code-block">
-                    <p class="title">请求体 (JSON):</p>
-                    <pre><code>{
-    "html": "HTML内容",
-    "base_url": "https://example.com"
-}</code></pre>
-                </div>
-
-                <h3 style="color: #00e0ff;">4. 图片提取</h3>
-                <p><strong>API 端点:</strong></p>
-                <pre><code>POST /beautifulsoup/images</code></pre>
-
-                <h3 style="color: #00e0ff;">5. HTML 清理</h3>
-                <p><strong>API 端点:</strong></p>
-                <pre><code>POST /beautifulsoup/clean</code></pre>
-                
-                <div class="code-block">
-                    <p class="title">请求体 (JSON):</p>
-                    <pre><code>{
-    "html": "HTML内容",
-    "remove_tags": ["script", "style"],
-    "remove_comments": true
-}</code></pre>
-                </div>
-
-                <h3 style="color: #00e0ff;">6. 网页抓取</h3>
-                <p><strong>API 端点:</strong></p>
-                <pre><code>POST /beautifulsoup/fetch</code></pre>
-                
-                <div class="code-block">
-                    <p class="title">请求体 (JSON):</p>
-                    <pre><code>{
-    "url": "https://example.com",
-    "selector": "CSS选择器（可选）"
-}</code></pre>
-                </div>
-
-                <p><strong>使用示例 (Python):</strong></p>
-                <pre><code>import requests
-
-# 解析HTML
-response = requests.post('/beautifulsoup/parse', json={
-    "html": "&lt;div&gt;&lt;h1&gt;标题&lt;/h1&gt;&lt;p&gt;段落&lt;/p&gt;&lt;/div&gt;"
-})
-
-# 提取所有链接
-response = requests.post('/beautifulsoup/links', json={
-    "html": "&lt;a href='#'&gt;链接1&lt;/a&gt;&lt;a href='/page'&gt;链接2&lt;/a&gt;",
-    "base_url": "https://example.com"
-})
-
-# 清理HTML
-response = requests.post('/beautifulsoup/clean', json={
-    "html": "&lt;div&gt;&lt;script&gt;alert()&lt;/script&gt;&lt;p&gt;内容&lt;/p&gt;&lt;/div&gt;",
-    "remove_tags": ["script"]
-})</code></pre>
-            </div>
-
-            <!-- 未来可以添加更多 API 服务 -->
+        <section class="apis-ocean">
+            <h2 class="apis-title">🌊 API 服务海洋</h2>
+            <!-- API 木块将通过 JavaScript 动态生成 -->
         </section>
 
         <footer>
-            <p>&copy; 2025 万物皆可 API. 致力于为优秀的开源工具提供便捷的 API 服务。</p>
+            <p>&copy; 2025 开源库API化平台. 致力于为优秀的开源工具提供便捷的 API 服务。</p>
         </footer>
     </div>
+
+    <script src="script.js"></script>
 </body>
 </html>

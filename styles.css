@@ -1,0 +1,416 @@
+/* 海洋主题样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    background: linear-gradient(135deg, #0c4a6e 0%, #0369a1 25%, #0284c7 50%, #0ea5e9 75%, #38bdf8 100%);
+    background-size: 400% 400%;
+    animation: ocean-waves 8s ease-in-out infinite;
+    min-height: 100vh;
+    color: #e0f2fe;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* 海洋波浪动画 */
+@keyframes ocean-waves {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* 海洋泡泡效果 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        radial-gradient(circle at 20% 80%, rgba(120, 213, 250, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(14, 165, 233, 0.1) 0%, transparent 50%);
+    animation: float-bubbles 12s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+}
+
+@keyframes float-bubbles {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    33% { transform: translateY(-20px) rotate(2deg); }
+    66% { transform: translateY(-10px) rotate(-1deg); }
+}
+
+.container {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* 头部样式 */
+header {
+    text-align: center;
+    margin-bottom: 60px;
+    padding: 40px 20px;
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+header h1 {
+    font-size: 3.5em;
+    color: #f0f9ff;
+    margin-bottom: 15px;
+    text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    animation: title-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes title-glow {
+    from { text-shadow: 0 0 20px rgba(56, 189, 248, 0.5); }
+    to { text-shadow: 0 0 30px rgba(56, 189, 248, 0.8), 0 0 40px rgba(56, 189, 248, 0.3); }
+}
+
+header .tagline {
+    font-size: 1.3em;
+    color: #bae6fd;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+/* 重要说明样式 */
+.important-notice {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1));
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    backdrop-filter: blur(5px);
+}
+
+.important-notice h3 {
+    color: #fca5a5;
+    font-size: 1.2em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.important-notice h3::before {
+    content: "⚠️";
+    font-size: 1.2em;
+}
+
+.important-notice p {
+    color: #fecaca;
+    line-height: 1.6;
+}
+
+/* API 服务容器 */
+.apis-ocean {
+    position: relative;
+    min-height: 60vh;
+    padding: 40px 0;
+}
+
+.apis-title {
+    text-align: center;
+    font-size: 2.5em;
+    color: #f0f9ff;
+    margin-bottom: 50px;
+    text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+/* 漂浮的 API 木块 */
+.api-floating-block {
+    position: relative;
+    width: 280px;
+    height: 200px;
+    background: linear-gradient(135deg, #92400e, #a16207, #ca8a04);
+    border-radius: 15px;
+    margin: 30px;
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(180, 83, 9, 0.3);
+    animation: float 4s ease-in-out infinite;
+    overflow: hidden;
+}
+
+.api-floating-block::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 0, 0, 0.1) 2px,
+            rgba(0, 0, 0, 0.1) 4px
+        );
+    border-radius: 15px;
+}
+
+.api-floating-block:nth-child(even) {
+    animation-delay: -2s;
+    animation-direction: reverse;
+}
+
+.api-floating-block:hover {
+    transform: translateY(-10px) scale(1.05);
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.4),
+        0 0 30px rgba(56, 189, 248, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0.5deg); }
+    50% { transform: translateY(-15px) rotate(-0.5deg); }
+}
+
+/* API 木块内容 */
+.api-block-content {
+    position: relative;
+    z-index: 2;
+    padding: 25px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.api-block-icon {
+    font-size: 3em;
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.api-block-title {
+    color: #fef3c7;
+    font-size: 1.3em;
+    font-weight: bold;
+    text-align: center;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    margin-bottom: 8px;
+}
+
+.api-block-desc {
+    color: #fde68a;
+    font-size: 0.9em;
+    text-align: center;
+    opacity: 0.9;
+    line-height: 1.4;
+}
+
+/* 悬浮窗口样式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.8);
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    border-radius: 20px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-overlay.active .modal-content {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+.modal-header {
+    padding: 25px 30px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(14, 165, 233, 0.1));
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    color: #f0f9ff;
+    font-size: 1.8em;
+    font-weight: bold;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 1.5em;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+.modal-body {
+    padding: 30px;
+    max-height: calc(90vh - 100px);
+    overflow-y: auto;
+    color: #e2e8f0;
+}
+
+/* 代码块样式 */
+code, pre {
+    font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+    background-color: rgba(15, 23, 42, 0.8);
+    color: #f1f5f9;
+    border-radius: 8px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+}
+
+code {
+    padding: 0.2em 0.6em;
+    font-size: 0.9em;
+}
+
+pre {
+    padding: 20px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 15px 0;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.code-block {
+    margin: 20px 0;
+}
+
+.code-block .title {
+    font-weight: bold;
+    color: #60a5fa;
+    margin-bottom: 8px;
+    font-size: 1.1em;
+}
+
+/* API 详情内容样式 */
+.api-details h3 {
+    color: #60a5fa;
+    font-size: 1.4em;
+    margin: 25px 0 15px 0;
+    border-left: 4px solid #3b82f6;
+    padding-left: 15px;
+}
+
+.api-details p {
+    line-height: 1.7;
+    margin-bottom: 15px;
+    color: #cbd5e1;
+}
+
+.api-details strong {
+    color: #38bdf8;
+}
+
+.api-details a {
+    color: #60a5fa;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.api-details a:hover {
+    color: #93c5fd;
+    text-decoration: underline;
+}
+
+/* 底部样式 */
+footer {
+    text-align: center;
+    margin-top: 80px;
+    padding: 30px 20px;
+    background: rgba(15, 23, 42, 0.4);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid rgba(56, 189, 248, 0.1);
+    color: #94a3b8;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2.5em;
+    }
+    
+    .api-floating-block {
+        width: 240px;
+        height: 180px;
+        margin: 20px auto;
+        display: block;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+    
+    .modal-body {
+        padding: 20px;
+    }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.5);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(56, 189, 248, 0.7);
+}
