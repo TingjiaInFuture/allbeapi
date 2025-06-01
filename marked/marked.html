@@ -1,0 +1,18 @@
+<h3>Marked API: Markdown 到 HTML 转换</h3>
+<p>使用 Marked 库将 Markdown 文本实时转换为 HTML。非常适合在网页中动态显示格式化文本。</p>
+<p><strong>端点:</strong> <code>POST /marked/render</code></p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "markdown": "# Hello World\nThis is **markdown**."
+}</code></pre>
+</div>
+<p><strong>响应 (HTML 字符串):</strong></p>
+<div class="code-block">
+    <div class="title">HTML</div>
+    <pre><code>&lt;h1 id="hello-world"&gt;Hello World&lt;/h1&gt;
+&lt;p&gt;This is &lt;strong&gt;markdown&lt;/strong&gt;.&lt;/p&gt;
+</code></pre>
+</div>
+<p><a href="https://marked.js.org/" target="_blank" rel="noopener noreferrer">了解更多关于 Marked</a></p>

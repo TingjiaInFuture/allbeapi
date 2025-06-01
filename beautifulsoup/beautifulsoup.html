@@ -1,0 +1,147 @@
+<h3>Beautiful Soup API: HTML 解析与提取</h3>
+<p>利用 Python 的 Beautiful Soup 库对 HTML 内容进行解析、提取和清理。</p>
+
+<h4>1. 解析HTML内容</h4>
+<p><strong>端点:</strong> <code>POST /beautifulsoup/parse</code></p>
+<p>解析HTML字符串并返回基本信息，如标题、纯文本内容和原始HTML。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "html": "&lt;html&gt;&lt;head&gt;&lt;title&gt;Test Page&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;Some text.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;",
+  "parser": "html.parser" <span class="comment">// 可选，默认为 "html.parser"</span>
+}</code></pre>
+</div>
+<p><strong>响应 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "title": "Test Page",
+  "text": "Hello\nSome text.",
+  "html": "&lt;html&gt;&lt;head&gt;&lt;title&gt;Test Page&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;Hello&lt;/h1&gt;&lt;p&gt;Some text.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;"
+}</code></pre>
+</div>
+
+<h4>2. 提取特定元素</h4>
+<p><strong>端点:</strong> <code>POST /beautifulsoup/extract</code></p>
+<p>根据CSS选择器或标签名从HTML中提取元素，并可选择提取特定属性值。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "html": "&lt;div&gt;&lt;p class="content"&gt;First paragraph.&lt;/p&gt;&lt;p&gt;Second paragraph.&lt;/p&gt;&lt;a href="#"&gt;Link&lt;/a&gt;&lt;/div&gt;",
+  "selector": "p.content", <span class="comment">// CSS 选择器或标签名</span>
+  "attribute": null, <span class="comment">// 可选，如 "class" 或 "href"</span>
+  "parser": "html.parser" <span class="comment">// 可选</span>
+}</code></pre>
+</div>
+<p><strong>响应 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "elements": [
+    "&lt;p class=\"content\"&gt;First paragraph.&lt;/p&gt;"
+  ]
+}</code></pre>
+</div>
+<p>如果指定了 <code>attribute</code>，则 <code>elements</code> 数组将包含属性值列表。</p>
+
+<h4>3. 提取所有链接</h4>
+<p><strong>端点:</strong> <code>POST /beautifulsoup/links</code></p>
+<p>提取HTML中所有的 <code>&lt;a&gt;</code> 标签的链接 (href属性)。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "html": "&lt;a href="page1.html"&gt;Page 1&lt;/a&gt;&lt;a href="http://example.com/page2"&gt;Page 2&lt;/a&gt;",
+  "base_url": "http://example.com/docs/", <span class="comment">// 可选，用于解析相对链接</span>
+  "parser": "html.parser" <span class="comment">// 可选</span>
+}</code></pre>
+</div>
+<p><strong>响应 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "links": [
+    "http://example.com/docs/page1.html",
+    "http://example.com/page2"
+  ]
+}</code></pre>
+</div>
+
+<h4>4. 提取所有图片</h4>
+<p><strong>端点:</strong> <code>POST /beautifulsoup/images</code></p>
+<p>提取HTML中所有的 <code>&lt;img&gt;</code> 标签的图片源 (src属性)。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "html": "&lt;img src="img1.png"&gt;&lt;img src="/path/to/img2.jpg"&gt;",
+  "base_url": "http://example.com/", <span class="comment">// 可选，用于解析相对链接</span>
+  "parser": "html.parser" <span class="comment">// 可选</span>
+}</code></pre>
+</div>
+<p><strong>响应 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "images": [
+    "http://example.com/img1.png",
+    "http://example.com/path/to/img2.jpg"
+  ]
+}</code></pre>
+</div>
+
+<h4>5. 清理HTML内容</h4>
+<p><strong>端点:</strong> <code>POST /beautifulsoup/clean</code></p>
+<p>清理HTML，例如移除特定标签、注释，或只保留指定标签。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "html": "&lt;body&gt;&lt;script&gt;alert('bad')&lt;/script&gt;&lt;!-- comment --&gt;&lt;p&gt;Good content.&lt;/p&gt;&lt;div&gt;More.&lt;/div&gt;&lt;/body&gt;",
+  "remove_tags": ["script", "style"], <span class="comment">// 可选，要移除的标签列表</span>
+  "keep_only": ["p"], <span class="comment">// 可选，只保留的标签列表 (如果提供，则优先于 remove_tags)</span>
+  "remove_comments": true, <span class="comment">// 可选，是否移除注释 (默认为 false)</span>
+  "parser": "html.parser" <span class="comment">// 可选</span>
+}</code></pre>
+</div>
+<p><strong>响应 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "cleaned_html": "&lt;p&gt;Good content.&lt;/p&gt;"
+}</code></pre>
+</div>
+
+<h4>6. 获取网页并解析</h4>
+<p><strong>端点:</strong> <code>POST /beautifulsoup/fetch</code></p>
+<p>通过URL获取网页内容，然后进行解析或提取。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "url": "http://example.com",
+  "selector": "h1", <span class="comment">// 可选，CSS选择器，如果提供则提取匹配元素</span>
+  "parser": "html.parser" <span class="comment">// 可选</span>
+}</code></pre>
+</div>
+<p><strong>响应 (JSON):</strong></p>
+<p>如果提供了 <code>selector</code>:</p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "elements": ["&lt;h1&gt;Example Domain&lt;/h1&gt;"] <span class="comment">// 提取的元素列表</span>
+}</code></pre>
+</div>
+<p>如果未提供 <code>selector</code>:</p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "title": "Example Domain",
+  "text": "Example Domain...", <span class="comment">// 页面纯文本</span>
+  "html": "&lt;html&gt;...&lt;/html&gt;" <span class="comment">// 页面完整HTML</span>
+}</code></pre>
+</div>
+
+<p>此 API 简化了从网页抓取和处理数据的过程。</p>

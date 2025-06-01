@@ -23,21 +23,21 @@ class OceanAPIExplorer {
                 icon: '📝',
                 title: 'Marked API',
                 description: 'Markdown 转 HTML',
-                details: this.getMarkedDetails()
+                detailsPath: 'marked/marked.html' // Changed
             },
             {
                 id: 'beautifulsoup',
                 icon: '🥄',
                 title: 'Beautiful Soup API',
                 description: 'HTML 解析与提取',
-                details: this.getBeautifulSoupDetails()
+                detailsPath: 'beautifulsoup/beautifulsoup.html' // Changed
             },
             {
                 id: 'prettier',
                 icon: '🎨',
                 title: 'Prettier API',
                 description: '代码格式化工具',
-                details: this.getPrettierDetails()
+                detailsPath: 'Prettier/Prettier.html' // Changed
             }
         ];
     }
@@ -173,9 +173,32 @@ class OceanAPIExplorer {
         window.addEventListener('resize', () => this._resizeParticleCanvas());
     }
     
-    openModal(api) {
+    async openModal(api) { // Added async
         this.modalElements.title.textContent = api.title;
-        this.modalElements.details.innerHTML = api.details;
+        
+        // Fetch details from HTML file
+        if (api.detailsPath) {
+            try {
+                const response = await fetch(api.detailsPath);
+                // For file:/// URLs, response.status might be 0 on success in some browsers/contexts,
+                // while response.ok (true for statuses 200-299) might be false.
+                // We treat status 0 as success for local files if response.ok is false.
+                if (response.ok || response.status === 0) { 
+                    const detailsHTML = await response.text();
+                    this.modalElements.details.innerHTML = detailsHTML;
+                } else {
+                    // If not ok and status is not 0, then it's a more definite error (e.g., 404)
+                    console.error(`Failed to load details from ${api.detailsPath}. Status: ${response.status}, StatusText: ${response.statusText}`);
+                    throw new Error(`HTTP error! status: ${response.status} for path ${api.detailsPath}`);
+                }
+            } catch (error) {
+                console.error('Error fetching API details:', error);
+                this.modalElements.details.innerHTML = '<p>Error loading details.</p>';
+            }
+        } else {
+            // Fallback or error if detailsPath is not defined
+            this.modalElements.details.innerHTML = '<p>Details not available.</p>';
+        }
         
         this.modalElements.overlay.classList.add('active');
         
@@ -378,79 +401,6 @@ class OceanAPIExplorer {
         `;
         document.body.appendChild(ripple);
         setTimeout(() => ripple.remove(), 700);
-    }
-
-    getMarkedDetails() {
-        return `
-            <h3>Marked API: Markdown 到 HTML 转换</h3>
-            <p>使用 Marked 库将 Markdown 文本实时转换为 HTML。非常适合在网页中动态显示格式化文本。</p>
-            <p><strong>端点:</strong> <code>POST /marked</code></p>
-            <p><strong>请求体 (JSON):</strong></p>
-            <div class="code-block">
-                <div class="title">JSON</div>
-                <pre><code>{
-  "markdown": "# Hello World\\nThis is **markdown**."
-}</code></pre>
-            </div>
-            <p><strong>响应 (JSON):</strong></p>
-            <div class="code-block">
-                <div class="title">JSON</div>
-                <pre><code>{
-  "html": "&lt;h1&gt;Hello World&lt;/h1&gt;\\n&lt;p&gt;This is &lt;strong&gt;markdown&lt;/strong&gt;.&lt;/p&gt;"
-}</code></pre>
-            </div>
-            <p><a href="https://marked.js.org/" target="_blank" rel="noopener noreferrer">了解更多关于 Marked</a></p>
-        `;
-    }
-
-    getBeautifulSoupDetails() {
-        return `
-            <h3>Beautiful Soup API: HTML 解析与提取</h3>
-            <p>利用 Python 的 Beautiful Soup 库解析 HTML 内容，轻松提取所需数据，如标签、属性和文本。</p>
-            <p><strong>端点:</strong> <code>POST /beautifulsoup/parse</code></p>
-            <p><strong>请求体 (JSON):</strong></p>
-            <div class="code-block">
-                <div class="title">JSON</div>
-                <pre><code>{
-  "html_content": "&lt;html&gt;&lt;body&gt;&lt;h1&gt;Title&lt;/h1&gt;&lt;p&gt;A paragraph.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;",
-  "selector": "p"
-}</code></pre>
-            </div>
-            <p><strong>响应 (JSON):</strong></p>
-            <div class="code-block">
-                <div class="title">JSON</div>
-                <pre><code>{
-  "tag": "p",
-  "text": "A paragraph.",
-  "attributes": {}
-}</code></pre>
-            </div>
-            <p>此 API 简化了从网页抓取和处理数据的过程。</p>
-        `;
-    }
-
-    getPrettierDetails() {
-        return `
-            <h3>Prettier API: 代码格式化</h3>
-            <p>使用 Prettier 自动格式化您的 JavaScript, HTML, CSS, Markdown 等代码，保持一致的代码风格。</p>
-            <p><strong>端点:</strong> <code>POST /prettier/format</code></p>
-            <p><strong>请求体 (JSON):</strong></p>
-            <div class="code-block">
-                <div class="title">JSON</div>
-                <pre><code>{
-  "code": "const foo = {bar:'baz'};",
-  "parser": "babel"
-}</code></pre>
-            </div>
-            <p><strong>响应 (JSON):</strong></p>
-            <div class="code-block">
-                <div class="title">JSON</div>
-                <pre><code>{
-  "formatted_code": "const foo = {\\n  bar: \\"baz\\",\\n};\\n"
-}</code></pre>
-            </div>
-            <p><a href="https://prettier.io/" target="_blank" rel="noopener noreferrer">探索 Prettier 文档</a></p>
-        `;
     }
 }
 
