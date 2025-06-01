@@ -331,7 +331,7 @@ class OceanAPIExplorer {
             <p>将 Markdown 文本实时转换为 HTML。基于强大的 <a href="https://github.com/markedjs/marked" target="_blank">marked</a> 库。</p>
             
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://api.allbeapi.top/marked/render</code></pre>
+            <pre><code>POST https://res.allbeapi.top/marked/render</code></pre>
 
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -350,7 +350,7 @@ class OceanAPIExplorer {
             <pre><code>import requests
 import json
 
-api_url = "https://api.allbeapi.top/marked/render"
+api_url = "https://res.allbeapi.top/marked/render"
 markdown_content = {
     "markdown": "# 测试标题\\n\\n这是从 Python 发送的 **Markdown** 内容。\\n\\n* 列表项 1\\n* 列表项 2"
 }
@@ -368,7 +368,7 @@ else:
             <h3>🌐 cURL 示例</h3>
             <pre><code>curl -X POST -H "Content-Type: application/json" \\
 -d '{"markdown": "# Hello World\\n\\nThis is **bold**."}' \\
-https://api.allbeapi.top/marked/render</code></pre>
+https://res.allbeapi.top/marked/render</code></pre>
 
             <h3>🌐 JavaScript 示例</h3>
             <pre><code>// 使用 fetch API
@@ -376,7 +376,7 @@ const markdownContent = {
     markdown: "# 标题\\n\\n这是 **JavaScript** 调用示例。"
 };
 
-fetch('https://api.allbeapi.top/marked/render', {
+fetch('https://res.allbeapi.top/marked/render', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
@@ -400,7 +400,7 @@ fetch('https://api.allbeapi.top/marked/render', {
             
             <h3>1. HTML 解析</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://api.allbeapi.top/beautifulsoup/parse</code></pre>
+            <pre><code>POST https://res.allbeapi.top/beautifulsoup/parse</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -421,7 +421,7 @@ fetch('https://api.allbeapi.top/marked/render', {
 
             <h3>2. 元素提取</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://api.allbeapi.top/beautifulsoup/extract</code></pre>
+            <pre><code>POST https://res.allbeapi.top/beautifulsoup/extract</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -434,7 +434,7 @@ fetch('https://api.allbeapi.top/marked/render', {
 
             <h3>3. 链接提取</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://api.allbeapi.top/beautifulsoup/links</code></pre>
+            <pre><code>POST https://res.allbeapi.top/beautifulsoup/links</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -446,11 +446,11 @@ fetch('https://api.allbeapi.top/marked/render', {
 
             <h3>4. 图片提取</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://api.allbeapi.top/beautifulsoup/images</code></pre>
+            <pre><code>POST https://res.allbeapi.top/beautifulsoup/images</code></pre>
 
             <h3>5. HTML 清理</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://api.allbeapi.top/beautifulsoup/clean</code></pre>
+            <pre><code>POST https://res.allbeapi.top/beautifulsoup/clean</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -463,7 +463,7 @@ fetch('https://api.allbeapi.top/marked/render', {
 
             <h3>6. 网页抓取</h3>
             <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://api.allbeapi.top/beautifulsoup/fetch</code></pre>
+            <pre><code>POST https://res.allbeapi.top/beautifulsoup/fetch</code></pre>
             
             <div class="code-block">
                 <p class="title">请求体 (JSON):</p>
@@ -477,18 +477,18 @@ fetch('https://api.allbeapi.top/marked/render', {
             <pre><code>import requests
 
 # 解析HTML
-response = requests.post('https://api.allbeapi.top/beautifulsoup/parse', json={
+response = requests.post('https://res.allbeapi.top/beautifulsoup/parse', json={
     "html": "&lt;div&gt;&lt;h1&gt;标题&lt;/h1&gt;&lt;p&gt;段落&lt;/p&gt;&lt;/div&gt;"
 })
 
 # 提取所有链接
-response = requests.post('https://api.allbeapi.top/beautifulsoup/links', json={
+response = requests.post('https://res.allbeapi.top/beautifulsoup/links', json={
     "html": "&lt;a href='#'&gt;链接1&lt;/a&gt;&lt;a href='/page'&gt;链接2&lt;/a&gt;",
     "base_url": "https://example.com"
 })
 
 # 清理HTML
-response = requests.post('https://api.allbeapi.top/beautifulsoup/clean', json={
+response = requests.post('https://res.allbeapi.top/beautifulsoup/clean', json={
     "html": "&lt;div&gt;&lt;script&gt;alert()&lt;/script&gt;&lt;p&gt;内容&lt;/p&gt;&lt;/div&gt;",
     "remove_tags": ["script"]
 })</code></pre>
@@ -499,7 +499,7 @@ const htmlContent = {
     html: "&lt;html&gt;&lt;head&gt;&lt;title&gt;我的网页&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;欢迎&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;"
 };
 
-fetch('https://api.allbeapi.top/beautifulsoup/parse', {
+fetch('https://res.allbeapi.top/beautifulsoup/parse', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
@@ -521,7 +521,7 @@ const linkExtraction = {
     base_url: "https://example.com"
 };
 
-fetch('https://api.allbeapi.top/beautifulsoup/links', {
+fetch('https://res.allbeapi.top/beautifulsoup/links', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',

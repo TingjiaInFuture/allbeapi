@@ -4,5 +4,5 @@ main = "worker.js"
 
 
 [env.production.routes]
-pattern = "api.allbeapi.top/*"
+pattern = "resa.allbeapi.top/*"
 zone_name = "allbeapi.top"

@@ -4,7 +4,7 @@
 
 ## 🌐 API 接入地址
 
-**基础 URL**: `https://api.allbeapi.top`
+**基础 URL**: `https://res.allbeapi.top`
 
 所有 API 服务都通过此域名提供，支持 HTTPS 安全访问。
 
@@ -21,10 +21,10 @@
 ### 📝 Marked API
 将 Markdown 文本转换为 HTML
 
-**端点**: `POST https://api.allbeapi.top/marked/render`
+**端点**: `POST https://res.allbeapi.top/marked/render`
 
 ```javascript
-fetch('https://api.allbeapi.top/marked/render', {
+fetch('https://res.allbeapi.top/marked/render', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -39,16 +39,16 @@ fetch('https://api.allbeapi.top/marked/render', {
 强大的 HTML/XML 解析和数据提取工具
 
 **主要端点**:
-- `POST https://api.allbeapi.top/beautifulsoup/parse` - HTML解析
-- `POST https://api.allbeapi.top/beautifulsoup/extract` - 元素提取
-- `POST https://api.allbeapi.top/beautifulsoup/links` - 链接提取
-- `POST https://api.allbeapi.top/beautifulsoup/images` - 图片提取
-- `POST https://api.allbeapi.top/beautifulsoup/clean` - HTML清理
+- `POST https://res.allbeapi.top/beautifulsoup/parse` - HTML解析
+- `POST https://res.allbeapi.top/beautifulsoup/extract` - 元素提取
+- `POST https://res.allbeapi.top/beautifulsoup/links` - 链接提取
+- `POST https://res.allbeapi.top/beautifulsoup/images` - 图片提取
+- `POST https://res.allbeapi.top/beautifulsoup/clean` - HTML清理
 
 ```python
 import requests
 
-response = requests.post('https://api.allbeapi.top/beautifulsoup/parse', json={
+response = requests.post('https://res.allbeapi.top/beautifulsoup/parse', json={
     "html": "<html><head><title>测试</title></head><body><p>内容</p></body></html>"
 })
 data = response.json()
