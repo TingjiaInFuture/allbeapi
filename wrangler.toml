@@ -1,8 +1,0 @@
-name = "allbeapi"
-compatibility_date = "2025-05-31"
-main = "worker.js"
-
-
-[env.production.routes]
-pattern = "resa.allbeapi.top/*"
-zone_name = "allbeapi.top"
