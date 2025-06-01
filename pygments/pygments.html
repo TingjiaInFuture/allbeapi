@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pygments API Test</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        textarea { width: 100%; min-height: 150px; margin-bottom: 10px; }
+        button { padding: 10px 15px; cursor: pointer; }
+        pre { background-color: #f5f5f5; padding: 10px; border: 1px solid #ccc; overflow-x: auto; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Pygments API Test</h1>
+    <textarea id="codeInput" placeholder="Enter code here..."></textarea>
+    <input type="text" id="languageInput" placeholder="Enter language (optional, e.g., python, javascript)">
+    <button onclick="highlightCode()">Highlight Code</button>
+    <h2>Result:</h2>
+    <div id="resultOutput"></div>
+    <div id="errorOutput" class="error"></div>
+
+    <script>
+        async function highlightCode() {
+            const code = document.getElementById('codeInput').value;
+            const language = document.getElementById('languageInput').value;
+            const resultOutput = document.getElementById('resultOutput');
+            const errorOutput = document.getElementById('errorOutput');
+
+            resultOutput.innerHTML = '';
+            errorOutput.innerHTML = '';
+
+            if (!code) {
+                errorOutput.textContent = 'Please enter some code.';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:5001/highlight', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ code, language }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultOutput.innerHTML = data.highlighted_code;
+                    if (data.detected_language) {
+                        errorOutput.textContent = `Detected language: ${data.detected_language}`;
+                        errorOutput.className = 'info';
+                    }
+                } else {
+                    errorOutput.textContent = `Error: ${data.error}`;
+                }
+            } catch (error) {
+                errorOutput.textContent = `Network error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

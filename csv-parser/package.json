@@ -1,0 +1,14 @@
+{
+  "name": "csv-parser-api",
+  "version": "1.0.0",
+  "description": "API for csv-parser",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "csv-parser": "^3.0.0",
+    "streamifier": "^0.1.1"
+  }
+}

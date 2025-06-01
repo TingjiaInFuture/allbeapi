@@ -1,0 +1,22 @@
+{
+  "name": "ajv-api",
+  "version": "1.0.0",
+  "description": "API for Ajv JSON Schema validator",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "ajv": "^8.0.0",
+    "ajv-formats": "^2.1.1",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.0"
+  },
+  "keywords": ["ajv", "json-schema", "validation", "api"],
+  "author": "AllBeAPI Platform",
+  "license": "MIT"
+}

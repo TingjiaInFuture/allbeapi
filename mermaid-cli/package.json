@@ -1,0 +1,14 @@
+{
+  "name": "mermaid-cli-api",
+  "version": "1.0.0",
+  "description": "API for Mermaid CLI",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "mermaid.cli": "^10.0.0", 
+    "uuid": "^9.0.0"
+  }
+}

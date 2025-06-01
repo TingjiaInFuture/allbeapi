@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pillow Image Processing API Test</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input[type="file"], input[type="text"], select { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px; }
+        button:hover { background-color: #0056b3; }
+        img { max-width: 100%; margin-top: 10px; border: 1px solid #ccc; }
+        .error { color: red; margin-top: 10px; }
+        .operations-list { list-style: none; padding: 0; }
+        .operations-list li { background-color: #f0f0f0; padding: 5px; margin-bottom: 5px; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; }
+        .operations-list button { background-color: #dc3545; font-size: 0.8em; padding: 3px 6px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pillow Image Processing API</h1>
+
+        <div class="form-group">
+            <label for="imageFile">Choose an image:</label>
+            <input type="file" id="imageFile" accept="image/*">
+        </div>
+
+        <div class="form-group">
+            <label for="operationType">Add Operation:</label>
+            <select id="operationType">
+                <option value="resize">Resize (e.g., 200,200)</option>
+                <option value="rotate">Rotate (e.g., 90)</option>
+                <option value="grayscale">Grayscale</option>
+                <option value="blur">Blur (e.g., 2 for radius)</option>
+                <option value="crop">Crop (x,y,width,height e.g., 50,50,100,100)</option>
+            </select>
+            <input type="text" id="operationArgs" placeholder="Arguments (if any)">
+            <button type="button" onclick="addOperation()">Add Operation</button>
+        </div>
+
+        <div class="form-group">
+            <label>Operations to perform:</label>
+            <ul id="operationsQueue" class="operations-list"></ul>
+        </div>
+
+        <div class="form-group">
+            <label for="outputFormat">Output Format:</label>
+            <select id="outputFormat">
+                <option value="PNG">PNG</option>
+                <option value="JPEG">JPEG</option>
+                <option value="GIF">GIF</option>
+                <option value="BMP">BMP</option>
+                <option value="TIFF">TIFF</option>
+                <option value="WEBP">WEBP</option>
+            </select>
+        </div>
+
+        <button type="button" onclick="processImage()">Process Image</button>
+
+        <h2>Result:</h2>
+        <div id="resultContainer">
+            <img id="processedImage" src="#" alt="Processed Image" style="display:none;">
+            <a id="downloadLink" href="#" style="display:none;">Download Processed Image</a>
+        </div>
+        <div id="errorOutput" class="error"></div>
+    </div>
+
+    <script>
+        let operations = [];
+
+        function addOperation() {
+            const type = document.getElementById('operationType').value;
+            const args = document.getElementById('operationArgs').value;
+            const queueElement = document.getElementById('operationsQueue');
+
+            let operationString = type;
+            if (args) {
+                operationString += `:${args}`;
+            }
+            operations.push(operationString);
+
+            const listItem = document.createElement('li');
+            listItem.textContent = operationString;
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = function() {
+                operations = operations.filter(op => op !== operationString);
+                listItem.remove();
+            };
+            listItem.appendChild(removeBtn);
+            queueElement.appendChild(listItem);
+            document.getElementById('operationArgs').value = ''; // Clear args input
+        }
+
+        async function processImage() {
+            const fileInput = document.getElementById('imageFile');
+            const outputFormat = document.getElementById('outputFormat').value;
+            const resultContainer = document.getElementById('resultContainer');
+            const processedImage = document.getElementById('processedImage');
+            const downloadLink = document.getElementById('downloadLink');
+            const errorOutput = document.getElementById('errorOutput');
+
+            processedImage.style.display = 'none';
+            downloadLink.style.display = 'none';
+            errorOutput.innerHTML = '';
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                errorOutput.textContent = 'Please select an image file.';
+                return;
+            }
+            if (operations.length === 0) {
+                errorOutput.textContent = 'Please add at least one operation.';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            operations.forEach(op => formData.append('operations', op));
+            formData.append('output_format', outputFormat);
+
+            try {
+                const response = await fetch('http://127.0.0.1:5002/process-image', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    processedImage.src = url;
+                    processedImage.style.display = 'block';
+
+                    downloadLink.href = url;
+                    const fileName = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `processed_image.${outputFormat.toLowerCase()}`;
+                    downloadLink.download = fileName;
+                    downloadLink.style.display = 'block';
+                    downloadLink.textContent = `Download ${fileName}`;
+
+                } else {
+                    const errorData = await response.json();
+                    errorOutput.textContent = `Error: ${errorData.error}`;
+                }
+            } catch (error) {
+                errorOutput.textContent = `Network error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "eslint-api",
+  "version": "1.0.0",
+  "description": "API for ESLint JavaScript and TypeScript linter",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "eslint": "^8.0.0", 
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.0"
+  },
+  "keywords": ["eslint", "linting", "javascript", "typescript", "api"],
+  "author": "AllBeAPI Platform",
+  "license": "MIT"
+}

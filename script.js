@@ -19,6 +19,76 @@ class OceanAPIExplorer {
     _getApisData() {
         return [
             {
+                id: 'pygments',
+                icon: '🌈',
+                title: 'Pygments API',
+                description: '代码语法高亮',
+                detailsPath: 'pygments/pygments.html'
+            },
+            {
+                id: 'pillow',
+                icon: '🖼️',
+                title: 'Pillow API',
+                description: '图像处理',
+                detailsPath: 'pillow/pillow.html'
+            },
+            {
+                id: 'python-qrcode',
+                icon: '📱',
+                title: 'python-qrcode API',
+                description: '二维码生成',
+                detailsPath: 'python-qrcode/python-qrcode.html'
+            },
+            {
+                id: 'ajv',
+                icon: '✅',
+                title: 'Ajv API',
+                description: 'JSON Schema 验证',
+                detailsPath: 'ajv/ajv.html'
+            },
+            {
+                id: 'eslint',
+                icon: '🔍',
+                title: 'ESLint API',
+                description: 'JS/TS 静态分析',
+                detailsPath: 'eslint/eslint.html'
+            },
+            {
+                id: 'diff',
+                icon: '🔄',
+                title: 'Diff API',
+                description: '文本内容比较',
+                detailsPath: 'diff/diff.html'
+            },
+            {
+                id: 'csv-parser',
+                icon: '📊',
+                title: 'CSV Parser API',
+                description: 'CSV 转 JSON',
+                detailsPath: 'csv-parser/csv-parser.html'
+            },
+            {
+                id: 'mermaid-cli',
+                icon: '📈',
+                title: 'Mermaid CLI API',
+                description: '文本生成图表',
+                detailsPath: 'mermaid-cli/mermaid-cli.html'
+            },
+            {
+                id: 'pdfkit',
+                icon: '📄',
+                title: 'PDFKit API',
+                description: 'PDF 文档生成',
+                detailsPath: 'pdfkit/pdfkit.html'
+            },
+            {
+                id: 'sanitize-html',
+                icon: '🛡️',
+                title: 'sanitize-html API',
+                description: 'HTML 清理 (XSS防护)',
+                detailsPath: 'sanitize-html/sanitize-html.html'
+            },
+            {
                 id: 'marked',
                 icon: '📝',
                 title: 'Marked API',
@@ -39,6 +109,17 @@ class OceanAPIExplorer {
                 description: '代码格式化工具',
                 detailsPath: 'Prettier/Prettier.html' // Changed
             }
+            // Add other existing APIs if they were removed by mistake during merge
+            // For example, if BeautifulSoup was meant to be kept:
+            /*
+            {
+                id: 'beautifulsoup',
+                icon: '🥄',
+                title: 'Beautiful Soup API',
+                description: 'HTML 解析与提取',
+                detailsPath: 'beautifulsoup/beautifulsoup.html'
+            }
+            */
         ];
     }
 

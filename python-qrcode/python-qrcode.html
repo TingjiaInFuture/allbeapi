@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python QR Code Generator API Test</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 500px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="text"], input[type="number"], select, textarea {
+            width: calc(100% - 16px); /* Account for padding */
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea { min-height: 80px; }
+        button { 
+            padding: 10px 20px; 
+            cursor: pointer; 
+            background-color: #28a745; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            font-size: 1em;
+        }
+        button:hover { background-color: #218838; }
+        #qrcodeResult img { max-width: 100%; border: 1px solid #ddd; margin-top: 10px; }
+        #errorOutput { color: red; margin-top: 10px; }
+        .color-picker-container { display: flex; align-items: center; gap: 10px; }
+        .color-picker-container input[type="color"] { padding: 0; height: 30px; width: 50px; border: 1px solid #ccc; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Code Generator</h1>
+
+        <div class="form-group">
+            <label for="qrData">Data for QR Code:</label>
+            <textarea id="qrData" placeholder="Enter data to encode (e.g., URL, text)" required></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="version">Version (1-40):</label>
+            <input type="number" id="version" value="1" min="1" max="40">
+        </div>
+
+        <div class="form-group">
+            <label for="errorCorrection">Error Correction:</label>
+            <select id="errorCorrection">
+                <option value="L">L (Low, ~7%)</option>
+                <option value="M" selected>M (Medium, ~15%)</option>
+                <option value="Q">Q (Quartile, ~25%)</option>
+                <option value="H">H (High, ~30%)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="boxSize">Box Size (pixels per module):</label>
+            <input type="number" id="boxSize" value="10" min="1">
+        </div>
+
+        <div class="form-group">
+            <label for="border">Border (modules):</label>
+            <input type="number" id="border" value="4" min="0">
+        </div>
+
+        <div class="form-group">
+            <label for="fillColor">Fill Color:</label>
+            <div class="color-picker-container">
+                <input type="color" id="fillColor" value="#000000">
+                <input type="text" id="fillColorText" value="black" onchange="document.getElementById('fillColor').value = this.value === 'black' ? '#000000' : this.value;" placeholder="e.g., black or #000000">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="backColor">Background Color:</label>
+            <div class="color-picker-container">
+                <input type="color" id="backColor" value="#ffffff">
+                <input type="text" id="backColorText" value="white" onchange="document.getElementById('backColor').value = this.value === 'white' ? '#ffffff' : this.value;" placeholder="e.g., white or #FFFFFF">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="imageFormat">Image Format:</label>
+            <select id="imageFormat">
+                <option value="png" selected>PNG</option>
+                <option value="jpeg">JPEG</option>
+            </select>
+        </div>
+
+        <button onclick="generateQRCode()">Generate QR Code</button>
+
+        <h2>Result:</h2>
+        <div id="qrcodeResult">
+            <img id="qrImage" src="#" alt="QR Code will appear here" style="display:none;">
+            <a id="downloadLink" href="#" style="display:none;">Download QR Code</a>
+        </div>
+        <div id="errorOutput"></div>
+    </div>
+
+    <script>
+        document.getElementById('fillColor').addEventListener('input', function() {
+            document.getElementById('fillColorText').value = this.value;
+        });
+        document.getElementById('backColor').addEventListener('input', function() {
+            document.getElementById('backColorText').value = this.value;
+        });
+
+        async function generateQRCode() {
+            const qrData = document.getElementById('qrData').value;
+            const version = parseInt(document.getElementById('version').value);
+            const errorCorrection = document.getElementById('errorCorrection').value;
+            const boxSize = parseInt(document.getElementById('boxSize').value);
+            const border = parseInt(document.getElementById('border').value);
+            const fillColor = document.getElementById('fillColorText').value;
+            const backColor = document.getElementById('backColorText').value;
+            const imageFormat = document.getElementById('imageFormat').value;
+
+            const qrImage = document.getElementById('qrImage');
+            const downloadLink = document.getElementById('downloadLink');
+            const errorOutput = document.getElementById('errorOutput');
+
+            qrImage.style.display = 'none';
+            downloadLink.style.display = 'none';
+            errorOutput.innerHTML = '';
+
+            if (!qrData) {
+                errorOutput.textContent = 'Please enter data for the QR code.';
+                return;
+            }
+
+            const payload = {
+                data: qrData,
+                version: version,
+                error_correction: errorCorrection,
+                box_size: boxSize,
+                border: border,
+                fill_color: fillColor,
+                back_color: backColor,
+                format: imageFormat
+            };
+
+            try {
+                const response = await fetch('http://127.0.0.1:5003/generate-qrcode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    qrImage.src = url;
+                    qrImage.style.display = 'block';
+
+                    const fileName = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `qrcode.${imageFormat.toLowerCase()}`;
+                    downloadLink.href = url;
+                    downloadLink.download = fileName;
+                    downloadLink.textContent = `Download ${fileName}`;
+                    downloadLink.style.display = 'block';
+                } else {
+                    const errorData = await response.json();
+                    errorOutput.textContent = `Error: ${errorData.error}`;
+                }
+            } catch (error) {
+                errorOutput.textContent = `Network error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

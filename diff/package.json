@@ -1,0 +1,22 @@
+{
+  "name": "diff-api",
+  "version": "1.0.0",
+  "description": "API for text comparison using the diff library",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "diff": "^5.0.0",
+    "cors": "^2.8.5",
+    "jsdom": "^22.0.0" 
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.0"
+  },
+  "keywords": ["diff", "text-comparison", "api"],
+  "author": "AllBeAPI Platform",
+  "license": "MIT"
+}
