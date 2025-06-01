@@ -115,7 +115,6 @@ class OceanAPIExplorer {
         
         // 添加打开动画序列
         overlay.classList.add('active');
-        document.body.style.overflow = 'hidden';
         
         // 创建波浪展开效果
         const content = document.querySelector('.modal-content');
@@ -167,7 +166,6 @@ class OceanAPIExplorer {
         
         setTimeout(() => {
             overlay.classList.remove('active');
-            document.body.style.overflow = '';
             
             // 重置样式
             content.style.transition = '';
