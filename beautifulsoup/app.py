@@ -8,7 +8,7 @@ from urllib.parse import urljoin, urlparse
 app = Flask(__name__)
 CORS(app)  # 启用CORS支持
 
-@app.route('/parse', methods=['POST'])
+@app.route('/beautifulsoup/parse', methods=['POST'])
 def parse_html():
     """
     解析HTML内容
@@ -36,7 +36,7 @@ def parse_html():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/extract', methods=['POST'])
+@app.route('/beautifulsoup/extract', methods=['POST'])
 def extract_elements():
     """
     从HTML中提取特定元素
@@ -86,7 +86,7 @@ def extract_elements():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/links', methods=['POST'])
+@app.route('/beautifulsoup/links', methods=['POST'])
 def extract_links():
     """
     提取所有链接
@@ -125,7 +125,7 @@ def extract_links():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/images', methods=['POST'])
+@app.route('/beautifulsoup/images', methods=['POST'])
 def extract_images():
     """
     提取所有图片
@@ -165,7 +165,7 @@ def extract_images():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/clean', methods=['POST'])
+@app.route('/beautifulsoup/clean', methods=['POST'])
 def clean_html():
     """
     清理HTML内容
@@ -214,7 +214,7 @@ def clean_html():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/fetch', methods=['POST'])
+@app.route('/beautifulsoup/fetch', methods=['POST'])
 def fetch_and_parse():
     """
     获取网页并解析
@@ -264,7 +264,7 @@ def fetch_and_parse():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/health', methods=['GET'])
+@app.route('/beautifulsoup/health', methods=['GET'])
 def health_check():
     """健康检查"""
     return jsonify({'status': 'healthy', 'service': 'beautifulsoup-api'})
