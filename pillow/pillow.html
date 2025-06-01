@@ -1,152 +1,54 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pillow Image Processing API Test</title>
+    <title>Pillow API 文档</title>
     <style>
-        body { font-family: sans-serif; margin: 20px; }
-        .container { max-width: 600px; margin: auto; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; }
-        input[type="file"], input[type="text"], select { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { padding: 10px 15px; cursor: pointer; background-color: #007bff; color: white; border: none; border-radius: 4px; }
-        button:hover { background-color: #0056b3; }
-        img { max-width: 100%; margin-top: 10px; border: 1px solid #ccc; }
-        .error { color: red; margin-top: 10px; }
-        .operations-list { list-style: none; padding: 0; }
-        .operations-list li { background-color: #f0f0f0; padding: 5px; margin-bottom: 5px; border-radius: 3px; display: flex; justify-content: space-between; align-items: center; }
-        .operations-list button { background-color: #dc3545; font-size: 0.8em; padding: 3px 6px; }
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        h1, h2, h3, h4 { color: #333; }
+        p, ul, pre { margin: 10px 0; }
+        code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+        .container { max-width: 800px; margin: auto; }
+        .code-block { background-color: #f9f9f9; border-left: 4px solid #007bff; padding: 10px 15px; margin: 10px 0; }
+        .title { font-weight: bold; margin-bottom: 5px; }
+        ul { padding-left: 20px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Pillow Image Processing API</h1>
+        <h1>Pillow API: 图像处理</h1>
+        <p>使用 Python 的 <a href="https://pillow.readthedocs.io/" target="_blank" rel="noopener noreferrer">Pillow</a> (PIL Fork) 库进行多种图像处理操作。</p>
 
-        <div class="form-group">
-            <label for="imageFile">Choose an image:</label>
-            <input type="file" id="imageFile" accept="image/*">
+        <h2>1. 处理图像</h2>
+        <p><strong>端点:</strong> <code>POST /process-image</code></p>
+        <p>接收图像文件和一系列处理操作指令，返回处理后的图像。</p>
+        <p><strong>请求体 (FormData):</strong></p>
+        <p>此端点接受 <code>multipart/form-data</code> 格式的请求，包含以下字段:</p>
+        <ul>
+          <li><code>file</code>: (File) 必需，要处理的图像文件。</li>
+          <li><code>operations</code>: (String[]) 必需，操作指令数组。每个操作是一个字符串，例如：
+            <ul>
+                <li><code>"resize:width,height"</code> (例如, "resize:200,200")</li>
+                <li><code>"rotate:angle"</code> (例如, "rotate:90")</li>
+                <li><code>"grayscale"</code> (无参数)</li>
+                <li><code>"blur:radius"</code> (例如, "blur:2")</li>
+                <li><code>"crop:x,y,width,height"</code> (例如, "crop:50,50,100,100")</li>
+            </ul>
+            可以多次出现此字段以执行多个操作。
+          </li>
+          <li><code>output_format</code>: (String) 必需，输出图像格式，例如："PNG", "JPEG", "GIF", "BMP", "TIFF", "WEBP"。</li>
+        </ul>
+        <p><strong>响应 (Image):</strong></p>
+        <p>成功时，直接返回处理后的图像文件。响应头中会包含 <code>Content-Disposition</code> 指示文件名，以及 <code>Content-Type</code> 表明图像类型。</p>
+        <p>如果发生错误，响应将是 JSON 格式：</p>
+        <div class="code-block">
+            <div class="title">JSON</div>
+            <pre><code>{
+  "error": "错误信息描述"
+}</code></pre>
         </div>
-
-        <div class="form-group">
-            <label for="operationType">Add Operation:</label>
-            <select id="operationType">
-                <option value="resize">Resize (e.g., 200,200)</option>
-                <option value="rotate">Rotate (e.g., 90)</option>
-                <option value="grayscale">Grayscale</option>
-                <option value="blur">Blur (e.g., 2 for radius)</option>
-                <option value="crop">Crop (x,y,width,height e.g., 50,50,100,100)</option>
-            </select>
-            <input type="text" id="operationArgs" placeholder="Arguments (if any)">
-            <button type="button" onclick="addOperation()">Add Operation</button>
-        </div>
-
-        <div class="form-group">
-            <label>Operations to perform:</label>
-            <ul id="operationsQueue" class="operations-list"></ul>
-        </div>
-
-        <div class="form-group">
-            <label for="outputFormat">Output Format:</label>
-            <select id="outputFormat">
-                <option value="PNG">PNG</option>
-                <option value="JPEG">JPEG</option>
-                <option value="GIF">GIF</option>
-                <option value="BMP">BMP</option>
-                <option value="TIFF">TIFF</option>
-                <option value="WEBP">WEBP</option>
-            </select>
-        </div>
-
-        <button type="button" onclick="processImage()">Process Image</button>
-
-        <h2>Result:</h2>
-        <div id="resultContainer">
-            <img id="processedImage" src="#" alt="Processed Image" style="display:none;">
-            <a id="downloadLink" href="#" style="display:none;">Download Processed Image</a>
-        </div>
-        <div id="errorOutput" class="error"></div>
+        <p><a href="https://pillow.readthedocs.io/en/stable/" target="_blank" rel="noopener noreferrer">了解更多关于 Pillow</a></p>
     </div>
-
-    <script>
-        let operations = [];
-
-        function addOperation() {
-            const type = document.getElementById('operationType').value;
-            const args = document.getElementById('operationArgs').value;
-            const queueElement = document.getElementById('operationsQueue');
-
-            let operationString = type;
-            if (args) {
-                operationString += `:${args}`;
-            }
-            operations.push(operationString);
-
-            const listItem = document.createElement('li');
-            listItem.textContent = operationString;
-            const removeBtn = document.createElement('button');
-            removeBtn.textContent = 'Remove';
-            removeBtn.onclick = function() {
-                operations = operations.filter(op => op !== operationString);
-                listItem.remove();
-            };
-            listItem.appendChild(removeBtn);
-            queueElement.appendChild(listItem);
-            document.getElementById('operationArgs').value = ''; // Clear args input
-        }
-
-        async function processImage() {
-            const fileInput = document.getElementById('imageFile');
-            const outputFormat = document.getElementById('outputFormat').value;
-            const resultContainer = document.getElementById('resultContainer');
-            const processedImage = document.getElementById('processedImage');
-            const downloadLink = document.getElementById('downloadLink');
-            const errorOutput = document.getElementById('errorOutput');
-
-            processedImage.style.display = 'none';
-            downloadLink.style.display = 'none';
-            errorOutput.innerHTML = '';
-
-            if (!fileInput.files || fileInput.files.length === 0) {
-                errorOutput.textContent = 'Please select an image file.';
-                return;
-            }
-            if (operations.length === 0) {
-                errorOutput.textContent = 'Please add at least one operation.';
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            operations.forEach(op => formData.append('operations', op));
-            formData.append('output_format', outputFormat);
-
-            try {
-                const response = await fetch('http://127.0.0.1:5002/process-image', {
-                    method: 'POST',
-                    body: formData,
-                });
-
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    processedImage.src = url;
-                    processedImage.style.display = 'block';
-
-                    downloadLink.href = url;
-                    const fileName = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `processed_image.${outputFormat.toLowerCase()}`;
-                    downloadLink.download = fileName;
-                    downloadLink.style.display = 'block';
-                    downloadLink.textContent = `Download ${fileName}`;
-
-                } else {
-                    const errorData = await response.json();
-                    errorOutput.textContent = `Error: ${errorData.error}`;
-                }
-            } catch (error) {
-                errorOutput.textContent = `Network error: ${error.message}`;
-            }
-        }
-    </script>
 </body>
 </html>

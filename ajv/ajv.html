@@ -1,141 +1,98 @@
-<!DOCTYPE html>
-<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajv JSON Schema Validator API Test</title>
+    <title>AJV API: JSON Schema 校验</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
         .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #333; }
-        textarea {
-            width: calc(100% - 22px); /* Full width minus padding and border */
-            min-height: 150px;
-            margin-bottom: 15px;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 0.9em;
-        }
-        button {
-            display: block;
-            width: 100%;
+        h1, h3, h4 { text-align: center; color: #333; }
+        h3 { margin-top: 0; }
+        p { line-height: 1.6; }
+        code { background-color: #eee; padding: 2px 4px; border-radius: 4px; }
+        .code-block {
+            background-color: #f9f9f9;
+            border-left: 4px solid #007bff;
             padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
+            margin: 10px 0;
             border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            margin-bottom: 20px;
         }
-        button:hover { background-color: #0056b3; }
+        .title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #007bff;
+        }
         pre {
             background-color: #eee;
-            padding: 15px;
+            padding: 10px;
             border-radius: 4px;
             border: 1px solid #ccc;
             white-space: pre-wrap; /* Allows wrapping */
             word-wrap: break-word; /* Breaks long words */
             font-size: 0.9em;
+            margin: 0;
         }
-        .result-valid { color: green; font-weight: bold; }
-        .result-invalid { color: red; font-weight: bold; }
-        .error-details { margin-top: 5px; }
-        label { font-weight: bold; display: block; margin-bottom: 5px; }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Ajv JSON Schema Validator</h1>
+        <h3>AJV API: JSON Schema 校验</h3>
+        <p>使用 <a href="https://ajv.js.org/" target="_blank" rel="noopener noreferrer">Ajv</a> 库根据 JSON Schema 校验 JSON 数据。</p>
 
-        <label for="schemaInput">JSON Schema:</label>
-        <textarea id="schemaInput" placeholder="Enter your JSON Schema here...">{
+        <h4>1. 校验 JSON 数据</h4>
+        <p><strong>端点:</strong> <code>POST /ajv/validate</code></p>
+        <p>接收 JSON Schema 和待校验的 JSON 数据，返回校验结果。</p>
+        <p><strong>请求体 (JSON):</strong></p>
+        <div class="code-block">
+            <div class="title">JSON</div>
+            <pre><code>{
+  "schema": {
     "type": "object",
     "properties": {
-        "name": { "type": "string" },
-        "email": { "type": "string", "format": "email" },
-        "age": { "type": "integer", "minimum": 0 }
+      "name": { "type": "string" },
+      "email": { "type": "string", "format": "email" },
+      "age": { "type": "integer", "minimum": 0 }
     },
     "required": ["name", "email"]
-}</textarea>
-
-        <label for="dataInput">JSON Data to Validate:</label>
-        <textarea id="dataInput" placeholder="Enter your JSON data here...">{
+  },
+  "data": {
     "name": "John Doe",
     "email": "john.doe@example.com",
     "age": 30
-}</textarea>
-
-        <button onclick="validateJSON()">Validate</button>
-
-        <h2>Validation Result:</h2>
-        <pre id="resultOutput"></pre>
+  }
+}</code></pre>
+        </div>
+        <p><strong>响应 (JSON):</strong></p>
+        <p>如果校验成功:</p>
+        <div class="code-block">
+            <div class="title">JSON</div>
+            <pre><code>{
+  "valid": true
+}</code></pre>
+        </div>
+        <p>如果校验失败:</p>
+        <div class="code-block">
+            <div class="title">JSON</div>
+            <pre><code>{
+  "valid": false,
+  "errors": [
+    {
+      "instancePath": "/age",
+      "schemaPath": "#/properties/age/minimum",
+      "keyword": "minimum",
+      "params": { "comparison": ">=", "limit": 0 },
+      "message": "must be >= 0"
+    }
+    <span class="comment">// ... 其他错误信息</span>
+  ]
+}</code></pre>
+        </div>
+        <p><a href="https://ajv.js.org/guide/getting-started.html" target="_blank" rel="noopener noreferrer">了解更多关于 Ajv</a></p>
     </div>
-
-    <script>
-        async function validateJSON() {
-            const schemaString = document.getElementById('schemaInput').value;
-            const dataString = document.getElementById('dataInput').value;
-            const resultOutput = document.getElementById('resultOutput');
-            resultOutput.textContent = 'Validating...';
-
-            let schema, data;
-            try {
-                schema = JSON.parse(schemaString);
-            } catch (e) {
-                resultOutput.textContent = `Error parsing schema JSON: ${e.message}`;
-                resultOutput.className = 'result-invalid';
-                return;
-            }
-
-            try {
-                data = JSON.parse(dataString);
-            } catch (e) {
-                resultOutput.textContent = `Error parsing data JSON: ${e.message}`;
-                resultOutput.className = 'result-invalid';
-                return;
-            }
-
-            try {
-                const response = await fetch('http://127.0.0.1:5004/validate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ schema, data }),
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    if (result.valid) {
-                        resultOutput.textContent = 'JSON is VALID against the schema.';
-                        resultOutput.className = 'result-valid';
-                    } else {
-                        // This case should ideally be handled by non-200 status for Ajv, but for safety:
-                        resultOutput.textContent = 'JSON is INVALID.\nErrors: ' + JSON.stringify(result.errors, null, 2);
-                        resultOutput.className = 'result-invalid';
-                    }
-                } else {
-                     resultOutput.textContent = `Validation FAILED (HTTP ${response.status}):\nError: ${result.error || 'Unknown error'}`;
-                    if (result.details) {
-                        resultOutput.textContent += `\nDetails: ${result.details}`;
-                    }
-                    if (result.errors) {
-                        resultOutput.textContent += `\nAJV Errors: ${JSON.stringify(result.errors, null, 2)}`;
-                    }
-                     if (result.ajvErrors) {
-                        resultOutput.textContent += `\nAJV Internal Errors: ${JSON.stringify(result.ajvErrors, null, 2)}`;
-                    }
-                    resultOutput.className = 'result-invalid';
-                }
-            } catch (error) {
-                resultOutput.textContent = `Network or other error: ${error.message}`;
-                resultOutput.className = 'result-invalid';
-            }
-        }
-    </script>
 </body>
-</html>

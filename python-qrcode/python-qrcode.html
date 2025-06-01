@@ -1,177 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Python QR Code Generator API Test</title>
+    <title>Python QR Code API 文档</title>
     <style>
         body { font-family: sans-serif; margin: 20px; display: flex; flex-direction: column; align-items: center; }
-        .container { width: 100%; max-width: 500px; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="text"], input[type="number"], select, textarea {
-            width: calc(100% - 16px); /* Account for padding */
-            padding: 8px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        textarea { min-height: 80px; }
-        button { 
-            padding: 10px 20px; 
-            cursor: pointer; 
-            background-color: #28a745; 
-            color: white; 
-            border: none; 
-            border-radius: 4px; 
-            font-size: 1em;
-        }
-        button:hover { background-color: #218838; }
-        #qrcodeResult img { max-width: 100%; border: 1px solid #ddd; margin-top: 10px; }
-        #errorOutput { color: red; margin-top: 10px; }
-        .color-picker-container { display: flex; align-items: center; gap: 10px; }
-        .color-picker-container input[type="color"] { padding: 0; height: 30px; width: 50px; border: 1px solid #ccc; cursor: pointer; }
+        .container { width: 100%; max-width: 800px; }
+        h1, h2, h3, h4 { color: #333; }
+        h1 { font-size: 1.5em; margin-bottom: 10px; }
+        h2 { font-size: 1.2em; margin: 20px 0 10px; }
+        h3 { font-size: 1.1em; margin: 15px 0 5px; }
+        h4 { font-size: 1em; margin: 10px 0; }
+        p { line-height: 1.6; margin-bottom: 10px; }
+        code { background-color: #f4f4f4; padding: 2px 4px; border-radius: 4px; }
+        .code-block { background-color: #f9f9f9; border-left: 4px solid #007bff; padding: 10px 15px; margin: 10px 0; }
+        .title { font-weight: bold; margin-bottom: 5px; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>QR Code Generator</h1>
+        <h1>Python QR Code API: 二维码生成</h1>
+        <p>使用 Python 的 <a href="https://pypi.org/project/qrcode/" target="_blank" rel="noopener noreferrer">qrcode</a> 库生成二维码图像。</p>
 
-        <div class="form-group">
-            <label for="qrData">Data for QR Code:</label>
-            <textarea id="qrData" placeholder="Enter data to encode (e.g., URL, text)" required></textarea>
+        <h2>1. 生成二维码</h2>
+        <p><strong>端点:</strong> <code>POST /generate-qrcode</code></p>
+        <p>接收生成二维码所需的数据和配置参数，返回二维码图像。</p>
+        <p><strong>请求体 (JSON):</strong></p>
+        <div class="code-block">
+            <div class="title">JSON</div>
+            <pre><code>{ 
+  "data": "https://www.example.com", <span class="comment">// 必需，要编码到二维码中的数据</span>
+  "version": 1, <span class="comment">// 可选，二维码版本 (1-40)，控制尺寸和数据容量</span>
+  "error_correction": "M", <span class="comment">// 可选，纠错级别 ("L", "M", "Q", "H")</span>
+  "box_size": 10, <span class="comment">// 可选，每个模块的像素数</span>
+  "border": 4, <span class="comment">// 可选，边框宽度（模块数）</span>
+  "fill_color": "black", <span class="comment">// 可选，填充颜色</span>
+  "back_color": "white", <span class="comment">// 可选，背景颜色</span>
+  "format": "png" <span class="comment">// 可选，输出图像格式 ("png", "jpeg")</span>
+}</code></pre>
         </div>
-
-        <div class="form-group">
-            <label for="version">Version (1-40):</label>
-            <input type="number" id="version" value="1" min="1" max="40">
+        <p><strong>响应 (Image):</strong></p>
+        <p>成功时，直接返回生成的二维码图像文件 (例如 <code>image/png</code> 或 <code>image/jpeg</code>)。响应头中会包含 <code>Content-Disposition</code> 指示文件名，以及 <code>Content-Type</code> 表明图像类型。</p>
+        <p>如果发生错误，响应将是 JSON 格式：</p>
+        <div class="code-block">
+            <div class="title">JSON</div>
+            <pre><code>{ 
+  "error": "错误信息描述" 
+}</code></pre>
         </div>
-
-        <div class="form-group">
-            <label for="errorCorrection">Error Correction:</label>
-            <select id="errorCorrection">
-                <option value="L">L (Low, ~7%)</option>
-                <option value="M" selected>M (Medium, ~15%)</option>
-                <option value="Q">Q (Quartile, ~25%)</option>
-                <option value="H">H (High, ~30%)</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="boxSize">Box Size (pixels per module):</label>
-            <input type="number" id="boxSize" value="10" min="1">
-        </div>
-
-        <div class="form-group">
-            <label for="border">Border (modules):</label>
-            <input type="number" id="border" value="4" min="0">
-        </div>
-
-        <div class="form-group">
-            <label for="fillColor">Fill Color:</label>
-            <div class="color-picker-container">
-                <input type="color" id="fillColor" value="#000000">
-                <input type="text" id="fillColorText" value="black" onchange="document.getElementById('fillColor').value = this.value === 'black' ? '#000000' : this.value;" placeholder="e.g., black or #000000">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label for="backColor">Background Color:</label>
-            <div class="color-picker-container">
-                <input type="color" id="backColor" value="#ffffff">
-                <input type="text" id="backColorText" value="white" onchange="document.getElementById('backColor').value = this.value === 'white' ? '#ffffff' : this.value;" placeholder="e.g., white or #FFFFFF">
-            </div>
-        </div>
-        
-        <div class="form-group">
-            <label for="imageFormat">Image Format:</label>
-            <select id="imageFormat">
-                <option value="png" selected>PNG</option>
-                <option value="jpeg">JPEG</option>
-            </select>
-        </div>
-
-        <button onclick="generateQRCode()">Generate QR Code</button>
-
-        <h2>Result:</h2>
-        <div id="qrcodeResult">
-            <img id="qrImage" src="#" alt="QR Code will appear here" style="display:none;">
-            <a id="downloadLink" href="#" style="display:none;">Download QR Code</a>
-        </div>
-        <div id="errorOutput"></div>
+        <p><a href="https://pypi.org/project/qrcode/" target="_blank" rel="noopener noreferrer">了解更多关于 Python qrcode 库</a></p>
     </div>
-
-    <script>
-        document.getElementById('fillColor').addEventListener('input', function() {
-            document.getElementById('fillColorText').value = this.value;
-        });
-        document.getElementById('backColor').addEventListener('input', function() {
-            document.getElementById('backColorText').value = this.value;
-        });
-
-        async function generateQRCode() {
-            const qrData = document.getElementById('qrData').value;
-            const version = parseInt(document.getElementById('version').value);
-            const errorCorrection = document.getElementById('errorCorrection').value;
-            const boxSize = parseInt(document.getElementById('boxSize').value);
-            const border = parseInt(document.getElementById('border').value);
-            const fillColor = document.getElementById('fillColorText').value;
-            const backColor = document.getElementById('backColorText').value;
-            const imageFormat = document.getElementById('imageFormat').value;
-
-            const qrImage = document.getElementById('qrImage');
-            const downloadLink = document.getElementById('downloadLink');
-            const errorOutput = document.getElementById('errorOutput');
-
-            qrImage.style.display = 'none';
-            downloadLink.style.display = 'none';
-            errorOutput.innerHTML = '';
-
-            if (!qrData) {
-                errorOutput.textContent = 'Please enter data for the QR code.';
-                return;
-            }
-
-            const payload = {
-                data: qrData,
-                version: version,
-                error_correction: errorCorrection,
-                box_size: boxSize,
-                border: border,
-                fill_color: fillColor,
-                back_color: backColor,
-                format: imageFormat
-            };
-
-            try {
-                const response = await fetch('http://127.0.0.1:5003/generate-qrcode', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(payload),
-                });
-
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    qrImage.src = url;
-                    qrImage.style.display = 'block';
-
-                    const fileName = response.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `qrcode.${imageFormat.toLowerCase()}`;
-                    downloadLink.href = url;
-                    downloadLink.download = fileName;
-                    downloadLink.textContent = `Download ${fileName}`;
-                    downloadLink.style.display = 'block';
-                } else {
-                    const errorData = await response.json();
-                    errorOutput.textContent = `Error: ${errorData.error}`;
-                }
-            } catch (error) {
-                errorOutput.textContent = `Network error: ${error.message}`;
-            }
-        }
-    </script>
 </body>
 </html>

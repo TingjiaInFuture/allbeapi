@@ -1,118 +1,38 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sanitize HTML API</title>
-    <link rel="stylesheet" href="../styles.css">
-</head>
-<body>
-    <header>
-        <h1>Sanitize HTML API</h1>
-        <nav>
-            <a href="../index.html">Home</a>
-        </nav>
-    </header>
-    <main>
-        <section>
-            <h2>Sanitize HTML Content</h2>
-            <p>Endpoint: <code>/sanitize-html</code> (POST)</p>
-            <p>Cleans HTML input to prevent XSS attacks. Allows specifying allowed tags and attributes.</p>
-            <h3>Request Body:</h3>
-            <pre><code>{
-    "html_content": "&lt;h1&gt;Hello &lt;script&gt;alert('XSS')&lt;/script&gt;World&lt;/h1&gt; &lt;a href='javascript:alert(1)'&gt;Click&lt;/a&gt;",
-    "options": { // Optional: See sanitize-html documentation for all options
-        "allowedTags": [ "h1", "p", "a" ],
-        "allowedAttributes": {
-            "a": [ "href" ]
-        }
-    }
-}</code></pre>
-            <p>If no options are provided, a very restrictive default is used (strips all tags and attributes).</p>
-            <h3>Example Usage (JavaScript):</h3>
-            <pre><code>
-fetch('http://localhost:3010/sanitize-html', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        html_content: "&lt;h1 style='color:blue;' onclick='alert(\'danger\')'&gt;Test&lt;/h1&gt;&lt;script&gt;alert('evil')&lt;/script&gt;",
-        options: {
-            allowedTags: [ 'h1' ],
-            allowedAttributes: { 'h1': [ 'style' ] }
-        }
-    }),
-})
-.then(response => response.json())
-.then(data => console.log(data.sanitized_html))
-.catch(error => console.error('Error:', error));
-            </code></pre>
-            <h3>Test Area:</h3>
-            <label for="htmlInput">HTML Content:</label><br>
-            <textarea id="htmlInput" placeholder="Enter HTML content here" rows="5" style="width: 100%;">&lt;h1 style="color:red;" onclick="alert('Still here?')"&gt;Welcome!&lt;/h1&gt;&lt;p&gt;This is a &lt;strong&gt;test&lt;/strong&gt; with a &lt;a href="javascript:alert('Gotcha!')"&gt;bad link&lt;/a&gt; and a &lt;a href="http://example.com"&gt;good link&lt;/a&gt;.&lt;/p&gt;&lt;script&gt;console.log('sneaky script')&lt;/script&gt;</textarea><br><br>
-            <label for="sanitizeOptions">Sanitization Options (JSON format, optional):</label><br>
-            <textarea id="sanitizeOptions" placeholder="e.g., { \"allowedTags\": [\"p\", \"strong\"], \"allowedAttributes\": {} }" rows="5" style="width: 100%;">{
-    "allowedTags": [ "h1", "p", "strong", "a" ],
+<h3>Sanitize HTML API: HTML 清理</h3>
+<p>使用 <a href="https://www.npmjs.com/package/sanitize-html" target="_blank" rel="noopener noreferrer">sanitize-html</a> 库清理 HTML 输入，以防止 XSS 攻击。允许指定允许的标签和属性。</p>
+
+<h4>1. 清理 HTML 内容</h4>
+<p><strong>端点:</strong> <code>POST /sanitize-html</code></p>
+<p>接收 HTML 内容和可选的清理配置，返回清理后的 HTML 字符串。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "html_content": "&lt;h1 style='color:blue;' onclick='alert(\"danger\")'&gt;Test&lt;/h1&gt;&lt;script&gt;alert('evil')&lt;/script&gt;",
+  "options": { <span class="comment">// 可选，参考 sanitize-html 文档获取所有选项</span>
+    "allowedTags": [ "h1", "p", "a", "strong" ],
     "allowedAttributes": {
-        "h1": [ "style" ],
-        "a": [ "href" ]
+      "h1": [ "style" ],
+      "a": [ "href" ]
     },
     "allowedSchemes": [ "http", "https" ]
-}</textarea><br>
-            <button onclick="testSanitizeHtml()">Sanitize HTML</button>
-            <h3>Sanitized Output:</h3>
-            <pre id="sanitizedOutput"></pre>
-            <h3>Rendered Sanitized Output:</h3>
-            <div id="renderedOutput" style="border: 1px solid #ccc; padding: 10px; margin-top:10px;"></div>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2024 API Collection</p>
-    </footer>
-    <script>
-        async function testSanitizeHtml() {
-            const htmlContent = document.getElementById('htmlInput').value;
-            const optionsString = document.getElementById('sanitizeOptions').value;
-            const outputElement = document.getElementById('sanitizedOutput');
-            const renderedElement = document.getElementById('renderedOutput');
-            outputElement.textContent = '';
-            renderedElement.innerHTML = '';
-
-            let options = null;
-            if (optionsString.trim() !== '') {
-                try {
-                    options = JSON.parse(optionsString);
-                } catch (e) {
-                    outputElement.textContent = 'Error: Invalid JSON in options: ' + e.message;
-                    return;
-                }
-            }
-
-            try {
-                const requestBody = { html_content: htmlContent };
-                if (options) {
-                    requestBody.options = options;
-                }
-
-                const response = await fetch('http://localhost:3010/sanitize-html', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody),
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    outputElement.textContent = data.sanitized_html;
-                    renderedElement.innerHTML = data.sanitized_html;
-                } else {
-                    outputElement.textContent = 'Error: ' + (data.error || response.statusText) + (data.details ? `\nDetails: ${data.details}` : '');
-                }
-            } catch (error) {
-                outputElement.textContent = 'Error: ' + error.message;
-            }
-        }
-    </script>
-</body>
-</html>
+  }
+}</code></pre>
+</div>
+<p>如果未提供 <code>options</code>，则使用非常严格的默认设置（剥离所有标签和属性）。</p>
+<p><strong>响应 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "sanitized_html": "&lt;h1 style=\"color:blue;\"&gt;Test&lt;/h1&gt;"
+}</code></pre>
+</div>
+<p>如果发生错误，响应将包含错误信息：</p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+  "error": "错误信息描述",
+  "details": "可选的错误详情"
+}</code></pre>
+</div>
+<p><a href="https://www.npmjs.com/package/sanitize-html" target="_blank" rel="noopener noreferrer">了解更多关于 sanitize-html</a></p>

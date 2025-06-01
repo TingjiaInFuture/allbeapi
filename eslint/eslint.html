@@ -1,45 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESLint API Test</title>
+    <title>ESLint API 文档</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f9f9f9; color: #333; }
-        .container { max-width: 900px; margin: auto; background-color: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: #4A90E2; margin-bottom: 20px; }
-        textarea {
-            width: calc(100% - 22px); /* Full width minus padding and border */
-            min-height: 200px;
-            margin-bottom: 15px;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-        }
-        .controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
-        .controls label, .controls select, .controls button {
-            margin-right: 10px;
-            margin-bottom: 10px; /* For wrapping */
-        }
-        select, button {
-            padding: 10px 15px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1em;
-        }
-        button {
-            background-color: #5cb85c;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        button:hover { background-color: #4cae4c; }
-        button#fixBtn { background-color: #f0ad4e; }
-        button#fixBtn:hover { background-color: #ec971f; }
-        pre {
+        h1, h3, h4 { color: #4A90E2; }
+        h1 { text-align: center; margin-bottom: 20px; }
+        h3 { margin-top: 30px; margin-bottom: 10px; }
+        h4 { margin-top: 20px; margin-bottom: 10px; }
+        p { margin-bottom: 15px; }
+        .code-block {
             background-color: #2d2d2d;
             color: #f0f0f0;
             padding: 15px;
@@ -47,145 +19,84 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-            max-height: 400px;
-            overflow-y: auto;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 15px;
         }
-        .results-header { margin-top: 20px; font-size: 1.2em; font-weight: bold; color: #333; }
-        .message { border-left: 4px solid; padding: 10px; margin-bottom: 8px; border-radius: 0 4px 4px 0; background-color: #fefefe; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .message.error { border-left-color: #d9534f; }
-        .message.warning { border-left-color: #f0ad4e; }
-        .message-details { font-size: 0.9em; }
-        .message-rule { font-style: italic; color: #777; }
+        .title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #5cb85c;
+        }
+        a {
+            color: #4A90E2;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>ESLint API Tester</h1>
+        <h1>ESLint API 文档</h1>
 
-        <label for="codeInput">Enter JavaScript or TypeScript code:</label>
-        <textarea id="codeInput" placeholder="// Your code here...
-function greet(name) {
-  console.log('Hello, ' + name)
-}
-greet('World');
+        <h3>ESLint API: JavaScript/TypeScript 代码检查与修复</h3>
+        <p>使用 <a href="https://eslint.org/" target="_blank" rel="noopener noreferrer">ESLint</a> 对 JavaScript 或 TypeScript 代码进行静态分析，查找问题并可选择自动修复。</p>
 
-var x = 10;
-if(x == '10') alert('oops'); // Potential issue here
-"></textarea>
-
-        <div class="controls">
-            <div>
-                <label for="languageSelect">Language:</label>
-                <select id="languageSelect">
-                    <option value="javascript" selected>JavaScript</option>
-                    <option value="typescript">TypeScript</option>
-                </select>
-            </div>
-            <div>
-                <button onclick="lintCode(false)">Lint Code</button>
-                <button id="fixBtn" onclick="lintCode(true)">Lint & Fix Code</button>
-            </div>
+        <h4>1. 检查 (Lint) 与修复代码</h4>
+        <p><strong>端点:</strong> <code>POST /lint</code></p>
+        <p>接收代码字符串、语言类型以及是否尝试修复的选项，返回 ESLint 的分析结果和修复后的代码（如果适用）。</p>
+        <p><strong>请求体 (JSON):</strong></p>
+        <div class="code-block">
+            <div class="title">JSON</div>
+            <pre><code>{
+  "code": "const foo = 'bar' ; console.log(foo)",
+  "language": "javascript", <span class="comment">// "javascript" 或 "typescript"</span>
+  "fix": true <span class="comment">// 可选，布尔值，是否尝试自动修复问题，默认为 false</span>
+}</code></pre>
         </div>
-
-        <div class="results-header">ESLint Output:</div>
-        <pre id="rawOutput">Awaiting analysis...</pre>
-        
-        <div class="results-header">Formatted Messages:</div>
-        <div id="formattedMessages"></div>
-
-        <div id="fixedCodeSection" style="display:none;">
-            <div class="results-header">Fixed Code:</div>
-            <textarea id="fixedCodeOutput" readonly></textarea>
-        </div>
-
-    </div>
-
-    <script>
-        async function lintCode(fix) {
-            const code = document.getElementById('codeInput').value;
-            const language = document.getElementById('languageSelect').value;
-            const rawOutput = document.getElementById('rawOutput');
-            const formattedMessagesDiv = document.getElementById('formattedMessages');
-            const fixedCodeSection = document.getElementById('fixedCodeSection');
-            const fixedCodeOutput = document.getElementById('fixedCodeOutput');
-
-            rawOutput.textContent = 'Linting...';
-            formattedMessagesDiv.innerHTML = '';
-            fixedCodeSection.style.display = 'none';
-            fixedCodeOutput.value = '';
-
-            if (!code.trim()) {
-                rawOutput.textContent = 'Please enter some code to lint.';
-                return;
-            }
-
-            try {
-                const response = await fetch('http://127.0.0.1:5005/lint', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ code, language, fix }),
-                });
-
-                const result = await response.json();
-                rawOutput.textContent = JSON.stringify(result, null, 2);
-
-                if (response.ok && result.results && result.results.length > 0) {
-                    const fileResult = result.results[0]; // Assuming single file linting
-                    if (fileResult.messages.length === 0) {
-                        const p = document.createElement('p');
-                        p.textContent = 'No linting issues found.';
-                        p.style.color = 'green';
-                        formattedMessagesDiv.appendChild(p);
-                    } else {
-                        fileResult.messages.forEach(msg => {
-                            const msgDiv = document.createElement('div');
-                            msgDiv.classList.add('message');
-                            msgDiv.classList.add(msg.severity === 2 ? 'error' : 'warning');
-                            
-                            let content = `<strong>[${msg.severity === 2 ? 'Error' : 'Warning'}]</strong> Line ${msg.line}, Col ${msg.column}: ${msg.message}`;
-                            if (msg.ruleId) {
-                                content += ` <span class="message-rule">(${msg.ruleId})</span>`;
-                            }
-                            msgDiv.innerHTML = content;
-                            formattedMessagesDiv.appendChild(msgDiv);
-                        });
-                    }
-
-                    if (fix && result.fixedCode) {
-                        fixedCodeSection.style.display = 'block';
-                        fixedCodeOutput.value = result.fixedCode;
-                        if (result.fixedCode !== code) {
-                             const p = document.createElement('p');
-                             p.textContent = 'Code has been auto-fixed.';
-                             p.style.color = 'blue';
-                             formattedMessagesDiv.insertBefore(p, formattedMessagesDiv.firstChild);
-                        }
-                    } else if (fix) {
-                        const p = document.createElement('p');
-                        p.textContent = 'No automatic fixes were applied or possible.';
-                        formattedMessagesDiv.insertBefore(p, formattedMessagesDiv.firstChild);
-                    }
-
-                } else if (!response.ok) {
-                    const p = document.createElement('p');
-                    p.textContent = `Error: ${result.error || 'Unknown linting error'}`;
-                    if(result.details) p.textContent += ` Details: ${result.details}`;
-                    p.style.color = 'red';
-                    formattedMessagesDiv.appendChild(p);
-                }
-
-            } catch (error) {
-                rawOutput.textContent = `Network or other error: ${error.message}`;
-                const p = document.createElement('p');
-                p.textContent = `Network or other error: ${error.message}`;
-                p.style.color = 'red';
-                formattedMessagesDiv.appendChild(p);
-            }
+        <p><strong>响应 (JSON):</strong></p>
+        <div class="code-block">
+            <div class="title">JSON</div>
+            <pre><code>{
+  "results": [
+    {
+      "filePath": "&lt;text&gt;",
+      "messages": [
+        {
+          "ruleId": "semi",
+          "severity": 2, <span class="comment">// 2 代表 error, 1 代表 warning</span>
+          "message": "Missing semicolon.",
+          "line": 1,
+          "column": 20,
+          "nodeType": "VariableDeclaration",
+          "fix": { "range": [19, 19], "text": ";" }
         }
-    </script>
+      ],
+      "errorCount": 1,
+      "warningCount": 0,
+      "fixableErrorCount": 1,
+      "fixableWarningCount": 0,
+      "source": "const foo = 'bar' ; console.log(foo)",
+      "output": "const foo = 'bar'; console.log(foo);" <span class="comment">// 如果 fix 为 true 且有可修复问题</span>
+    }
+  ],
+  "fixedCode": "const foo = 'bar'; console.log(foo);", <span class="comment">// 如果 fix 为 true 且代码被修改</span>
+  "success": true
+}</code></pre>
+        </div>
+        <p>如果 `fix` 为 `true` 且代码被成功修复，`fixedCode` 字段将包含修复后的代码。`results[0].output` 也可能包含修复后的代码片段。</p>
+        <p>如果发生错误（例如，配置问题或内部错误），响应将是：</p>
+        <div class="code-block">
+            <div class="title">JSON</div>
+            <pre><code>{
+  "success": false,
+  "error": "ESLint 错误信息",
+  "details": "可选的错误详情"
+}</code></pre>
+        </div>
+        <p><a href="https://eslint.org/docs/latest/user-guide/getting-started" target="_blank" rel="noopener noreferrer">了解更多关于 ESLint</a></p>
+    </div>
 </body>
 </html>

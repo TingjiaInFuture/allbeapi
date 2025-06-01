@@ -1,76 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Parser API</title>
-    <link rel="stylesheet" href="../styles.css">
-</head>
-<body>
-    <header>
-        <h1>CSV Parser API</h1>
-        <nav>
-            <a href="../index.html">Home</a>
-        </nav>
-    </header>
-    <main>
-        <section>
-            <h2>Convert CSV to JSON</h2>
-            <p>Endpoint: <code>/csv-to-json</code> (POST)</p>
-            <p>Converts CSV data to a JSON array of objects.</p>
-            <h3>Request Body:</h3>
-            <pre><code>{
-    "csv_data": "header1,header2\nvalue1,value2\nvalue3,value4"
+<!-- filepath: d:\\1\\fun\\allbeapi\\csv-parser\\csv-parser.html -->
+<h3>CSV Parser API: CSV 与 JSON 转换</h3>
+<p>提供 CSV 数据与 JSON 格式之间的转换功能。</p>
+
+<h4>1. CSV 转 JSON</h4>
+<p><strong>端点:</strong> <code>POST /csv-to-json</code></p>
+<p>将 CSV 数据转换为 JSON 对象数组。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
+    "csv_data": "header1,header2\\nvalue1,value2\\nvalue3,value4"
 }</code></pre>
-            <h3>Example Usage (JavaScript):</h3>
-            <pre><code>
+</div>
+<p><strong>响应 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>[
+    { "header1": "value1", "header2": "value2" },
+    { "header1": "value3", "header2": "value4" }
+]</code></pre>
+</div>
+<p><strong>示例用法 (JavaScript):</strong></p>
+<div class="code-block">
+    <div class="title">JavaScript</div>
+    <pre><code>
 fetch('http://localhost:3007/csv-to-json', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-        csv_data: "name,age\njohn,30\njane,25"
+        csv_data: "name,age\\njohn,30\\njane,25"
     }),
 })
 .then(response => response.json())
 .then(data => console.log(data))
 .catch(error => console.error('Error:', error));
-            </code></pre>
-            <h3>Test Area:</h3>
-            <textarea id="csvData" placeholder="Enter CSV data here (e.g., name,age
-john,30
-jane,25)" rows="5" style="width: 100%;"></textarea>
-            <button onclick="testCsvToJson()">Convert to JSON</button>
-            <h3>Response:</h3>
-            <pre id="csvResponse"></pre>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2024 API Collection</p>
-    </footer>
-    <script>
-        async function testCsvToJson() {
-            const csvData = document.getElementById('csvData').value;
-            const responseElement = document.getElementById('csvResponse');
-            try {
-                const response = await fetch('http://localhost:3007/csv-to-json', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ csv_data: csvData }),
-                });
-                const data = await response.json();
-                if (response.ok) {
-                    responseElement.textContent = JSON.stringify(data, null, 2);
-                } else {
-                    responseElement.textContent = 'Error: ' + (data.error || response.statusText);
-                }
-            } catch (error) {
-                responseElement.textContent = 'Error: ' + error.message;
-            }
-        }
-    </script>
-</body>
-</html>
+    </code></pre>
+</div>
