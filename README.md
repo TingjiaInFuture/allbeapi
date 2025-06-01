@@ -1,6 +1,6 @@
-# 开源库API化平台 🌊
+# 开源库API化平台ALLBEAPI 🌊
 
-一个将优秀开源库转换为 API 服务的平台，让开发者无需安装和部署即可直接调用。
+为优秀开源库提供免费 API 服务，让开发者无需安装和部署即可直接调用。
 
 ## 🌐 API 接入地址
 
@@ -8,13 +8,6 @@
 
 所有 API 服务都通过此域名提供，支持 HTTPS 安全访问。
 
-## ✨ 主要特性
-
-- 🌊 **海洋主题界面** - 美观的深海蓝色渐变背景，API服务如木块般在海洋中漂浮
-- 📱 **响应式设计** - 支持各种屏幕尺寸和设备
-- 🎨 **丰富的动画效果** - 包括漂浮动画、水波纹效果、气泡动画等
-- 🚀 **快速加载** - 优化的加载动画和渐进式内容展示
-- 📖 **详细文档** - 每个API都有完整的使用说明和代码示例
 
 ## 🔧 目前支持的API服务
 
@@ -91,53 +84,7 @@ fetch('https://res.allbeapi.top/prettier/format', {
 
 对于生产应用，请考虑直接安装和使用相应的开源库。
 
-## 🛠️ 技术架构
 
-### 前端
-- **HTML5** - 语义化标签和现代Web标准
-- **CSS3** - Flexbox布局、CSS Grid、动画和渐变
-- **原生JavaScript** - ES6+语法，模块化设计
-
-### 文件结构
-```
-├── index.html          # 主页面
-├── styles.css          # 样式文件
-├── script.js           # 交互脚本
-├── marked/             # Marked API 服务
-│   ├── index.js
-│   └── package.json
-├── beautifulsoup/      # Beautiful Soup API 服务
-│   ├── app.py
-│   └── requirements.txt
-├── Prettier/           # Prettier API 服务
-│   ├── index.js
-│   ├── package.json
-│   └── README.md
-└── test/               # 测试文件
-    ├── test_marked_api.py
-    ├── test_beautifulsoup_api.py
-    └── test_prettier_api.py
-```
-
-## 🚀 本地开发
-
-1. 克隆项目
-```bash
-git clone <repository-url>
-cd allbeapi
-```
-
-2. 打开主页
-直接在浏览器中打开 `index.html` 文件即可查看效果。
-
-3. 测试API服务
-```bash
-# 测试 Marked API
-python test/test_marked_api.py
-
-# 测试 Beautiful Soup API
-python test/test_beautifulsoup_api.py
-```
 
 ## 🤝 贡献指南
 
@@ -154,4 +101,4 @@ python test/test_beautifulsoup_api.py
 
 ---
 
-🌊 **让优秀的开源工具像海洋一样自由流动** 🌊
+🌊 **让优秀的开源工具像海水一样自由流动** 🌊
