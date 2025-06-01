@@ -1,0 +1,34 @@
+{
+  "name": "prettier-api",
+  "version": "1.0.0",
+  "description": "API service for Prettier code formatter",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "prettier": "^3.0.0",
+    "@prettier/plugin-php": "^0.20.0",
+    "@prettier/plugin-xml": "^3.2.0",
+    "prettier-plugin-java": "^2.3.0",
+    "prettier-plugin-sql": "^0.15.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "keywords": [
+    "prettier",
+    "api",
+    "code-formatter",
+    "javascript",
+    "typescript",
+    "html",
+    "css",
+    "json"
+  ],
+  "author": "AllBeAPI Platform",
+  "license": "MIT"
+}

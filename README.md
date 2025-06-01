@@ -55,6 +55,30 @@ data = response.json()
 print(f"标题: {data['title']}")
 ```
 
+### 🎨 Prettier API
+强大的代码格式化工具，支持多种编程语言
+
+**主要端点**:
+- `POST https://res.allbeapi.top/prettier/format` - 代码格式化
+- `POST https://res.allbeapi.top/prettier/check` - 格式检查
+- `POST https://res.allbeapi.top/prettier/batch` - 批量格式化
+- `GET https://res.allbeapi.top/prettier/parsers` - 支持的解析器
+- `GET https://res.allbeapi.top/prettier/options` - 配置选项
+
+```javascript
+fetch('https://res.allbeapi.top/prettier/format', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        code: 'const x={a:1,b:2};',
+        parser: 'babel',
+        options: { singleQuote: true, semi: false }
+    })
+})
+.then(response => response.json())
+.then(data => console.log(data.formatted));
+```
+
 
 ## ⚠️ 重要说明
 
@@ -85,9 +109,14 @@ print(f"标题: {data['title']}")
 ├── beautifulsoup/      # Beautiful Soup API 服务
 │   ├── app.py
 │   └── requirements.txt
+├── Prettier/           # Prettier API 服务
+│   ├── index.js
+│   ├── package.json
+│   └── README.md
 └── test/               # 测试文件
     ├── test_marked_api.py
-    └── test_beautifulsoup_api.py
+    ├── test_beautifulsoup_api.py
+    └── test_prettier_api.py
 ```
 
 ## 🚀 本地开发

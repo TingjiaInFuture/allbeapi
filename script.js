@@ -9,9 +9,7 @@ class OceanAPIExplorer {
         this.createAPIBlocks();
         this.setupEventListeners();
         this.createOceanEffects();
-    }
-
-    // 创建API服务木块
+    }    // 创建API服务木块
     createAPIBlocks() {
         const apisData = [
             {
@@ -27,6 +25,13 @@ class OceanAPIExplorer {
                 title: 'Beautiful Soup API',
                 description: 'HTML 解析与提取',
                 details: this.getBeautifulSoupDetails()
+            },
+            {
+                id: 'prettier',
+                icon: '🎨',
+                title: 'Prettier API',
+                description: '代码格式化工具',
+                details: this.getPrettierDetails()
             }
         ];
 
@@ -530,6 +535,183 @@ fetch('https://res.allbeapi.top/beautifulsoup/links', {
 .then(links => {
     console.log('提取的链接:', links);
 });</code></pre>
+        `;
+    }
+
+    // Prettier API 详细信息
+    getPrettierDetails() {
+        return `
+            <h3>🎨 代码格式化服务</h3>
+            <p>强大的代码格式化工具，支持多种编程语言。基于著名的 <a href="https://prettier.io/" target="_blank">Prettier</a> 库。</p>
+            
+            <h3>1. 代码格式化</h3>
+            <p><strong>API 端点:</strong></p>
+            <pre><code>POST https://res.allbeapi.top/prettier/format</code></pre>
+            
+            <div class="code-block">
+                <p class="title">请求体 (JSON):</p>
+                <pre><code>{
+    "code": "const x={a:1,b:2};",
+    "parser": "babel",
+    "options": {
+        "singleQuote": true,
+        "semi": false,
+        "printWidth": 80
+    }
+}</code></pre>
+            </div>
+
+            <div class="code-block">
+                <p class="title">响应体 (JSON):</p>
+                <pre><code>{
+    "success": true,
+    "formatted": "const x = { a: 1, b: 2 }\\n",
+    "parser": "babel",
+    "options": { ... }
+}</code></pre>
+            </div>
+
+            <h3>2. 格式检查</h3>
+            <p><strong>API 端点:</strong></p>
+            <pre><code>POST https://res.allbeapi.top/prettier/check</code></pre>
+            
+            <div class="code-block">
+                <p class="title">请求体 (JSON):</p>
+                <pre><code>{
+    "code": "const x = { a: 1, b: 2 };",
+    "parser": "babel"
+}</code></pre>
+            </div>
+
+            <h3>3. 批量格式化</h3>
+            <p><strong>API 端点:</strong></p>
+            <pre><code>POST https://res.allbeapi.top/prettier/batch</code></pre>
+            
+            <div class="code-block">
+                <p class="title">请求体 (JSON):</p>
+                <pre><code>{
+    "files": [
+        {
+            "name": "script.js",
+            "code": "const x={a:1};",
+            "parser": "babel"
+        },
+        {
+            "name": "style.css",
+            "code": "body{margin:0;}",
+            "parser": "css"
+        }
+    ],
+    "options": { "singleQuote": true }
+}</code></pre>
+            </div>
+
+            <h3>4. 支持的语言</h3>
+            <p><strong>API 端点:</strong></p>
+            <pre><code>GET https://res.allbeapi.top/prettier/parsers</code></pre>
+            
+            <p><strong>支持的语言:</strong> JavaScript, TypeScript, JSON, HTML, CSS, SCSS, Less, Markdown, YAML, XML, PHP, Java, SQL</p>
+
+            <h3>5. 配置选项</h3>
+            <p><strong>API 端点:</strong></p>
+            <pre><code>GET https://res.allbeapi.top/prettier/options</code></pre>
+
+            <h3>🐍 Python 示例</h3>
+            <pre><code>import requests
+
+# 格式化 JavaScript 代码
+response = requests.post('https://res.allbeapi.top/prettier/format', json={
+    "code": "const x={a:1,b:2};",
+    "parser": "babel",
+    "options": {"singleQuote": True, "semi": False}
+})
+
+data = response.json()
+print("格式化后的代码:")
+print(data['formatted'])
+
+# 检查代码格式
+response = requests.post('https://res.allbeapi.top/prettier/check', json={
+    "code": "const x = { a: 1, b: 2 };",
+    "parser": "babel"
+})
+
+data = response.json()
+print(f"代码格式正确: {data['isFormatted']}")
+
+# 批量格式化
+response = requests.post('https://res.allbeapi.top/prettier/batch', json={
+    "files": [
+        {"name": "script.js", "code": "const x={a:1};", "parser": "babel"},
+        {"name": "data.json", "code": '{"key":"value"}', "parser": "json"}
+    ]
+})
+
+data = response.json()
+print(f"处理了 {data['summary']['total']} 个文件")</code></pre>
+
+            <h3>🌐 JavaScript 示例</h3>
+            <pre><code>// 格式化代码
+const codeToFormat = {
+    code: 'const x={a:1,b:2};',
+    parser: 'babel',
+    options: { singleQuote: true, semi: false }
+};
+
+fetch('https://res.allbeapi.top/prettier/format', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(codeToFormat)
+})
+.then(response => response.json())
+.then(data => {
+    console.log('格式化后的代码:', data.formatted);
+})
+.catch(error => {
+    console.error('错误:', error);
+});
+
+// 获取支持的解析器
+fetch('https://res.allbeapi.top/prettier/parsers')
+.then(response => response.json())
+.then(data => {
+    console.log('支持的解析器:', data.parsers);
+});
+
+// 批量格式化多个文件
+const filesToFormat = {
+    files: [
+        { name: 'app.js', code: 'function hello(){console.log("hi");}', parser: 'babel' },
+        { name: 'style.css', code: 'body{color:red;}', parser: 'css' }
+    ],
+    options: { printWidth: 120, tabWidth: 4 }
+};
+
+fetch('https://res.allbeapi.top/prettier/batch', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(filesToFormat)
+})
+.then(response => response.json())
+.then(data => {
+    console.log('批量格式化结果:', data.results);
+    data.results.forEach(result => {
+        console.log(\`\${result.name}: \${result.formatted}\`);
+    });
+});</code></pre>
+
+            <h3>🌐 cURL 示例</h3>
+            <pre><code>curl -X POST https://res.allbeapi.top/prettier/format \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "code": "const x={a:1,b:2};",
+    "parser": "babel",
+    "options": {"singleQuote": true, "semi": false}
+  }'</code></pre>
         `;
     }
 }
