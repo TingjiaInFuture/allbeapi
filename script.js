@@ -2,16 +2,22 @@
 
 class OceanAPIExplorer {
     constructor() {
-        this.init();
+        this.apiBlocksContainer = document.querySelector('.apis-ocean');
+        this.modalElements = {};
+        this.loadingOverlayElement = null;
+        
+        this.particleCanvas = null;
+        this.particleCtx = null;
+        this.particleAnimationId = null;
+        this.particles = [];
+
+        this.apis = this._getApisData();
+
+        this._initializeLoadingScreen();
     }
 
-    init() {
-        this.createAPIBlocks();
-        this.setupEventListeners();
-        this.createOceanEffects();
-    }    // 创建API服务木块
-    createAPIBlocks() {
-        const apisData = [
+    _getApisData() {
+        return [
             {
                 id: 'marked',
                 icon: '📝',
@@ -34,20 +40,81 @@ class OceanAPIExplorer {
                 details: this.getPrettierDetails()
             }
         ];
+    }
 
-        const container = document.querySelector('.apis-ocean');
-        apisData.forEach((api, index) => {
-            const block = this.createAPIBlock(api, index);
-            container.appendChild(block);
+    _initializeLoadingScreen() {
+        document.body.style.opacity = '0';
+        document.body.style.transform = 'scale(0.95)';
+
+        this.loadingOverlayElement = document.createElement('div');
+        this.loadingOverlayElement.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0c4a6e, #0369a1);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: #f0f9ff;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+        `;
+        this.loadingOverlayElement.innerHTML = `
+            <div style="font-size: 3em; margin-bottom: 20px; animation: ocean-pulse 2s ease-in-out infinite;">🌊</div>
+            <div style="font-size: 1.5em; text-align: center;">
+                <div style="margin-bottom: 10px;">开源库API化平台</div>
+                <div style="font-size: 0.8em; opacity: 0.7;">正在加载海洋...</div>
+            </div>
+            <div style="margin-top: 30px; width: 200px; height: 4px; background: rgba(56, 189, 248, 0.2); border-radius: 2px; overflow: hidden;">
+                <div style="width: 0%; height: 100%; background: linear-gradient(90deg, #38bdf8, #60a5fa); border-radius: 2px; animation: ocean-loading-bar 2s ease-out forwards;"></div>
+            </div>
+        `;
+        document.body.appendChild(this.loadingOverlayElement);
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ocean-pulse {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.2); opacity: 0.8; }
+            }
+            @keyframes ocean-loading-bar {
+                to { width: 100%; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        this._initMainApplication();
+        if (this.loadingOverlayElement) {
+            this.loadingOverlayElement.remove();
+        }
+        document.body.style.opacity = '1';
+        document.body.style.transform = 'scale(1)';
+        document.body.style.transition = 'opacity 0.5s ease-out, transform 0.5s ease-out';
+    }
+
+    _initMainApplication() {
+        this._createAPIBlocks();
+        this._setupModal();
+        this._setupGlobalEventListeners();
+        this._createOceanVisualEffects();
+        this._setupMouseRippleEffect();
+    }
+
+    _createAPIBlocks() {
+        this.apis.forEach((api, index) => {
+            const block = this._createSingleAPIBlock(api, index);
+            this.apiBlocksContainer.appendChild(block);
         });
     }
 
-    createAPIBlock(api, index) {
+    _createSingleAPIBlock(api, index) {
         const block = document.createElement('div');
         block.className = 'api-floating-block';
         block.dataset.apiId = api.id;
         
-        // 随机位置和动画延迟
         const randomDelay = Math.random() * 2;
         const randomDuration = 3 + Math.random() * 2;
         block.style.animationDelay = `${randomDelay}s`;
@@ -62,33 +129,10 @@ class OceanAPIExplorer {
         `;
 
         block.addEventListener('click', () => this.openModal(api));
-        
         return block;
     }
 
-    // 设置事件监听器
-    setupEventListeners() {
-        // 创建模态框
-        this.createModal();
-        
-        // ESC 键关闭模态框
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                this.closeModal();
-            }
-        });
-
-        // 点击遮罩关闭模态框
-        const overlay = document.querySelector('.modal-overlay');
-        overlay.addEventListener('click', (e) => {
-            if (e.target === overlay) {
-                this.closeModal();
-            }
-        });
-    }
-
-    // 创建模态框HTML
-    createModal() {
+    _setupModal() {
         const modalHTML = `
             <div class="modal-overlay">
                 <div class="modal-content">
@@ -102,91 +146,81 @@ class OceanAPIExplorer {
                 </div>
             </div>
         `;
-        
         document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        this.modalElements.overlay = document.querySelector('.modal-overlay');
+        this.modalElements.content = document.querySelector('.modal-content');
+        this.modalElements.title = document.querySelector('.modal-title');
+        this.modalElements.details = document.querySelector('.api-details');
+        this.modalElements.closeButton = document.querySelector('.modal-close');
+    }
+
+    _setupGlobalEventListeners() {
+        this.modalElements.closeButton.addEventListener('click', () => this.closeModal());
         
-        // 绑定关闭按钮事件
-        document.querySelector('.modal-close').addEventListener('click', () => {
-            this.closeModal();
+        this.modalElements.overlay.addEventListener('click', (e) => {
+            if (e.target === this.modalElements.overlay) {
+                this.closeModal();
+            }
         });
-    }    // 打开模态框
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.modalElements.overlay.classList.contains('active')) {
+                this.closeModal();
+            }
+        });
+
+        window.addEventListener('resize', () => this._resizeParticleCanvas());
+    }
+    
     openModal(api) {
-        const overlay = document.querySelector('.modal-overlay');
-        const title = document.querySelector('.modal-title');
-        const details = document.querySelector('.api-details');
+        this.modalElements.title.textContent = api.title;
+        this.modalElements.details.innerHTML = api.details;
         
-        title.textContent = api.title;
-        details.innerHTML = api.details;
+        this.modalElements.overlay.classList.add('active');
         
-        // 添加打开动画序列
-        overlay.classList.add('active');
-        
-        // 创建波浪展开效果
-        const content = document.querySelector('.modal-content');
-        content.style.transform = 'translate(-50%, -50%) scale(0.3) rotateY(90deg)';
-        content.style.opacity = '0';
+        this.modalElements.content.style.transform = 'translate(-50%, -50%) scale(0.3) rotateY(90deg)';
+        this.modalElements.content.style.opacity = '0';
         
         setTimeout(() => {
-            content.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
-            content.style.transform = 'translate(-50%, -50%) scale(1) rotateY(0deg)';
-            content.style.opacity = '1';
+            this.modalElements.content.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            this.modalElements.content.style.transform = 'translate(-50%, -50%) scale(1) rotateY(0deg)';
         }, 50);
         
-        // 添加内容淡入动画
         setTimeout(() => {
-            const apiDetails = document.querySelector('.api-details');
-            apiDetails.style.opacity = '0';
-            apiDetails.style.transform = 'translateY(20px)';
-            
-            setTimeout(() => {
-                apiDetails.style.transition = 'all 0.4s ease-out';
-                apiDetails.style.opacity = '1';
-                apiDetails.style.transform = 'translateY(0)';
-            }, 200);
+            this.modalElements.content.style.opacity = '1';
         }, 100);
         
-        // 添加代码块动画
         setTimeout(() => {
-            const codeBlocks = document.querySelectorAll('.modal-body pre, .modal-body code');
-            codeBlocks.forEach((block, index) => {
+            const codeBlocks = this.modalElements.details.querySelectorAll('pre');
+            codeBlocks.forEach((block, i) => {
                 block.style.opacity = '0';
-                block.style.transform = 'translateX(-20px)';
-                
+                block.style.transform = 'translateY(20px)';
                 setTimeout(() => {
-                    block.style.transition = 'all 0.3s ease-out';
+                    block.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                     block.style.opacity = '1';
-                    block.style.transform = 'translateX(0)';
-                }, index * 100);
+                    block.style.transform = 'translateY(0)';
+                }, i * 100);
             });
         }, 400);
-    }    // 关闭模态框
+    }
+
     closeModal() {
-        const overlay = document.querySelector('.modal-overlay');
-        const content = document.querySelector('.modal-content');
-        
-        // 添加关闭动画
-        content.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 1, 1)';
-        content.style.transform = 'translate(-50%, -50%) scale(0.8) rotateY(-15deg)';
-        content.style.opacity = '0';
+        this.modalElements.content.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 1, 1)';
+        this.modalElements.content.style.transform = 'translate(-50%, -50%) scale(0.8) rotateY(-15deg)';
+        this.modalElements.content.style.opacity = '0';
         
         setTimeout(() => {
-            overlay.classList.remove('active');
-            
-            // 重置样式
-            content.style.transition = '';
-            content.style.transform = '';
-            content.style.opacity = '';
+            this.modalElements.overlay.classList.remove('active');
         }, 300);
     }
 
-    // 创建海洋特效
-    createOceanEffects() {
-        this.createFloatingBubbles();
-        this.addWaveParticles();
+    _createOceanVisualEffects() {
+        this._createFloatingBubbles();
+        this._addWaveParticles();
     }
 
-    // 创建漂浮气泡
-    createFloatingBubbles() {
+    _createFloatingBubbles() {
         const bubbleContainer = document.createElement('div');
         bubbleContainer.style.cssText = `
             position: fixed;
@@ -200,20 +234,13 @@ class OceanAPIExplorer {
         `;
         document.body.appendChild(bubbleContainer);
 
-        // 创建多个气泡
         for (let i = 0; i < 15; i++) {
-            setTimeout(() => {
-                this.createBubble(bubbleContainer);
-            }, i * 1000);
+            this._createBubble(bubbleContainer);
         }
-
-        // 定期创建新气泡
-        setInterval(() => {
-            this.createBubble(bubbleContainer);
-        }, 3000);
+        setInterval(() => this._createBubble(bubbleContainer), 3000);
     }
 
-    createBubble(container) {
+    _createBubble(container) {
         const bubble = document.createElement('div');
         const size = Math.random() * 30 + 10;
         const startX = Math.random() * window.innerWidth;
@@ -228,38 +255,34 @@ class OceanAPIExplorer {
             height: ${size}px;
             background: radial-gradient(circle, rgba(56, 189, 248, ${opacity}) 0%, transparent 70%);
             border-radius: 50%;
-            animation: bubble-rise ${duration}ms linear forwards;
+            animation: ocean-bubble-rise ${duration}ms linear forwards;
         `;
-
-        // 添加气泡上升动画
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes bubble-rise {
-                to {
-                    transform: translateY(-${window.innerHeight + 100}px) translateX(${Math.random() * 200 - 100}px);
-                    opacity: 0;
+        
+        // Ensure keyframes are defined only once or are unique if params change
+        if (!document.getElementById('ocean-bubble-rise-keyframes')) {
+            const style = document.createElement('style');
+            style.id = 'ocean-bubble-rise-keyframes';
+            // Generic keyframe, actual Y translation handled by JS if needed, or keep as is if window.innerHeight is fairly static
+            style.textContent = `
+                @keyframes ocean-bubble-rise {
+                    to {
+                        transform: translateY(-${window.innerHeight + 100}px) translateX(${Math.random() * 200 - 100}px);
+                        opacity: 0;
+                    }
                 }
-            }
-        `;
-        document.head.appendChild(style);
+            `; // Note: Math.random() in keyframes means it's fixed at definition time.
+               // For truly dynamic end X positions per bubble, JS animation is better.
+               // Given the current structure, this will create one version of keyframes.
+            document.head.appendChild(style);
+        }
 
         container.appendChild(bubble);
-
-        // 动画结束后移除气泡
-        setTimeout(() => {
-            if (bubble.parentNode) {
-                bubble.parentNode.removeChild(bubble);
-            }
-            if (style.parentNode) {
-                style.parentNode.removeChild(style);
-            }
-        }, duration);
+        setTimeout(() => bubble.remove(), duration);
     }
 
-    // 添加波浪粒子效果
-    addWaveParticles() {
-        const canvas = document.createElement('canvas');
-        canvas.style.cssText = `
+    _addWaveParticles() {
+        this.particleCanvas = document.createElement('canvas');
+        this.particleCanvas.style.cssText = `
             position: fixed;
             top: 0;
             left: 0;
@@ -269,576 +292,168 @@ class OceanAPIExplorer {
             z-index: 0;
             opacity: 0.3;
         `;
-        document.body.appendChild(canvas);
+        document.body.appendChild(this.particleCanvas);
+        this.particleCtx = this.particleCanvas.getContext('2d');
 
-        const ctx = canvas.getContext('2d');
-        let animationId;
+        this._resizeParticleCanvas(); // Initial size
+        this._createInitialParticles();
+        this._animateParticles();
+    }
 
-        const resizeCanvas = () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        };
+    _resizeParticleCanvas() {
+        if (!this.particleCanvas) return;
+        this.particleCanvas.width = window.innerWidth;
+        this.particleCanvas.height = window.innerHeight;
+    }
 
-        const particles = [];
+    _createInitialParticles() {
         const particleCount = 50;
-
-        // 初始化粒子
         for (let i = 0; i < particleCount; i++) {
-            particles.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                radius: Math.random() * 2 + 1,
-                vx: (Math.random() - 0.5) * 0.5,
-                vy: (Math.random() - 0.5) * 0.5,
-                opacity: Math.random() * 0.5 + 0.2
+            this.particles.push({
+                x: Math.random() * this.particleCanvas.width,
+                y: Math.random() * this.particleCanvas.height,
+                radius: Math.random() * 1.5 + 0.5,
+                vx: Math.random() * 0.4 - 0.2, // Slower horizontal movement
+                vy: Math.random() * 0.6 - 0.3, // Slower vertical movement
+                color: 'rgba(200, 220, 255, 0.5)'
             });
         }
+    }
 
-        const animateParticles = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+    _animateParticles() {
+        if (!this.particleCtx || !this.particleCanvas) return;
+        this.particleCtx.clearRect(0, 0, this.particleCanvas.width, this.particleCanvas.height);
 
-            particles.forEach(particle => {
-                // 更新位置
-                particle.x += particle.vx;
-                particle.y += particle.vy;
+        this.particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
 
-                // 边界检查
-                if (particle.x < 0 || particle.x > canvas.width) particle.vx *= -1;
-                if (particle.y < 0 || particle.y > canvas.height) particle.vy *= -1;
+            if (p.x < 0 || p.x > this.particleCanvas.width) p.vx *= -1;
+            if (p.y < 0 || p.y > this.particleCanvas.height) p.vy *= -1;
 
-                // 绘制粒子
-                ctx.beginPath();
-                ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(56, 189, 248, ${particle.opacity})`;
-                ctx.fill();
-            });
-
-            animationId = requestAnimationFrame(animateParticles);
-        };
-
-        resizeCanvas();
-        animateParticles();
-
-        window.addEventListener('resize', resizeCanvas);
-
-        // 清理函数
-        window.addEventListener('beforeunload', () => {
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-            }
+            this.particleCtx.beginPath();
+            this.particleCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            this.particleCtx.fillStyle = p.color;
+            this.particleCtx.fill();
         });
-    }    // Marked API 详细信息
-    getMarkedDetails() {
-        return `
-            <h3>📝 Markdown 转 HTML 服务</h3>
-            <p>将 Markdown 文本实时转换为 HTML。基于强大的 <a href="https://github.com/markedjs/marked" target="_blank">marked</a> 库。</p>
-            
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/marked/render</code></pre>
 
-            <div class="code-block">
-                <p class="title">请求体 (JSON):</p>
-                <pre><code>{
-    "markdown": "# 标题\\n\\n这是一段 **Markdown** 文本。"
-}</code></pre>
-            </div>
-
-            <div class="code-block">
-                <p class="title">响应体 (HTML):</p>
-                <pre><code>&lt;h1 id="标题"&gt;标题&lt;/h1&gt;
-&lt;p&gt;这是一段 &lt;strong&gt;Markdown&lt;/strong&gt; 文本。&lt;/p&gt;</code></pre>
-            </div>
-            
-            <h3>🐍 Python 示例</h3>
-            <pre><code>import requests
-import json
-
-api_url = "https://res.allbeapi.top/marked/render"
-markdown_content = {
-    "markdown": "# 测试标题\\n\\n这是从 Python 发送的 **Markdown** 内容。\\n\\n* 列表项 1\\n* 列表项 2"
-}
-
-response = requests.post(api_url, json=markdown_content)
-
-if response.status_code == 200:
-    html_output = response.text
-    print("转换后的 HTML:")
-    print(html_output)
-else:
-    print(f"请求失败，状态码: {response.status_code}")
-    print(response.text)</code></pre>
-
-            <h3>🌐 cURL 示例</h3>
-            <pre><code>curl -X POST -H "Content-Type: application/json" \\
--d '{"markdown": "# Hello World\\n\\nThis is **bold**."}' \\
-https://res.allbeapi.top/marked/render</code></pre>
-
-            <h3>🌐 JavaScript 示例</h3>
-            <pre><code>// 使用 fetch API
-const markdownContent = {
-    markdown: "# 标题\\n\\n这是 **JavaScript** 调用示例。"
-};
-
-fetch('https://res.allbeapi.top/marked/render', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(markdownContent)
-})
-.then(response => response.text())
-.then(html => {
-    console.log('转换后的 HTML:', html);
-    document.getElementById('output').innerHTML = html;
-})
-.catch(error => {
-    console.error('错误:', error);
-});</code></pre>
-        `;
-    }    // Beautiful Soup API 详细信息
-    getBeautifulSoupDetails() {
-        return `
-            <h3>🥄 HTML 解析与提取服务</h3>
-            <p>强大的 HTML/XML 解析工具，提供丰富的文档解析和数据提取功能。基于著名的 <a href="https://github.com/waylan/beautifulsoup" target="_blank">Beautiful Soup</a> 库。</p>
-            
-            <h3>1. HTML 解析</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/beautifulsoup/parse</code></pre>
-            
-            <div class="code-block">
-                <p class="title">请求体 (JSON):</p>
-                <pre><code>{
-    "html": "&lt;html&gt;&lt;head&gt;&lt;title&gt;页面标题&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;p&gt;内容&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;",
-    "parser": "html.parser"
-}</code></pre>
-            </div>
-
-            <div class="code-block">
-                <p class="title">响应体 (JSON):</p>
-                <pre><code>{
-    "title": "页面标题",
-    "text": "页面标题\\n内容",
-    "html": "格式化后的HTML"
-}</code></pre>
-            </div>
-
-            <h3>2. 元素提取</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/beautifulsoup/extract</code></pre>
-            
-            <div class="code-block">
-                <p class="title">请求体 (JSON):</p>
-                <pre><code>{
-    "html": "HTML内容",
-    "selector": "CSS选择器或标签名",
-    "attribute": "属性名（可选）"
-}</code></pre>
-            </div>
-
-            <h3>3. 链接提取</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/beautifulsoup/links</code></pre>
-            
-            <div class="code-block">
-                <p class="title">请求体 (JSON):</p>
-                <pre><code>{
-    "html": "HTML内容",
-    "base_url": "https://example.com"
-}</code></pre>
-            </div>
-
-            <h3>4. 图片提取</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/beautifulsoup/images</code></pre>
-
-            <h3>5. HTML 清理</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/beautifulsoup/clean</code></pre>
-            
-            <div class="code-block">
-                <p class="title">请求体 (JSON):</p>
-                <pre><code>{
-    "html": "HTML内容",
-    "remove_tags": ["script", "style"],
-    "remove_comments": true
-}</code></pre>
-            </div>
-
-            <h3>6. 网页抓取</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/beautifulsoup/fetch</code></pre>
-            
-            <div class="code-block">
-                <p class="title">请求体 (JSON):</p>
-                <pre><code>{
-    "url": "https://example.com",
-    "selector": "CSS选择器（可选）"
-}</code></pre>
-            </div>
-
-            <h3>🐍 Python 示例</h3>
-            <pre><code>import requests
-
-# 解析HTML
-response = requests.post('https://res.allbeapi.top/beautifulsoup/parse', json={
-    "html": "&lt;div&gt;&lt;h1&gt;标题&lt;/h1&gt;&lt;p&gt;段落&lt;/p&gt;&lt;/div&gt;"
-})
-
-# 提取所有链接
-response = requests.post('https://res.allbeapi.top/beautifulsoup/links', json={
-    "html": "&lt;a href='#'&gt;链接1&lt;/a&gt;&lt;a href='/page'&gt;链接2&lt;/a&gt;",
-    "base_url": "https://example.com"
-})
-
-# 清理HTML
-response = requests.post('https://res.allbeapi.top/beautifulsoup/clean', json={
-    "html": "&lt;div&gt;&lt;script&gt;alert()&lt;/script&gt;&lt;p&gt;内容&lt;/p&gt;&lt;/div&gt;",
-    "remove_tags": ["script"]
-})</code></pre>
-
-            <h3>🌐 JavaScript 示例</h3>
-            <pre><code>// 解析HTML并提取标题
-const htmlContent = {
-    html: "&lt;html&gt;&lt;head&gt;&lt;title&gt;我的网页&lt;/title&gt;&lt;/head&gt;&lt;body&gt;&lt;h1&gt;欢迎&lt;/h1&gt;&lt;/body&gt;&lt;/html&gt;"
-};
-
-fetch('https://res.allbeapi.top/beautifulsoup/parse', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(htmlContent)
-})
-.then(response => response.json())
-.then(data => {
-    console.log('页面标题:', data.title);
-    console.log('文本内容:', data.text);
-})
-.catch(error => {
-    console.error('错误:', error);
-});
-
-// 提取所有链接
-const linkExtraction = {
-    html: "&lt;a href='/home'&gt;首页&lt;/a&gt;&lt;a href='/about'&gt;关于我们&lt;/a&gt;",
-    base_url: "https://example.com"
-};
-
-fetch('https://res.allbeapi.top/beautifulsoup/links', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(linkExtraction)
-})
-.then(response => response.json())
-.then(links => {
-    console.log('提取的链接:', links);
-});</code></pre>
-        `;
+        this.particleAnimationId = requestAnimationFrame(() => this._animateParticles());
     }
 
-    // Prettier API 详细信息
-    getPrettierDetails() {
-        return `
-            <h3>🎨 代码格式化服务</h3>
-            <p>强大的代码格式化工具，支持多种编程语言。基于著名的 <a href="https://prettier.io/" target="_blank">Prettier</a> 库。</p>
-            
-            <h3>1. 代码格式化</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/prettier/format</code></pre>
-            
-            <div class="code-block">
-                <p class="title">请求体 (JSON):</p>
-                <pre><code>{
-    "code": "const x={a:1,b:2};",
-    "parser": "babel",
-    "options": {
-        "singleQuote": true,
-        "semi": false,
-        "printWidth": 80
-    }
-}</code></pre>
-            </div>
+    _setupMouseRippleEffect() {
+        document.addEventListener('mousemove', (e) => {
+            this._createMouseRipple(e.clientX, e.clientY);
+        });
 
-            <div class="code-block">
-                <p class="title">响应体 (JSON):</p>
-                <pre><code>{
-    "success": true,
-    "formatted": "const x = { a: 1, b: 2 }\\n",
-    "parser": "babel",
-    "options": { ... }
-}</code></pre>
-            </div>
-
-            <h3>2. 格式检查</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/prettier/check</code></pre>
-            
-            <div class="code-block">
-                <p class="title">请求体 (JSON):</p>
-                <pre><code>{
-    "code": "const x = { a: 1, b: 2 };",
-    "parser": "babel"
-}</code></pre>
-            </div>
-
-            <h3>3. 批量格式化</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>POST https://res.allbeapi.top/prettier/batch</code></pre>
-            
-            <div class="code-block">
-                <p class="title">请求体 (JSON):</p>
-                <pre><code>{
-    "files": [
-        {
-            "name": "script.js",
-            "code": "const x={a:1};",
-            "parser": "babel"
-        },
-        {
-            "name": "style.css",
-            "code": "body{margin:0;}",
-            "parser": "css"
-        }
-    ],
-    "options": { "singleQuote": true }
-}</code></pre>
-            </div>
-
-            <h3>4. 支持的语言</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>GET https://res.allbeapi.top/prettier/parsers</code></pre>
-            
-            <p><strong>支持的语言:</strong> JavaScript, TypeScript, JSON, HTML, CSS, SCSS, Less, Markdown, YAML, XML, PHP, Java, SQL</p>
-
-            <h3>5. 配置选项</h3>
-            <p><strong>API 端点:</strong></p>
-            <pre><code>GET https://res.allbeapi.top/prettier/options</code></pre>
-
-            <h3>🐍 Python 示例</h3>
-            <pre><code>import requests
-
-# 格式化 JavaScript 代码
-response = requests.post('https://res.allbeapi.top/prettier/format', json={
-    "code": "const x={a:1,b:2};",
-    "parser": "babel",
-    "options": {"singleQuote": True, "semi": False}
-})
-
-data = response.json()
-print("格式化后的代码:")
-print(data['formatted'])
-
-# 检查代码格式
-response = requests.post('https://res.allbeapi.top/prettier/check', json={
-    "code": "const x = { a: 1, b: 2 };",
-    "parser": "babel"
-})
-
-data = response.json()
-print(f"代码格式正确: {data['isFormatted']}")
-
-# 批量格式化
-response = requests.post('https://res.allbeapi.top/prettier/batch', json={
-    "files": [
-        {"name": "script.js", "code": "const x={a:1};", "parser": "babel"},
-        {"name": "data.json", "code": '{"key":"value"}', "parser": "json"}
-    ]
-})
-
-data = response.json()
-print(f"处理了 {data['summary']['total']} 个文件")</code></pre>
-
-            <h3>🌐 JavaScript 示例</h3>
-            <pre><code>// 格式化代码
-const codeToFormat = {
-    code: 'const x={a:1,b:2};',
-    parser: 'babel',
-    options: { singleQuote: true, semi: false }
-};
-
-fetch('https://res.allbeapi.top/prettier/format', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(codeToFormat)
-})
-.then(response => response.json())
-.then(data => {
-    console.log('格式化后的代码:', data.formatted);
-})
-.catch(error => {
-    console.error('错误:', error);
-});
-
-// 获取支持的解析器
-fetch('https://res.allbeapi.top/prettier/parsers')
-.then(response => response.json())
-.then(data => {
-    console.log('支持的解析器:', data.parsers);
-});
-
-// 批量格式化多个文件
-const filesToFormat = {
-    files: [
-        { name: 'app.js', code: 'function hello(){console.log("hi");}', parser: 'babel' },
-        { name: 'style.css', code: 'body{color:red;}', parser: 'css' }
-    ],
-    options: { printWidth: 120, tabWidth: 4 }
-};
-
-fetch('https://res.allbeapi.top/prettier/batch', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(filesToFormat)
-})
-.then(response => response.json())
-.then(data => {
-    console.log('批量格式化结果:', data.results);
-    data.results.forEach(result => {
-        console.log(\`\${result.name}: \${result.formatted}\`);
-    });
-});</code></pre>
-
-            <h3>🌐 cURL 示例</h3>
-            <pre><code>curl -X POST https://res.allbeapi.top/prettier/format \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "code": "const x={a:1,b:2};",
-    "parser": "babel",
-    "options": {"singleQuote": true, "semi": false}
-  }'</code></pre>
-        `;
-    }
-}
-
-// 页面加载完成后初始化
-document.addEventListener('DOMContentLoaded', () => {
-    // 添加页面加载动画
-    document.body.style.opacity = '0';
-    document.body.style.transform = 'scale(0.95)';
-    
-    // 创建加载效果
-    const loadingOverlay = document.createElement('div');
-    loadingOverlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #0c4a6e, #0369a1);
-        z-index: 9999;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        color: #f0f9ff;
-        font-family: 'SF Mono', Monaco, Consolas, monospace;
-    `;
-    
-    loadingOverlay.innerHTML = `
-        <div style="font-size: 3em; margin-bottom: 20px; animation: pulse 2s ease-in-out infinite;">🌊</div>
-        <div style="font-size: 1.5em; text-align: center;">
-            <div style="margin-bottom: 10px;">开源库API化平台</div>
-            <div style="font-size: 0.8em; opacity: 0.7;">正在加载海洋...</div>
-        </div>
-        <div style="margin-top: 30px; width: 200px; height: 4px; background: rgba(56, 189, 248, 0.2); border-radius: 2px; overflow: hidden;">
-            <div style="width: 0%; height: 100%; background: linear-gradient(90deg, #38bdf8, #60a5fa); border-radius: 2px; animation: loading-bar 2s ease-out forwards;"></div>
-        </div>
-    `;
-    
-    document.body.appendChild(loadingOverlay);
-    
-    // 添加加载动画样式
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.2); opacity: 0.8; }
-        }
-        @keyframes loading-bar {
-            to { width: 100%; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    // 初始化主应用
-    setTimeout(() => {
-        new OceanAPIExplorer();
-        
-        // 移除加载屏幕
-        setTimeout(() => {
-            loadingOverlay.style.transition = 'opacity 0.8s ease-out';
-            loadingOverlay.style.opacity = '0';
-            
-            // 显示主内容
-            document.body.style.transition = 'opacity 1s ease-in-out, transform 1s ease-in-out';
-            document.body.style.opacity = '1';
-            document.body.style.transform = 'scale(1)';
-            
-            setTimeout(() => {
-                if (loadingOverlay.parentNode) {
-                    loadingOverlay.parentNode.removeChild(loadingOverlay);
+        const rippleStyle = document.createElement('style');
+        // Ensure ID to prevent multiple appends if this method were called multiple times
+        rippleStyle.id = 'ocean-mouse-ripple-keyframes'; 
+        if (!document.getElementById(rippleStyle.id)) {
+            rippleStyle.textContent = `
+                @keyframes ocean-mouse-ripple {
+                    to {
+                        transform: scale(3);
+                        opacity: 0;
+                    }
                 }
-                if (style.parentNode) {
-                    style.parentNode.removeChild(style);
-                }
-            }, 800);
-        }, 500);
-    }, 2000);
-    
-    // 添加鼠标跟踪水波效果
-    let mouseX = 0, mouseY = 0;
-    document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-        
-        // 创建鼠标跟踪的水波纹
-        if (Math.random() < 0.1) { // 减少频率
-            createMouseRipple(mouseX, mouseY);
+            `;
+            document.head.appendChild(rippleStyle);
         }
-    });
-    
-    function createMouseRipple(x, y) {
+    }
+
+    _createMouseRipple(x, y) {
         const ripple = document.createElement('div');
         ripple.style.cssText = `
             position: fixed;
-            left: ${x - 10}px;
-            top: ${y - 10}px;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(56, 189, 248, 0.5);
+            left: ${x}px;
+            top: ${y}px;
+            width: 30px;
+            height: 30px;
+            background: rgba(56, 189, 248, 0.3);
             border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: ocean-mouse-ripple 0.7s ease-out;
             pointer-events: none;
-            z-index: 100;
-            animation: mouse-ripple 1.5s ease-out forwards;
+            z-index: 999;
         `;
-        
         document.body.appendChild(ripple);
-        
-        setTimeout(() => {
-            if (ripple.parentNode) {
-                ripple.parentNode.removeChild(ripple);
-            }
-        }, 1500);
+        setTimeout(() => ripple.remove(), 700);
     }
-    
-    // 添加鼠标波纹动画
-    const rippleStyle = document.createElement('style');
-    rippleStyle.textContent = `
-        @keyframes mouse-ripple {
-            to {
-                transform: scale(3);
-                opacity: 0;
-            }
-        }
-    `;
-    document.head.appendChild(rippleStyle);
-});
 
-// 导出供其他脚本使用
-window.OceanAPIExplorer = OceanAPIExplorer;
+    getMarkedDetails() {
+        return `
+            <h3>Marked API: Markdown 到 HTML 转换</h3>
+            <p>使用 Marked 库将 Markdown 文本实时转换为 HTML。非常适合在网页中动态显示格式化文本。</p>
+            <p><strong>端点:</strong> <code>POST /marked</code></p>
+            <p><strong>请求体 (JSON):</strong></p>
+            <div class="code-block">
+                <div class="title">JSON</div>
+                <pre><code>{
+  "markdown": "# Hello World\\nThis is **markdown**."
+}</code></pre>
+            </div>
+            <p><strong>响应 (JSON):</strong></p>
+            <div class="code-block">
+                <div class="title">JSON</div>
+                <pre><code>{
+  "html": "&lt;h1&gt;Hello World&lt;/h1&gt;\\n&lt;p&gt;This is &lt;strong&gt;markdown&lt;/strong&gt;.&lt;/p&gt;"
+}</code></pre>
+            </div>
+            <p><a href="https://marked.js.org/" target="_blank" rel="noopener noreferrer">了解更多关于 Marked</a></p>
+        `;
+    }
+
+    getBeautifulSoupDetails() {
+        return `
+            <h3>Beautiful Soup API: HTML 解析与提取</h3>
+            <p>利用 Python 的 Beautiful Soup 库解析 HTML 内容，轻松提取所需数据，如标签、属性和文本。</p>
+            <p><strong>端点:</strong> <code>POST /beautifulsoup/parse</code></p>
+            <p><strong>请求体 (JSON):</strong></p>
+            <div class="code-block">
+                <div class="title">JSON</div>
+                <pre><code>{
+  "html_content": "&lt;html&gt;&lt;body&gt;&lt;h1&gt;Title&lt;/h1&gt;&lt;p&gt;A paragraph.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;",
+  "selector": "p"
+}</code></pre>
+            </div>
+            <p><strong>响应 (JSON):</strong></p>
+            <div class="code-block">
+                <div class="title">JSON</div>
+                <pre><code>{
+  "tag": "p",
+  "text": "A paragraph.",
+  "attributes": {}
+}</code></pre>
+            </div>
+            <p>此 API 简化了从网页抓取和处理数据的过程。</p>
+        `;
+    }
+
+    getPrettierDetails() {
+        return `
+            <h3>Prettier API: 代码格式化</h3>
+            <p>使用 Prettier 自动格式化您的 JavaScript, HTML, CSS, Markdown 等代码，保持一致的代码风格。</p>
+            <p><strong>端点:</strong> <code>POST /prettier/format</code></p>
+            <p><strong>请求体 (JSON):</strong></p>
+            <div class="code-block">
+                <div class="title">JSON</div>
+                <pre><code>{
+  "code": "const foo = {bar:'baz'};",
+  "parser": "babel"
+}</code></pre>
+            </div>
+            <p><strong>响应 (JSON):</strong></p>
+            <div class="code-block">
+                <div class="title">JSON</div>
+                <pre><code>{
+  "formatted_code": "const foo = {\\n  bar: \\"baz\\",\\n};\\n"
+}</code></pre>
+            </div>
+            <p><a href="https://prettier.io/" target="_blank" rel="noopener noreferrer">探索 Prettier 文档</a></p>
+        `;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    window.oceanExplorer = new OceanAPIExplorer();
+});

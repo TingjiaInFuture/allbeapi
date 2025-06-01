@@ -22,28 +22,9 @@ body {
     50% { background-position: 100% 50%; }
 }
 
-/* 海洋泡泡效果 */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: 
-        radial-gradient(circle at 20% 80%, rgba(120, 213, 250, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(14, 165, 233, 0.1) 0%, transparent 50%);
-    animation: float-bubbles 12s ease-in-out infinite;
-    pointer-events: none;
-    z-index: 1;
-}
-
-@keyframes float-bubbles {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    33% { transform: translateY(-20px) rotate(2deg); }
-    66% { transform: translateY(-10px) rotate(-1deg); }
-}
+/* 海洋泡泡效果 - 通过 JS 动态创建，此处可移除或保留作为备用 */
+/* body::before { ... } */
+/* @keyframes float-bubbles { ... } */
 
 .container {
     position: relative;
@@ -119,7 +100,7 @@ header .tagline {
     padding: 4px 12px;
     border-radius: 6px;
     font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    font-size: 1.1em;
+    font-size: 1.1em; /* 保持现有字体大小 */
     font-weight: bold;
     border: 1px solid rgba(34, 197, 94, 0.3);
 }
@@ -240,21 +221,13 @@ header .tagline {
     left: 0;
     right: 0;
     bottom: 0;
-    background: 
-        repeating-linear-gradient(
-            90deg,
-            transparent,
-            transparent 3px,
-            rgba(0, 0, 0, 0.1) 3px,
-            rgba(0, 0, 0, 0.1) 6px
-        ),
-        repeating-linear-gradient(
-            0deg,
-            transparent,
-            transparent 1px,
-            rgba(0, 0, 0, 0.05) 1px,
-            rgba(0, 0, 0, 0.05) 2px
-        );
+    background: repeating-linear-gradient(
+        45deg,
+        rgba(0,0,0,0.05),
+        rgba(0,0,0,0.05) 10px,
+        rgba(0,0,0,0.08) 10px,
+        rgba(0,0,0,0.08) 20px
+    );
     border-radius: 15px;
     opacity: 0.7;
 }
@@ -274,14 +247,8 @@ header .tagline {
 }
 
 @keyframes water-ripple {
-    0%, 100% { 
-        transform: scaleX(1) scaleY(0.3);
-        opacity: 0.3;
-    }
-    50% { 
-        transform: scaleX(1.2) scaleY(0.6);
-        opacity: 0.6;
-    }
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.2); opacity: 0.5; }
 }
 
 .api-floating-block:nth-child(even) {
@@ -417,7 +384,7 @@ header .tagline {
 
 .modal-close:hover {
     background: rgba(239, 68, 68, 0.2);
-    color: #f87171;
+    color: #fecaca; /* 悬停时颜色变亮 */
 }
 
 .modal-body {
@@ -430,65 +397,73 @@ header .tagline {
 /* 代码块样式 */
 code, pre {
     font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-    background-color: rgba(15, 23, 42, 0.8);
-    color: #f1f5f9;
-    border-radius: 8px;
-    border: 1px solid rgba(56, 189, 248, 0.2);
+    font-size: 0.95em;
+    border-radius: 6px;
 }
 
 code {
-    padding: 0.2em 0.6em;
-    font-size: 0.9em;
+    background-color: rgba(56, 189, 248, 0.1);
+    color: #bae6fd;
+    padding: 3px 6px;
+    border: 1px solid rgba(56, 189, 248, 0.2);
 }
 
 pre {
-    padding: 20px;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    background-color: rgba(15, 23, 42, 0.8); /* 深色背景 */
+    color: #e0f2fe;
+    padding: 15px;
     margin: 15px 0;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    overflow-x: auto;
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 .code-block {
-    margin: 20px 0;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden; /* 确保子元素圆角 */
 }
 
 .code-block .title {
+    background-color: rgba(56, 189, 248, 0.15);
+    color: #7dd3fc;
+    padding: 8px 15px;
+    font-size: 0.9em;
     font-weight: bold;
-    color: #60a5fa;
-    margin-bottom: 8px;
-    font-size: 1.1em;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
 }
 
 /* API 详情内容样式 */
 .api-details h3 {
-    color: #60a5fa;
-    font-size: 1.4em;
-    margin: 25px 0 15px 0;
-    border-left: 4px solid #3b82f6;
-    padding-left: 15px;
+    color: #7dd3fc;
+    font-size: 1.5em;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.2);
+    padding-bottom: 8px;
 }
 
 .api-details p {
+    color: #cbd5e1;
     line-height: 1.7;
     margin-bottom: 15px;
-    color: #cbd5e1;
 }
 
 .api-details strong {
-    color: #38bdf8;
+    color: #f0f9ff;
+    font-weight: 600;
 }
 
 .api-details a {
-    color: #60a5fa;
+    color: #38bdf8;
     text-decoration: none;
-    transition: color 0.2s;
+    border-bottom: 1px dashed rgba(56, 189, 248, 0.5);
+    transition: color 0.2s, border-bottom-color 0.2s;
 }
 
 .api-details a:hover {
-    color: #93c5fd;
-    text-decoration: underline;
+    color: #7dd3fc;
+    border-bottom-color: #7dd3fc;
 }
 
 /* 底部样式 */
