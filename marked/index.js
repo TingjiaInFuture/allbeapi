@@ -8,7 +8,7 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 // API endpoint to render markdown
-app.post('/render', (req, res) => {
+app.post('/marked/render', (req, res) => {
   const { markdown } = req.body;
 
   if (typeof markdown !== 'string') {
