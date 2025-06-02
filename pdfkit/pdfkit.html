@@ -11,6 +11,11 @@
     <h3>PDFKit API: PDF 生成</h3>
     <p>使用 Node.js 的 <a href="http://pdfkit.org/" target="_blank" rel="noopener noreferrer">PDFKit</a> 库从文本内容生成 PDF 文档。</p>
 
+    <div class="important-notice">
+        <h3>字体支持说明</h3>
+        <p>当前API使用内置字体，对中文字符支持有限。如需完整中文支持，建议在服务器上安装中文字体文件或使用其他PDF生成方案。</p>
+    </div>
+
     <h4>1. 从文本生成 PDF</h4>
     <p><strong>端点:</strong> <code>POST /generate-pdf</code></p>
     <p>接收文本内容，生成 PDF 文件，并返回文件的访问路径。</p>
@@ -18,7 +23,7 @@
     <div class="code-block">
         <div class="title">JSON</div>
         <pre><code>{
-  "text_content": "这是 PDF 文档的内容。\n可以包含多行文本。"
+  "text_content": "这是 PDF 文档的内容。\n可以包含多行文本。" <span class="comment">// 支持UTF-8编码的文本</span>
 }</code></pre>
     </div>
     <p><strong>响应 (JSON):</strong></p>

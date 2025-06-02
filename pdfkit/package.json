@@ -9,6 +9,7 @@
   "dependencies": {
     "express": "^4.17.1",
     "pdfkit": "^0.13.0", 
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "fontkit": "^1.8.0"
   }
 }
