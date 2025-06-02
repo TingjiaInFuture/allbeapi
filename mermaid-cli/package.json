@@ -5,10 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
-  },
-  "dependencies": {
+  },  "dependencies": {
     "express": "^4.17.1",
-    "mermaid.cli": "^10.0.0", 
+    "@mermaid-js/mermaid-cli": "^10.0.0", 
     "uuid": "^9.0.0"
   }
 }

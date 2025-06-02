@@ -15,7 +15,7 @@ if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
 }
 
-app.post('/generate-pdf', (req, res) => {
+app.post('/pdfkit/generate-pdf', (req, res) => {
     const { text_content } = req.body;
 
     if (!text_content) {

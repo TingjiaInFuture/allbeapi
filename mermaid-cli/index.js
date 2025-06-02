@@ -1,5 +1,5 @@
 const express = require('express');
-const { MermaidAPI } = require('mermaid.cli');
+const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
@@ -15,7 +15,7 @@ if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
 }
 
-app.post('/generate-diagram', async (req, res) => {
+app.post('/mermaid-cli/generate-diagram', async (req, res) => {
     const { definition, format } = req.body;
 
     if (!definition) {
@@ -28,19 +28,37 @@ app.post('/generate-diagram', async (req, res) => {
 
     const filename = `diagram-${uuidv4()}.${outputFormat}`;
     const outputPath = path.join(outputDir, filename);
+    const inputFilename = `input-${uuidv4()}.mmd`;
+    const inputPath = path.join(outputDir, inputFilename);
 
     try {
-        const { data } = await MermaidAPI.render(
-            definition,
-            { outputFormat },
-        );
-        fs.writeFileSync(outputPath, data);
-        // Send the file path or the file itself depending on your needs
-        // For simplicity, sending the path to the generated file
-        // In a real application, you might want to serve this as a static file or return the image data directly
+        // Write definition to temporary file
+        fs.writeFileSync(inputPath, definition);
+        
+        // Use mermaid CLI to generate the diagram
+        const command = `npx mmdc -i "${inputPath}" -o "${outputPath}"`;
+        
+        await new Promise((resolve, reject) => {
+            exec(command, (error, stdout, stderr) => {
+                if (error) {
+                    console.error('Error generating diagram:', error);
+                    reject(error);
+                } else {
+                    resolve();
+                }
+            });
+        });
+
+        // Clean up input file
+        fs.unlinkSync(inputPath);
+        
         res.json({ message: 'Diagram generated successfully', filePath: `/mermaid-cli/output/${filename}` });
     } catch (error) {
         console.error('Error generating diagram:', error);
+        // Clean up input file if it exists
+        if (fs.existsSync(inputPath)) {
+            fs.unlinkSync(inputPath);
+        }
         res.status(500).json({ error: 'Error generating diagram', details: error.message });
     }
 });
