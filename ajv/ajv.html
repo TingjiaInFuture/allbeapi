@@ -1,57 +1,13 @@
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AJV API: JSON Schema 校验</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; }
-        .container { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        h1, h3, h4 { text-align: center; color: #333; }
-        h3 { margin-top: 0; }
-        p { line-height: 1.6; }
-        code { background-color: #eee; padding: 2px 4px; border-radius: 4px; }
-        .code-block {
-            background-color: #f9f9f9;
-            border-left: 4px solid #007bff;
-            padding: 10px 15px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        .title {
-            font-weight: bold;
-            margin-bottom: 5px;
-            color: #007bff;
-        }
-        pre {
-            background-color: #eee;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            white-space: pre-wrap; /* Allows wrapping */
-            word-wrap: break-word; /* Breaks long words */
-            font-size: 0.9em;
-            margin: 0;
-        }
-        a {
-            color: #007bff;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h3>AJV API: JSON Schema 校验</h3>
-        <p>使用 <a href="https://ajv.js.org/" target="_blank" rel="noopener noreferrer">Ajv</a> 库根据 JSON Schema 校验 JSON 数据。</p>
+<h3>AJV API: JSON Schema 校验</h3>
+<p>使用 <a href="https://ajv.js.org/" target="_blank" rel="noopener noreferrer">Ajv</a> 库根据 JSON Schema 校验 JSON 数据。</p>
 
-        <h4>1. 校验 JSON 数据</h4>
-        <p><strong>端点:</strong> <code>POST /ajv/validate</code></p>
-        <p>接收 JSON Schema 和待校验的 JSON 数据，返回校验结果。</p>
-        <p><strong>请求体 (JSON):</strong></p>
-        <div class="code-block">
-            <div class="title">JSON</div>
-            <pre><code>{
+<h4>1. 校验 JSON 数据</h4>
+<p><strong>端点:</strong> <code>POST /ajv/validate</code></p>
+<p>接收 JSON Schema 和待校验的 JSON 数据，返回校验结果。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
   "schema": {
     "type": "object",
     "properties": {
@@ -67,19 +23,19 @@
     "age": 30
   }
 }</code></pre>
-        </div>
-        <p><strong>响应 (JSON):</strong></p>
-        <p>如果校验成功:</p>
-        <div class="code-block">
-            <div class="title">JSON</div>
-            <pre><code>{
+</div>
+<p><strong>响应 (JSON):</strong></p>
+<p>如果校验成功:</p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
   "valid": true
 }</code></pre>
-        </div>
-        <p>如果校验失败:</p>
-        <div class="code-block">
-            <div class="title">JSON</div>
-            <pre><code>{
+</div>
+<p>如果校验失败:</p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
   "valid": false,
   "errors": [
     {
@@ -92,7 +48,5 @@
     <span class="comment">// ... 其他错误信息</span>
   ]
 }</code></pre>
-        </div>
-        <p><a href="https://ajv.js.org/guide/getting-started.html" target="_blank" rel="noopener noreferrer">了解更多关于 Ajv</a></p>
-    </div>
-</body>
+</div>
+<p><a href="https://ajv.js.org/guide/getting-started.html" target="_blank" rel="noopener noreferrer">了解更多关于 Ajv</a></p>
