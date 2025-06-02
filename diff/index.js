@@ -35,7 +35,7 @@ function createHtmlDiff(diffResult) {
     return pre.outerHTML;
 }
 
-app.post('/compare', (req, res) => {
+app.post('/diff/compare', (req, res) => {
     const { text1, text2, type, outputFormat } = req.body;
 
     if (text1 === undefined || text2 === undefined) {

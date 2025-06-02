@@ -7,48 +7,41 @@
     <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-    <header>
-        <h1>Mermaid CLI API</h1>
-        <nav>
-            <a href="../index.html">首页</a>
-        </nav>
-    </header>
-    <main>
-        <section>
-            <h2>生成图表</h2>
-            <p><strong>端点:</strong> <code>POST /generate-diagram</code></p>
-            <p>接收 Mermaid 定义和输出格式，生成图表文件，并返回文件的访问路径。</p>
-            <p><strong>请求体 (JSON):</strong></p>
-            <div class="code-block">
-                <div class="title">JSON</div>
-                <pre><code>{
+    <h3>Mermaid CLI API: 图表生成</h3>
+    <p>使用 <a href="https://mermaid.js.org/" target="_blank" rel="noopener noreferrer">Mermaid CLI</a> 从文本定义生成图表文件。</p>
+
+    <h4>1. 生成图表</h4>
+    <p><strong>端点:</strong> <code>POST /generate-diagram</code></p>
+    <p>接收 Mermaid 定义和输出格式，生成图表文件，并返回文件的访问路径。</p>
+    <p><strong>请求体 (JSON):</strong></p>
+    <div class="code-block">
+        <div class="title">JSON</div>
+        <pre><code>{
   "definition": "graph TD;
 A-->B;
 B-->C;
 C-->D;",
   "format": "svg" // 可选，输出格式，可以是 "svg" (默认) 或 "png"
 }</code></pre>
-            </div>
-            <p><strong>响应 (JSON):</strong></p>
-            <div class="code-block">
-                <div class="title">JSON</div>
-                <pre><code>{
+    </div>
+    <p><strong>响应 (JSON):</strong></p>
+    <div class="code-block">
+        <div class="title">JSON</div>
+        <pre><code>{
   "message": "Diagram generated successfully",
   "filePath": "/generated_diagrams/some_unique_filename.svg" // 相对于 API 服务器的路径
 }</code></pre>
-            </div>
-            <p>生成的图表文件可以通过拼接基础 URL 和 <code>filePath</code> 来访问，例如 <code>http://localhost:3008/generated_diagrams/some_unique_filename.svg</code>。</p>
-            <p>如果发生错误，响应将包含错误信息：</p>
-            <div class="code-block">
-                <div class="title">JSON</div>
-                <pre><code>{
+    </div>
+    <p>生成的图表文件可以通过拼接基础 URL 和 <code>filePath</code> 来访问，例如 <code>http://localhost:3008/generated_diagrams/some_unique_filename.svg</code>。</p>
+    <p>如果发生错误，响应将包含错误信息：</p>
+    <div class="code-block">
+        <div class="title">JSON</div>
+        <pre><code>{
   "error": "错误信息描述",
   "details": "可选的错误详情"
 }</code></pre>
-            </div>
-            <p><a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer">了解更多关于 Mermaid</a></p>
-        </section>
-    </main>
+    </div>
+    <p><a href="https://mermaid.js.org/intro/" target="_blank" rel="noopener noreferrer">了解更多关于 Mermaid</a></p>
     <footer>
         <p>&copy; 2024 API Collection</p>
     </footer>

@@ -6,7 +6,7 @@ import io
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/process-image', methods=['POST'])
+@app.route('/pillow/process-image', methods=['POST'])
 def process_image():
     if 'file' not in request.files:
         return jsonify({'error': 'No file part'}), 400

@@ -1,95 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pygments API Test</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; }
-        textarea { width: 100%; min-height: 150px; margin-bottom: 10px; }
-        button { padding: 10px 15px; cursor: pointer; }
-        pre { background-color: #f5f5f5; padding: 10px; border: 1px solid #ccc; overflow-x: auto; }
-        .error { color: red; }
-        .code-block { background-color: #f9f9f9; border: 1px solid #ddd; padding: 10px; margin: 10px 0; }
-        .title { font-weight: bold; margin-bottom: 5px; }
-    </style>
-</head>
-<body>
-    <h1>Pygments API Test</h1>
-    <h3>Pygments API: 代码高亮</h3>
-    <p>使用 Python 的 <a href="https://pygments.org/" target="_blank" rel="noopener noreferrer">Pygments</a> 库对代码进行语法高亮，并输出为 HTML。</p>
+<h3>Pygments API: 代码高亮</h3>
+<p>使用 Python 的 <a href="https://pygments.org
 
-    <h4>1. 高亮代码</h4>
-    <p><strong>端点:</strong> <code>POST /highlight</code></p>
-    <p>接收代码字符串和可选的语言名称，返回高亮后的 HTML 代码。</p>
-    <p><strong>请求体 (JSON):</strong></p>
-    <div class="code-block">
-        <div class="title">JSON</div>
-        <pre><code>{
+<h4>1. 高亮代码</h4>
+<p><strong>端点:</strong> <code>POST /highlight</code></p>
+<p>接收代码字符串和可选的语言名称，返回高亮后的 HTML 代码。</p>
+<p><strong>请求体 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
   "code": "def hello():\n  print(\"Hello, World!\")",
   "language": "python" <span class="comment">// 可选，如果未提供，Pygments 会尝试自动检测语言</span>
 }</code></pre>
-    </div>
-    <p><strong>响应 (JSON):</strong></p>
-    <div class="code-block">
-        <div class="title">JSON</div>
-        <pre><code>{
+</div>
+<p><strong>响应 (JSON):</strong></p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
   "highlighted_code": "&lt;div class=\"highlight\"&gt;&lt;pre&gt;&lt;span&gt;...&lt;/span&gt;...&lt;/pre&gt;&lt;/div&gt;\n",
   "detected_language": "python" <span class="comment">// 如果语言是自动检测的，则包含此字段</span>
 }</code></pre>
-    </div>
-    <p>如果发生错误，响应将包含错误信息：</p>
-    <div class="code-block">
-        <div class="title">JSON</div>
-        <pre><code>{
+</div>
+<p>如果发生错误，响应将包含错误信息：</p>
+<div class="code-block">
+    <div class="title">JSON</div>
+    <pre><code>{
   "error": "错误信息描述"
 }</code></pre>
-    </div>
-    <p><a href="https://pygments.org/docs/" target="_blank" rel="noopener noreferrer">了解更多关于 Pygments</a></p>
-
-    <h2>Result:</h2>
-    <div id="resultOutput"></div>
-    <div id="errorOutput" class="error"></div>
-
-    <script>
-        async function highlightCode() {
-            const code = document.getElementById('codeInput').value;
-            const language = document.getElementById('languageInput').value;
-            const resultOutput = document.getElementById('resultOutput');
-            const errorOutput = document.getElementById('errorOutput');
-
-            resultOutput.innerHTML = '';
-            errorOutput.innerHTML = '';
-
-            if (!code) {
-                errorOutput.textContent = 'Please enter some code.';
-                return;
-            }
-
-            try {
-                const response = await fetch('http://127.0.0.1:5001/highlight', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ code, language }),
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    resultOutput.innerHTML = data.highlighted_code;
-                    if (data.detected_language) {
-                        errorOutput.textContent = `Detected language: ${data.detected_language}`;
-                        errorOutput.className = 'info';
-                    }
-                } else {
-                    errorOutput.textContent = `Error: ${data.error}`;
-                }
-            } catch (error) {
-                errorOutput.textContent = `Network error: ${error.message}`;
-            }
-        }
-    </script>
-</body>
-</html>
+</div>
+<p><a href="https://pygments.org/docs/" target="_blank" rel="noopener noreferrer">了解更多关于 Pygments</a></p>

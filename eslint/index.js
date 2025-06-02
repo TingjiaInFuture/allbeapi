@@ -33,7 +33,7 @@ const eslintConfig = {
     },
 };
 
-app.post('/lint', async (req, res) => {
+app.post('/eslint/lint', async (req, res) => {
     const { code, language, fix } = req.body;
 
     if (!code) {

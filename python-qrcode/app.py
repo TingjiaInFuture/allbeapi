@@ -6,7 +6,7 @@ import io
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/generate-qrcode', methods=['POST'])
+@app.route('/python-qrcode/generate-qrcode', methods=['POST'])
 def generate_qrcode_route():
     data = request.get_json()
     qr_data = data.get('data')

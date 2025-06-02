@@ -7,7 +7,7 @@ const port = 3007;
 
 app.use(express.json());
 
-app.post('/csv-to-json', (req, res) => {
+app.post('/csv-parser/csv-to-json', (req, res) => {
     const csvData = req.body.csv_data;
     if (!csvData) {
         return res.status(400).json({ error: 'Missing csv_data in request body' });
