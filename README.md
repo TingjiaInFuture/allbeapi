@@ -8,69 +8,26 @@
 
 所有 API 服务都通过此域名提供，支持 HTTPS 安全访问。
 
+## 📊 平台统计
 
-## 🔧 目前支持的API服务
+- 🚀 **API 总数**: 13个
+- 🔗 **端点总数**: 25个
+- 📅 **最后更新**: 2025年6月3日
+- 🏷️ **服务分类**: 4大类
 
-### 📝 Marked API
-将 Markdown 文本转换为 HTML
+## 🔧 API 服务分类
 
-**端点**: `POST https://res.allbeapi.top/marked/render`
+### 📝 文本处理 (Text Processing)
+文本转换、格式化、高亮等功能
 
-```javascript
-fetch('https://res.allbeapi.top/marked/render', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        markdown: "# 标题\n\n这是 **粗体** 文本。"
-    })
-})
-.then(response => response.text())
-.then(html => console.log(html));
-```
+### 📋 数据解析 (Data Parsing)  
+HTML、CSV等数据格式的解析和提取
 
-### 🥄 Beautiful Soup API
-强大的 HTML/XML 解析和数据提取工具
+### 🛡️ 安全验证 (Security & Validation)
+代码检查、数据验证、安全过滤等功能
 
-**主要端点**:
-- `POST https://res.allbeapi.top/beautifulsoup/parse` - HTML解析
-- `POST https://res.allbeapi.top/beautifulsoup/extract` - 元素提取
-- `POST https://res.allbeapi.top/beautifulsoup/links` - 链接提取
-- `POST https://res.allbeapi.top/beautifulsoup/images` - 图片提取
-- `POST https://res.allbeapi.top/beautifulsoup/clean` - HTML清理
-
-```python
-import requests
-
-response = requests.post('https://res.allbeapi.top/beautifulsoup/parse', json={
-    "html": "<html><head><title>测试</title></head><body><p>内容</p></body></html>"
-})
-data = response.json()
-print(f"标题: {data['title']}")
-```
-
-### 🎨 Prettier API
-强大的代码格式化工具，支持多种编程语言
-
-**主要端点**:
-- `POST https://res.allbeapi.top/prettier/format` - 代码格式化
-- `POST https://res.allbeapi.top/prettier/check` - 格式检查
-- `POST https://res.allbeapi.top/prettier/batch` - 批量格式化
-- `GET https://res.allbeapi.top/prettier/parsers` - 支持的解析器
-- `GET https://res.allbeapi.top/prettier/options` - 配置选项
-
-```javascript
-fetch('https://res.allbeapi.top/prettier/format', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-        code: 'const x={a:1,b:2};',
-        parser: 'babel',
-        options: { singleQuote: true, semi: false }
-    })
-})
-.then(response => response.json())
-.then(data => console.log(data.formatted));
-```
+### 🎨 内容生成 (Content Generation)
+图片、PDF、图表等内容的生成
 
 
 ## ⚠️ 重要说明
