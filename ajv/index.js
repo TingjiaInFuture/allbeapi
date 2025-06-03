@@ -10,7 +10,7 @@ addFormats(ajv); // Add support for formats like date-time, email, etc.
 app.use(cors());
 app.use(express.json());
 
-app.post('/validate', (req, res) => {
+app.post('/ajv/validate', (req, res) => {
     const { schema, data } = req.body;
 
     if (!schema) {
