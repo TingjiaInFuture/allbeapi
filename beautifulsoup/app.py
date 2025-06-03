@@ -270,4 +270,8 @@ def health_check():
     return jsonify({'status': 'healthy', 'service': 'beautifulsoup-api'})
 
 if __name__ == '__main__':
+    # 开发环境使用Flask开发服务器
     app.run(host='0.0.0.0', port=5000, debug=True)
+    
+    # 生产环境使用Gunicorn:
+    # gunicorn -c gunicorn.conf.py app:app
