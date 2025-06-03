@@ -90,4 +90,4 @@ def process_image():
     return send_file(img_io, mimetype=mime_type_map.get(save_format, 'application/octet-stream'), as_attachment=True, download_name=f'processed_image.{save_format.lower()}')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5002)
+    app.run(host='0.0.0.0',debug=True, port=5002)
