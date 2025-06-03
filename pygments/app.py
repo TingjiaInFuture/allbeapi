@@ -106,4 +106,4 @@ def highlight_code():
         return jsonify({'error': f'Error highlighting code: {str(e)}'}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=9000)
