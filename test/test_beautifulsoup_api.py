@@ -23,9 +23,8 @@ def test_parse_html():
     """
     
     payload = {"html": html_content}
-    
     try:
-        response = requests.post(f"{BASE_URL}/parse", json=payload)
+        response = requests.post(f"{BASE_URL}/beautifulsoup/parse", json=payload)
         if response.status_code == 200:
             result = response.json()
             print(f"标题: {result['title']}")
@@ -52,9 +51,8 @@ def test_extract_elements():
     
     # 测试提取所有h2标签
     payload = {"html": html_content, "selector": "h2"}
-    
     try:
-        response = requests.post(f"{BASE_URL}/extract", json=payload)
+        response = requests.post(f"{BASE_URL}/beautifulsoup/extract", json=payload)
         if response.status_code == 200:
             result = response.json()
             print(f"找到 {len(result['elements'])} 个h2元素:")
