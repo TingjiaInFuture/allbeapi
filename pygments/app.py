@@ -93,19 +93,40 @@ def highlight_code():
         return jsonify({'error': f'Error initializing lexer: {str(e)}'}), 500
 
     try:
-        formatter = HtmlFormatter(style='default', linenos=False, cssclass='highlight')
+        formatter = HtmlFormatter(
+            style='default', 
+            linenos=False, 
+            cssclass='highlight',
+            noclasses=False,
+            nowrap=False,
+            full=False
+        )
         result = highlight(code, lexer, formatter)
         css_styles = formatter.get_style_defs('.highlight')
+        
+        # 确保返回完整的HTML内容
         return jsonify({
             'highlighted_code': result, 
             'detected_language': lexer.name,
             'lexer_aliases': lexer.aliases,
             'css_styles': css_styles,
             'code_length': len(code),
-            'lines_count': len(code.split('\n'))
+            'lines_count': len(code.split('\n')),
+            'success': True
         })
     except Exception as e:
-        return jsonify({'error': f'Error highlighting code: {str(e)}'}), 500
+        return jsonify({
+            'error': f'Error highlighting code: {str(e)}',
+            'success': False
+        }), 500
+
+@app.route('/pygments/health', methods=['GET'])
+def health_check():
+    return jsonify({
+        'status': 'healthy',
+        'service': 'Pygments API',
+        'version': '1.0.0'
+    })
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=9000, debug=True)
