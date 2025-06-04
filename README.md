@@ -5,7 +5,7 @@
 ![平台状态](https://img.shields.io/badge/%E5%B9%B3%E5%8F%B0%E7%8A%B6%E6%80%81-%E5%9C%A8%E7%BA%BF-brightgreen?style=flat-square)
 ![最后更新](https://img.shields.io/badge/%E6%9C%80%E5%90%8E%E6%9B%B4%E6%96%B0-2025--06--04-orange?style=flat-square)
 ![许可证](https://img.shields.io/badge/%E8%AE%B8%E5%8F%AF%E8%AF%81-MIT-yellow?style=flat-square)
-[![演示平台](https://img.shields.io/badge/%F0%9F%9A%80-%E5%9C%A8%E7%BA%BF%E6%BC%94%E7%A4%BA-ff69b4?style=flat-square)](https://res.allbeapi.top/demo.html)
+[![演示平台](https://img.shields.io/badge/%F0%9F%9A%80-%E5%9C%A8%E7%BA%BF%E6%BC%94%E7%A4%BA-ff69b4?style=flat-square)](https://allbeapi.top/demo.html)
 
 ![GitHub stars](https://img.shields.io/github/stars/TingjiaInFuture/allbeapi?style=flat-square)
 ![GitHub forks](https://img.shields.io/github/forks/TingjiaInFuture/allbeapi?style=flat-square)
