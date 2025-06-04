@@ -478,6 +478,70 @@ New Line 4</textarea>
                     <h3>✅ 验证结果</h3>
                     <div class="demo-result" id="ajv-result">点击"验证 JSON"查看结果...</div>
                 </div>
+            </div>        </div>        <!-- ESLint Demo -->
+        <div class="demo-content" id="eslint">
+            <div class="demo-form">
+                <div class="demo-input-section">
+                    <h3>🔍 输入 JavaScript/TypeScript 代码</h3>
+                    <textarea class="demo-textarea" id="eslint-input" placeholder="输入需要检查的代码..." style="min-height: 300px;">let x = 1
+if (x == 1) {
+console.log("hello world")
+}
+
+function test(){
+return "test"
+}
+
+var unused = 'variable';
+const obj = {a:1,b:2,c:3}
+console.log(obj)</textarea>
+                    <div style="margin: 15px 0;">
+                        <label style="color: #bae6fd; margin-right: 20px; display: inline-block;">
+                            语言类型:
+                            <select class="demo-select" id="eslint-language" style="margin-left: 10px; background: rgba(15, 23, 42, 0.7); color: #f0f9ff; border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 4px; padding: 5px;">
+                                <option value="javascript">JavaScript</option>
+                                <option value="typescript">TypeScript</option>
+                            </select>
+                        </label>
+                        <label style="color: #bae6fd; display: inline-block;">
+                            <input type="checkbox" id="eslint-fix" checked style="margin-right: 5px;">
+                            自动修复
+                        </label>
+                    </div>
+                    <button class="demo-button" onclick="callESLintAPI()">检查代码</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>📋 检查结果</h3>
+                    <div id="eslint-stats" style="background: rgba(15, 23, 42, 0.5); padding: 15px; border-radius: 6px; margin-bottom: 15px; border: 1px solid rgba(56, 189, 248, 0.2); display: none;">
+                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                            <div style="color: #f87171; font-size: 14px;">
+                                <span style="color: #bae6fd;">🔴 错误: </span><span id="error-count">0</span>
+                            </div>
+                            <div style="color: #fbbf24; font-size: 14px;">
+                                <span style="color: #bae6fd;">⚠️ 警告: </span><span id="warning-count">0</span>
+                            </div>
+                            <div style="color: #34d399; font-size: 14px;">
+                                <span style="color: #bae6fd;">🔧 可修复错误: </span><span id="fixable-error-count">0</span>
+                            </div>
+                            <div style="color: #34d399; font-size: 14px;">
+                                <span style="color: #bae6fd;">🔧 可修复警告: </span><span id="fixable-warning-count">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="demo-result" id="eslint-result" style="min-height: 250px;">点击"检查代码"查看结果...</div>
+                </div>
+            </div>
+            
+            <div class="demo-examples">
+                <h3>💡 示例代码</h3>
+                <div class="demo-example" onclick="loadESLintExample(1)">
+                    <div class="demo-example-title">常见问题代码</div>
+                    <div class="demo-example-desc">包含分号、括号、缩进等常见问题</div>
+                </div>
+                <div class="demo-example" onclick="loadESLintExample(2)">
+                    <div class="demo-example-title">TypeScript 代码</div>
+                    <div class="demo-example-desc">TypeScript 类型检查示例</div>
+                </div>
             </div>
         </div>
     </div>    <script>
@@ -876,13 +940,166 @@ function hello() {
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({schema: schema, data: data})
                 });
-                
-                const responseData = await response.json();
+                  const responseData = await response.json();
                 result.textContent = JSON.stringify(responseData, null, 2);
                 result.className = 'demo-result';
             } catch (error) {
                 result.textContent = `错误: ${error.message}`;
                 result.className = 'demo-result demo-error';
+            }
+        }        // ESLint API
+        async function callESLintAPI() {
+            const code = document.getElementById('eslint-input').value;
+            const language = document.getElementById('eslint-language').value;
+            const fix = document.getElementById('eslint-fix').checked;
+            const result = document.getElementById('eslint-result');
+            const statsDiv = document.getElementById('eslint-stats');
+            
+            if (!code.trim()) {
+                result.textContent = '请输入代码';
+                result.className = 'demo-result demo-error';
+                statsDiv.style.display = 'none';
+                return;
+            }
+            
+            result.textContent = '正在检查...';
+            result.className = 'demo-result demo-loading';
+            statsDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/eslint/lint`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        code: code,
+                        language: language,
+                        fix: fix
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    result.textContent = `错误: ${data.error}`;
+                    result.className = 'demo-result demo-error';
+                    return;
+                }
+                
+                // 显示统计信息
+                if (data.results && data.results.length > 0) {
+                    const lintResult = data.results[0];
+                    
+                    // 更新统计信息
+                    document.getElementById('error-count').textContent = lintResult.errorCount || 0;
+                    document.getElementById('warning-count').textContent = lintResult.warningCount || 0;
+                    document.getElementById('fixable-error-count').textContent = lintResult.fixableErrorCount || 0;
+                    document.getElementById('fixable-warning-count').textContent = lintResult.fixableWarningCount || 0;
+                    statsDiv.style.display = 'block';
+                    
+                    // 格式化结果显示
+                    let output = '';
+                    
+                    if (lintResult.messages && lintResult.messages.length > 0) {
+                        output += `<div style="color: #f0f9ff; font-size: 16px; margin-bottom: 15px; font-weight: bold;">🔍 检查结果:</div>`;
+                        
+                        lintResult.messages.forEach((msg, index) => {
+                            const severityIcon = msg.severity === 2 ? '❌' : '⚠️';
+                            const severityText = msg.severity === 2 ? '错误' : '警告';
+                            const severityColor = msg.severity === 2 ? '#f87171' : '#fbbf24';
+                            
+                            output += `
+                                <div style="background: rgba(30, 41, 59, 0.6); padding: 15px; border-radius: 6px; margin-bottom: 10px; border-left: 4px solid ${severityColor};">
+                                    <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                        <span style="font-size: 16px; margin-right: 8px;">${severityIcon}</span>
+                                        <span style="color: ${severityColor}; font-weight: bold; margin-right: 10px;">${severityText}</span>
+                                        <span style="color: #94a3b8; font-size: 12px; background: rgba(15, 23, 42, 0.5); padding: 2px 6px; border-radius: 3px;">${msg.ruleId || 'no-unused-vars'}</span>
+                                    </div>
+                                    <div style="color: #bae6fd; margin-bottom: 5px;">
+                                        位置: 第${msg.line}行，第${msg.column}列
+                                    </div>
+                                    <div style="color: #f0f9ff; line-height: 1.4;">
+                                        信息: ${msg.message}
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        if (fix && data.fixedCode && data.fixedCode !== code) {
+                            output += `
+                                <div style="margin-top: 20px; padding: 15px; background: rgba(34, 197, 94, 0.1); border-radius: 6px; border: 1px solid rgba(34, 197, 94, 0.3);">
+                                    <div style="color: #34d399; font-weight: bold; margin-bottom: 10px;">🔧 修复后的代码:</div>
+                                    <pre style="background: rgba(15, 23, 42, 0.7); padding: 15px; border-radius: 4px; overflow-x: auto; font-family: 'SF Mono', Monaco, Consolas, monospace; font-size: 13px; line-height: 1.4; color: #f0f9ff; margin: 0;">${data.fixedCode}</pre>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        output = `
+                            <div style="text-align: center; padding: 40px; color: #34d399;">
+                                <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+                                <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">代码检查通过！</div>
+                                <div style="color: #94a3b8; font-size: 14px;">没有发现任何问题</div>
+                            </div>
+                        `;
+                    }
+                } else {
+                    output = `
+                        <div style="text-align: center; padding: 40px; color: #34d399;">
+                            <div style="font-size: 48px; margin-bottom: 15px;">✅</div>
+                            <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">代码检查完成！</div>
+                            <div style="color: #94a3b8; font-size: 14px;">没有发现任何问题</div>
+                        </div>
+                    `;
+                }
+                
+                result.innerHTML = output;
+                result.className = 'demo-result';
+                
+            } catch (error) {
+                result.textContent = `错误: ${error.message}`;
+                result.className = 'demo-result demo-error';
+                statsDiv.style.display = 'none';
+            }
+        }
+
+        function loadESLintExample(type) {
+            const input = document.getElementById('eslint-input');
+            const languageSelect = document.getElementById('eslint-language');
+            
+            if (type === 1) {
+                languageSelect.value = 'javascript';
+                input.value = `const foo = 'bar'   ;
+let x = 1
+if (x == 1) {
+console.log("hello world")
+}
+
+function test(){
+return "test"
+}
+
+var unused = 'variable';
+const obj = {a:1,b:2,c:3}
+console.log(obj)`;
+            } else if (type === 2) {
+                languageSelect.value = 'typescript';
+                input.value = `interface User {
+    name: string
+    age: number
+}
+
+function greet(user: User) {
+    console.log("Hello " + user.name)
+}
+
+const user = {
+    name: "张三",
+    age: 25
+}
+
+greet(user)
+
+let value: any = "test"
+console.log(value)`;
             }
         }
     </script>
