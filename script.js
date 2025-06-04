@@ -271,17 +271,19 @@ class OceanAPIExplorer {
                 // For file:/// URLs, response.status might be 0 on success in some browsers/contexts,
                 // while response.ok (true for statuses 200-299) might be false.
                 // We treat status 0 as success for local files if response.ok is false.
-                if (response.ok || response.status === 0) { 
+                if (response.ok || (response.status === 0 && window.location.protocol === 'file:')) { 
                     const detailsHTML = await response.text();
                     this.modalElements.details.innerHTML = detailsHTML;
                 } else {
                     // If not ok and status is not 0, then it's a more definite error (e.g., 404)
+                    // or a non-zero status for a non-file protocol that isn't ok.
                     console.error(`Failed to load details from ${api.detailsPath}. Status: ${response.status}, StatusText: ${response.statusText}`);
-                    throw new Error(`HTTP error! status: ${response.status} for path ${api.detailsPath}`);
+                    this.modalElements.details.innerHTML = `<p>错误：无法加载API详情 (状态: ${response.status})</p><p>请检查文件路径或网络连接。</p>`;
+                    // throw new Error(`HTTP error! status: ${response.status} for path ${api.detailsPath}`);
                 }
             } catch (error) {
                 console.error('Error fetching API details:', error);
-                this.modalElements.details.innerHTML = '<p>Error loading details.</p>';
+                this.modalElements.details.innerHTML = '<p>加载API详情时出错。请查看控制台了解更多信息。</p>';
             }
         } else {
             // Fallback or error if detailsPath is not defined

@@ -1,9 +1,11 @@
 const express = require('express');
 const sanitizeHtml = require('sanitize-html');
+const cors = require('cors');
 
 const app = express();
 const port = 3010;
 
+app.use(cors());
 app.use(express.json());
 
 app.post('/sanitize-html', (req, res) => {

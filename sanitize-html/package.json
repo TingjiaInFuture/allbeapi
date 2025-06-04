@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
-  },
-  "dependencies": {
+  },  "dependencies": {
     "express": "^4.17.1",
-    "sanitize-html": "^2.0.0" 
+    "sanitize-html": "^2.0.0",
+    "cors": "^2.8.5"
   }
 }
