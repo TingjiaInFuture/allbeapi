@@ -15,6 +15,8 @@ if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
 }
 
+const puppeteerConfigPath = path.join(__dirname, 'puppeteer-config.json');
+
 app.post('/mermaid-cli/generate-diagram', async (req, res) => {
     const { definition, format } = req.body;
 
@@ -35,13 +37,21 @@ app.post('/mermaid-cli/generate-diagram', async (req, res) => {
         // Write definition to temporary file
         fs.writeFileSync(inputPath, definition);
         
-        // Use mermaid CLI to generate the diagram
-        const command = `npx mmdc -i "${inputPath}" -o "${outputPath}"`;
+        // Use mermaid CLI to generate the diagram, now with puppeteer config
+        const command = `npx mmdc -i "${inputPath}" -o "${outputPath}" -p "${puppeteerConfigPath}"`;
         
         await new Promise((resolve, reject) => {
             exec(command, (error, stdout, stderr) => {
                 if (error) {
-                    console.error('Error generating diagram:', error);
+                    console.error(`Error generating diagram. Command: ${command}`);
+                    console.error(`Stderr: ${stderr}`);
+                    console.error(`Stdout: ${stdout}`);
+                    console.error('Error object:', error); // Log the full error object on the server
+
+                    // Attach more details to the error object for the client response
+                    error.stderr = stderr;
+                    error.stdout = stdout;
+                    error.executedCommand = command;
                     reject(error);
                 } else {
                     resolve();
@@ -59,7 +69,15 @@ app.post('/mermaid-cli/generate-diagram', async (req, res) => {
         if (fs.existsSync(inputPath)) {
             fs.unlinkSync(inputPath);
         }
-        res.status(500).json({ error: 'Error generating diagram', details: error.message });
+        // Send more detailed error information
+        res.status(500).json({
+            error: 'Error generating diagram',
+            details: error.message, // Original error message from exec
+            stderr: error.stderr,
+            stdout: error.stdout,
+            command: error.executedCommand,
+            exitCode: error.code
+        });
     }
 });
 
