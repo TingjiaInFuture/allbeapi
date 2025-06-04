@@ -5,7 +5,17 @@ const cors = require('cors');
 const app = express();
 const port = 3010;
 
-app.use(cors());
+// Configure CORS
+const corsOptions = {
+  origin: 'https://allbeapi.top', // Allow only this origin
+  methods: ['GET', 'POST', 'OPTIONS'], // Allow these methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allow these headers
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions)); // Enable pre-flight requests for all routes
+
 app.use(express.json());
 
 app.post('/sanitize-html', (req, res) => {
