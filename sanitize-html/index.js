@@ -18,7 +18,7 @@ app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable pre-flight requests for all routes
 
 // Add explicit health check endpoint
-app.get('/health', (req, res) => {
+app.get('/sanitize-html/health', (req, res) => {
   res.json({ status: 'ok', service: 'sanitize-html' });
 });
 
@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 
 // Sanitize HTML endpoint - both with and without prefix for flexibility
 app.post('/sanitize-html', handleSanitizeRequest);
-app.post('/', handleSanitizeRequest); // Support root path requests
+
 
 function handleSanitizeRequest(req, res) {
     const { html_content, options } = req.body;
