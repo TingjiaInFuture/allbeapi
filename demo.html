@@ -1042,8 +1042,8 @@ function hello() {
             result.className = 'demo-result demo-loading';
             
             try {
-                console.log('发起请求到:', `${BASE_URL}/sanitize-html`);
-                const response = await fetch(`${BASE_URL}/sanitize-html`, {
+                console.log('发起请求到:', `${BASE_URL}/sanitize-html/sanitize-html`);
+                const response = await fetch(`${BASE_URL}/sanitize-html/sanitize-html`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
