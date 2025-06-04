@@ -1129,8 +1129,9 @@ function hello() {
                         fix: fix
                     })
                 });
+                  const data = await response.json();
                 
-                const data = await response.json();
+                let output = ''; // 将 output 声明移到更外层的作用域
                 
                 if (data.error) {
                     result.textContent = `错误: ${data.error}`;
@@ -1150,8 +1151,6 @@ function hello() {
                     statsDiv.style.display = 'block';
                     
                     // 格式化结果显示
-                    let output = '';
-                    
                     if (lintResult.messages && lintResult.messages.length > 0) {
                         output += `<div style="color: #f0f9ff; font-size: 16px; margin-bottom: 15px; font-weight: bold;">🔍 检查结果:</div>`;
                         
