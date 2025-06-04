@@ -95,10 +95,12 @@ def highlight_code():
     try:
         formatter = HtmlFormatter(style='default', linenos=False, cssclass='highlight')
         result = highlight(code, lexer, formatter)
+        css_styles = formatter.get_style_defs('.highlight')
         return jsonify({
             'highlighted_code': result, 
             'detected_language': lexer.name,
             'lexer_aliases': lexer.aliases,
+            'css_styles': css_styles,
             'code_length': len(code),
             'lines_count': len(code.split('\n'))
         })

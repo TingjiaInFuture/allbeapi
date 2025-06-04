@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="开源库API化平台 - 在线演示和测试API服务">
-    <title>API 演示平台 - 开源库API化平台</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>API 演示平台 - 开源库API化平台</title>    <link rel="stylesheet" href="styles.css">
     <style>
+        /* 基础样式 */
         .demo-container {
             max-width: 1400px;
             margin: 0 auto;
@@ -17,6 +17,37 @@
             text-align: center;
             margin-bottom: 40px;
         }
+
+        /* Pygments 代码高亮基础样式 */
+        .highlight {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            overflow-x: auto;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        .highlight pre {
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
+            white-space: pre;
+            word-wrap: normal;
+        }
+        
+        /* 基础代码高亮颜色 */
+        .highlight .k { color: #008000; font-weight: bold; } /* 关键字 */
+        .highlight .s { color: #BA2121; } /* 字符串 */
+        .highlight .c { color: #3D7B7B; font-style: italic; } /* 注释 */
+        .highlight .nb { color: #008000; } /* 内置函数 */
+        .highlight .nf { color: #0000FF; } /* 函数名 */
+        .highlight .nc { color: #0000FF; font-weight: bold; } /* 类名 */
+        .highlight .mi { color: #666666; } /* 数字 */
 
         .demo-tabs {
             display: flex;
@@ -740,6 +771,20 @@ function hello() {
                 
                 const data = await response.json();
                 if (data.highlighted_code) {
+                    // 移除之前的样式（如果存在）
+                    const existingStyle = document.getElementById('pygments-styles');
+                    if (existingStyle) {
+                        existingStyle.remove();
+                    }
+                    
+                    // 添加 Pygments CSS 样式
+                    if (data.css_styles) {
+                        const styleElement = document.createElement('style');
+                        styleElement.id = 'pygments-styles';
+                        styleElement.textContent = data.css_styles;
+                        document.head.appendChild(styleElement);
+                    }
+                    
                     result.innerHTML = data.highlighted_code;
                 } else {
                     result.textContent = JSON.stringify(data, null, 2);
@@ -748,7 +793,7 @@ function hello() {
             } catch (error) {
                 result.textContent = `错误: ${error.message}`;
                 result.className = 'demo-result demo-error';
-            }        }        // QR Code API
+            }}        // QR Code API
         async function callQRCodeAPI() {
             const input = document.getElementById('qrcode-input').value;
             const size = document.getElementById('qrcode-size').value;
