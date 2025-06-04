@@ -31,7 +31,7 @@ app.use((req, res, next) => {
 });
 
 // Sanitize HTML endpoint - both with and without prefix for flexibility
-app.post('/sanitize-html', handleSanitizeRequest);
+app.post('/sanitize-html/sanitize-html', handleSanitizeRequest);
 
 
 function handleSanitizeRequest(req, res) {
