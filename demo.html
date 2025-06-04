@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="开源库API化平台 - 在线演示和测试API服务">
+    <title>API 演示平台 - 开源库API化平台</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .demo-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .demo-tab {
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            color: #bae6fd;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .demo-tab:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+
+        .demo-tab.active {
+            background: rgba(56, 189, 248, 0.3);
+            border-color: rgba(56, 189, 248, 0.6);
+            color: #f0f9ff;
+        }
+
+        .demo-content {
+            display: none;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .demo-content.active {
+            display: block;
+        }
+
+        .demo-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .demo-input-section {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .demo-input-section h3 {
+            color: #f0f9ff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .demo-textarea {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 6px;
+            color: #f0f9ff;
+            padding: 12px;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .demo-textarea:focus {
+            outline: none;
+            border-color: rgba(56, 189, 248, 0.6);
+            box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+        }
+
+        .demo-select, .demo-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 6px;
+            color: #f0f9ff;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+        }
+
+        .demo-button {
+            background: linear-gradient(135deg, #0369a1, #0284c7);
+            border: none;
+            color: #f0f9ff;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+
+        .demo-button:hover {
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .demo-result {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            min-height: 100px;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            color: #dcfce7;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .demo-error {
+            border-color: rgba(239, 68, 68, 0.3);
+            background: rgba(239, 68, 68, 0.1);
+            color: #fecaca;
+        }
+
+        .demo-loading {
+            text-align: center;
+            color: #bae6fd;
+            font-style: italic;
+        }
+
+        .demo-examples {
+            margin-top: 20px;
+        }
+
+        .demo-example {
+            background: rgba(30, 41, 59, 0.3);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .demo-example:hover {
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .demo-example-title {
+            color: #f0f9ff;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .demo-example-desc {
+            color: #bae6fd;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .demo-form {
+                grid-template-columns: 1fr;
+            }
+            
+            .demo-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .demo-tab {
+                width: 100%;
+                max-width: 300px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <header class="demo-header">
+            <h1>🚀 API 演示平台</h1>
+            <p class="tagline">在线测试开源库API服务，实时查看结果</p>
+            <div style="margin-top: 20px;">
+                <a href="index.html" class="demo-button">← 返回主页</a>
+            </div>
+        </header>        <section class="demo-tabs">
+            <div class="demo-tab active" data-tab="marked">📝 Markdown转HTML</div>
+            <div class="demo-tab" data-tab="prettier">🎨 代码格式化</div>
+            <div class="demo-tab" data-tab="beautifulsoup">🥄 HTML解析</div>
+            <div class="demo-tab" data-tab="pygments">🌈 代码高亮</div>
+            <div class="demo-tab" data-tab="qrcode">📱 二维码生成</div>
+            <div class="demo-tab" data-tab="diff">🔄 文本比较</div>
+            <div class="demo-tab" data-tab="csv">📊 CSV解析</div>
+            <div class="demo-tab" data-tab="sanitize">🛡️ HTML清理</div>
+            <div class="demo-tab" data-tab="ajv">✅ JSON验证</div>
+            <div class="demo-tab" data-tab="eslint">🔍 ESLint检查</div>
+        </section>
+
+        <!-- Marked API Demo -->
+        <div class="demo-content active" id="marked">
+            <div class="demo-form">
+                <div class="demo-input-section">
+                    <h3>📝 输入 Markdown</h3>
+                    <textarea class="demo-textarea" id="marked-input" placeholder="输入 Markdown 文本..."># Hello World
+
+这是一个 **粗体** 文本示例。
+
+- 列表项 1
+- 列表项 2
+
+```javascript
+console.log('Hello World');
+```
+
+> 这是一个引用</textarea>
+                    <button class="demo-button" onclick="callMarkedAPI()">转换为 HTML</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>📄 输出 HTML</h3>
+                    <div class="demo-result" id="marked-result">点击"转换为 HTML"查看结果...</div>
+                </div>
+            </div>
+            
+            <div class="demo-examples">
+                <h3>💡 示例模板</h3>
+                <div class="demo-example" onclick="loadMarkedExample(1)">
+                    <div class="demo-example-title">基础语法示例</div>
+                    <div class="demo-example-desc">包含标题、列表、代码块等常用语法</div>
+                </div>
+                <div class="demo-example" onclick="loadMarkedExample(2)">
+                    <div class="demo-example-title">表格和链接</div>
+                    <div class="demo-example-desc">演示表格语法和链接的使用</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prettier API Demo -->
+        <div class="demo-content" id="prettier">
+            <div class="demo-form">
+                <div class="demo-input-section">
+                    <h3>🎨 输入代码</h3>
+                    <select class="demo-select" id="prettier-parser">
+                        <option value="babel">JavaScript</option>
+                        <option value="typescript">TypeScript</option>
+                        <option value="css">CSS</option>
+                        <option value="html">HTML</option>
+                        <option value="json">JSON</option>
+                    </select>
+                    <textarea class="demo-textarea" id="prettier-input" placeholder="输入需要格式化的代码...">const x=1;function test(a,b){if(a>b){return a;}else{return b;}}const result=test(5,3);console.log(result);</textarea>
+                    <button class="demo-button" onclick="callPrettierAPI()">格式化代码</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>✨ 格式化结果</h3>
+                    <div class="demo-result" id="prettier-result">点击"格式化代码"查看结果...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Beautiful Soup API Demo -->
+        <div class="demo-content" id="beautifulsoup">
+            <div class="demo-form">
+                <div class="demo-input-section">
+                    <h3>🥄 输入 HTML</h3>
+                    <textarea class="demo-textarea" id="beautifulsoup-input" placeholder="输入 HTML 内容..."><!DOCTYPE html>
+<html>
+<head>
+    <title>示例页面</title>
+</head>
+<body>
+    <div class="container">
+        <h1>欢迎</h1>
+        <p>这是一个示例段落。</p>
+        <a href="https://example.com">示例链接</a>
+        <img src="image.jpg" alt="示例图片">
+    </div>
+</body>
+</html></textarea>
+                    <select class="demo-select" id="beautifulsoup-action">
+                        <option value="parse">解析HTML结构</option>
+                        <option value="links">提取所有链接</option>
+                        <option value="images">提取所有图片</option>
+                        <option value="clean">清理HTML</option>
+                    </select>
+                    <button class="demo-button" onclick="callBeautifulSoupAPI()">解析 HTML</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>📋 解析结果</h3>
+                    <div class="demo-result" id="beautifulsoup-result">点击"解析 HTML"查看结果...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pygments API Demo -->
+        <div class="demo-content" id="pygments">
+            <div class="demo-form">
+                <div class="demo-input-section">
+                    <h3>🌈 输入代码</h3>
+                    <select class="demo-select" id="pygments-language">
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="css">CSS</option>
+                        <option value="html">HTML</option>
+                    </select>
+                    <textarea class="demo-textarea" id="pygments-input" placeholder="输入代码...">def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+# 计算斐波那契数列
+for i in range(10):
+    print(f"F({i}) = {fibonacci(i)}")</textarea>
+                    <button class="demo-button" onclick="callPygmentsAPI()">语法高亮</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>🎨 高亮结果</h3>
+                    <div class="demo-result" id="pygments-result">点击"语法高亮"查看结果...</div>
+                </div>
+            </div>        </div>
+
+        <!-- QR Code API Demo -->
+        <div class="demo-content" id="qrcode">
+            <div class="demo-form">                <div class="demo-input-section">
+                    <h3>📱 输入数据</h3>
+                    <label for="qrcode-size" style="color: #bae6fd; margin-bottom: 5px; display: block;">框大小 (box_size):</label>
+                    <select class="demo-select" id="qrcode-size">
+                        <option value="5">小 (5)</option>
+                        <option value="8">中 (8)</option>
+                        <option value="10" selected>大 (10)</option>
+                        <option value="15">超大 (15)</option>
+                        <option value="20">极大 (20)</option>
+                    </select>
+                    <label for="qrcode-input" style="color: #bae6fd; margin: 10px 0 5px 0; display: block;">要编码的内容:</label>
+                    <textarea class="demo-textarea" id="qrcode-input" placeholder="输入要生成二维码的内容...">https://res.allbeapi.top</textarea>
+                    <button class="demo-button" onclick="callQRCodeAPI()">生成二维码</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>📱 二维码图片</h3>
+                    <div class="demo-result" id="qrcode-result">点击"生成二维码"查看结果...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Diff API Demo -->
+        <div class="demo-content" id="diff">
+            <div class="demo-form">
+                <div class="demo-input-section">
+                    <h3>📄 原始文本</h3>
+                    <textarea class="demo-textarea" id="diff-text1" placeholder="输入原始文本...">Hello World
+This is the original text.
+Line 3
+Line 4</textarea>
+                    <h3>📄 修改后文本</h3>
+                    <textarea class="demo-textarea" id="diff-text2" placeholder="输入修改后文本...">Hello Beautiful World
+This is the modified text.
+Line 3
+New Line 4</textarea>
+                    
+                    <div style="margin-top: 10px; margin-bottom: 10px;">
+                        <label for="diff-type" style="margin-right: 5px;">比较类型:</label>
+                        <select class="demo-select" id="diff-type" style="margin-right: 15px;">
+                            <option value="chars">字符 (chars)</option>
+                            <option value="words" selected>单词 (words)</option>
+                            <option value="wordsWithSpace">单词 (带空格)</option>
+                            <option value="lines">行 (lines)</option>
+                            <option value="trimmedLines">行 (去空)</option>
+                            <option value="sentences">句子 (sentences)</option>
+                            <option value="css">CSS</option>
+                            <option value="json">JSON</option>
+                        </select>
+
+                        <label for="diff-output-format" style="margin-right: 5px;">输出格式:</label>
+                        <select class="demo-select" id="diff-output-format">
+                            <option value="html" selected>HTML</option>
+                            <option value="json_array">JSON 数组</option>
+                            <option value="patch">Patch</option>
+                        </select>
+                    </div>
+                    
+                    <button class="demo-button" onclick="callDiffAPI()">比较差异</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>🔄 差异结果</h3>
+                    <div class="demo-result" id="diff-result">点击"比较差异"查看结果...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CSV Parser Demo -->
+        <div class="demo-content" id="csv">
+            <div class="demo-form">
+                <div class="demo-input-section">
+                    <h3>📊 输入 CSV</h3>
+                    <textarea class="demo-textarea" id="csv-input" placeholder="输入 CSV 数据...">name,age,city,occupation
+张三,25,北京,工程师
+李四,30,上海,设计师
+王五,28,深圳,产品经理
+赵六,35,广州,数据分析师</textarea>
+                    <button class="demo-button" onclick="callCSVAPI()">转换为 JSON</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>📋 JSON 结果</h3>
+                    <div class="demo-result" id="csv-result">点击"转换为 JSON"查看结果...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sanitize HTML Demo -->
+        <div class="demo-content" id="sanitize">
+            <div class="demo-form">
+                <div class="demo-input-section">
+                    <h3>🛡️ 输入 HTML (可能包含危险内容)</h3>
+                    <textarea class="demo-textarea" id="sanitize-input" placeholder="输入需要清理的 HTML..."><div>
+    <h1>安全的内容</h1>
+    <p>这是正常的段落。</p>
+    <script>alert('这是危险的脚本!');</script>
+    <img src="image.jpg" alt="安全图片">
+    <a href="javascript:alert('危险链接')">危险链接</a>
+    <iframe src="http://malicious.com"></iframe>
+</div></textarea>
+                    <button class="demo-button" onclick="callSanitizeAPI()">清理 HTML</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>✅ 清理后的安全 HTML</h3>
+                    <div class="demo-result" id="sanitize-result">点击"清理 HTML"查看结果...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AJV Demo -->
+        <div class="demo-content" id="ajv">
+            <div class="demo-form">
+                <div class="demo-input-section">
+                    <h3>📋 JSON Schema</h3>
+                    <textarea class="demo-textarea" id="ajv-schema" placeholder="输入 JSON Schema..." style="min-height: 150px;">{
+  "type": "object",
+  "properties": {
+    "name": {"type": "string"},
+    "age": {"type": "number", "minimum": 0},
+    "email": {"type": "string", "format": "email"}
+  },
+  "required": ["name", "age"]
+}</textarea>
+                    <h3>📄 待验证的 JSON 数据</h3>
+                    <textarea class="demo-textarea" id="ajv-data" placeholder="输入 JSON 数据..." style="min-height: 150px;">{
+  "name": "张三",
+  "age": 25,
+  "email": "zhangsan@example.com"
+}</textarea>
+                    <button class="demo-button" onclick="callAjvAPI()">验证 JSON</button>
+                </div>
+                <div class="demo-input-section">
+                    <h3>✅ 验证结果</h3>
+                    <div class="demo-result" id="ajv-result">点击"验证 JSON"查看结果...</div>
+                </div>
+            </div>
+        </div>
+    </div>    <script>
+        const BASE_URL = 'https://res.allbeapi.top';
+
+        // 初始化页面时检查hash
+        window.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash.substring(1);
+            if (hash) {
+                switchToTab(hash);
+            }
+        });
+
+        // Tab switching
+        document.querySelectorAll('.demo-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                switchToTab(targetTab);
+            });
+        });
+
+        function switchToTab(targetTab) {
+            // Update active tab
+            document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
+            const activeTab = document.querySelector(`[data-tab="${targetTab}"]`);
+            if (activeTab) {
+                activeTab.classList.add('active');
+            }
+            
+            // Update active content
+            document.querySelectorAll('.demo-content').forEach(c => c.classList.remove('active'));
+            const activeContent = document.getElementById(targetTab);
+            if (activeContent) {
+                activeContent.classList.add('active');
+            }
+        }        // Marked API
+        async function callMarkedAPI() {
+            const input = document.getElementById('marked-input').value;
+            const result = document.getElementById('marked-result');
+            
+            if (!input.trim()) {
+                result.textContent = '请输入 Markdown 文本';
+                result.className = 'demo-result demo-error';
+                return;
+            }
+            
+            result.textContent = '正在转换...';
+            result.className = 'demo-result demo-loading';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/marked/render`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({markdown: input})
+                });
+                
+                if (response.ok) {
+                    // Marked API returns HTML directly, not JSON
+                    const htmlContent = await response.text();
+                    result.innerHTML = htmlContent;
+                    result.className = 'demo-result';
+                } else {
+                    const errorData = await response.json();
+                    result.textContent = `错误: ${errorData.error || '请求失败'}`;
+                    result.className = 'demo-result demo-error';
+                }
+            } catch (error) {
+                result.textContent = `错误: ${error.message}`;
+                result.className = 'demo-result demo-error';
+            }
+        }
+
+        function loadMarkedExample(type) {
+            const input = document.getElementById('marked-input');
+            if (type === 1) {
+                input.value = `# Hello World
+
+这是一个 **粗体** 文本和 *斜体* 文本示例。
+
+## 列表示例
+
+- 列表项 1
+- 列表项 2
+  - 嵌套列表项
+
+## 代码示例
+
+\`\`\`javascript
+function hello() {
+    console.log('Hello World');
+}
+\`\`\`
+
+> 这是一个引用文本`;
+            } else if (type === 2) {
+                input.value = `# 表格和链接示例
+
+## 表格
+
+| 姓名 | 年龄 | 职业 |
+|------|------|------|
+| 张三 | 25   | 工程师 |
+| 李四 | 30   | 设计师 |
+
+## 链接
+
+[访问GitHub](https://github.com)
+
+## 图片
+
+![示例图片](https://via.placeholder.com/150)`;
+            }
+        }
+
+        // Prettier API
+        async function callPrettierAPI() {
+            const input = document.getElementById('prettier-input').value;
+            const parser = document.getElementById('prettier-parser').value;
+            const result = document.getElementById('prettier-result');
+            
+            if (!input.trim()) {
+                result.textContent = '请输入代码';
+                result.className = 'demo-result demo-error';
+                return;
+            }
+            
+            result.textContent = '正在格式化...';
+            result.className = 'demo-result demo-loading';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/prettier/format`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({code: input, parser: parser})
+                });
+                
+                const data = await response.json();
+                result.textContent = data.formatted || JSON.stringify(data, null, 2);
+                result.className = 'demo-result';
+            } catch (error) {
+                result.textContent = `错误: ${error.message}`;
+                result.className = 'demo-result demo-error';
+            }
+        }
+
+        // Beautiful Soup API
+        async function callBeautifulSoupAPI() {
+            const input = document.getElementById('beautifulsoup-input').value;
+            const action = document.getElementById('beautifulsoup-action').value;
+            const result = document.getElementById('beautifulsoup-result');
+            
+            if (!input.trim()) {
+                result.textContent = '请输入 HTML';
+                result.className = 'demo-result demo-error';
+                return;
+            }
+            
+            result.textContent = '正在解析...';
+            result.className = 'demo-result demo-loading';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/beautifulsoup/${action}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({html: input})
+                });
+                
+                const data = await response.json();
+                result.textContent = JSON.stringify(data, null, 2);
+                result.className = 'demo-result';
+            } catch (error) {
+                result.textContent = `错误: ${error.message}`;
+                result.className = 'demo-result demo-error';
+            }
+        }        // Pygments API
+        async function callPygmentsAPI() {
+            const input = document.getElementById('pygments-input').value;
+            const language = document.getElementById('pygments-language').value;
+            const result = document.getElementById('pygments-result');
+            
+            if (!input.trim()) {
+                result.textContent = '请输入代码';
+                result.className = 'demo-result demo-error';
+                return;
+            }
+            
+            result.textContent = '正在高亮...';
+            result.className = 'demo-result demo-loading';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/pygments/highlight`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({code: input, language: language})
+                });
+                
+                const data = await response.json();
+                if (data.highlighted_code) {
+                    result.innerHTML = data.highlighted_code;
+                } else {
+                    result.textContent = JSON.stringify(data, null, 2);
+                }
+                result.className = 'demo-result';
+            } catch (error) {
+                result.textContent = `错误: ${error.message}`;
+                result.className = 'demo-result demo-error';
+            }        }        // QR Code API
+        async function callQRCodeAPI() {
+            const input = document.getElementById('qrcode-input').value;
+            const size = document.getElementById('qrcode-size').value;
+            const result = document.getElementById('qrcode-result');
+            
+            if (!input.trim()) {
+                result.textContent = '请输入要生成二维码的内容';
+                result.className = 'demo-result demo-error';
+                return;
+            }
+            
+            result.textContent = '正在生成二维码...';
+            result.className = 'demo-result demo-loading';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/python-qrcode/generate-qrcode`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({data: input, box_size: parseInt(size)})
+                });
+                
+                if (response.ok && response.headers.get('content-type')?.startsWith('image/')) {
+                    // 处理图像响应
+                    const blob = await response.blob();
+                    const imageUrl = URL.createObjectURL(blob);
+                    
+                    // 显示二维码图片
+                    result.innerHTML = `
+                        <div style="text-align: center;">
+                            <img src="${imageUrl}" 
+                                 alt="QR Code" 
+                                 style="max-width: 100%; border: 1px solid #ddd; border-radius: 8px; margin: 10px 0;">
+                            <p style="margin: 10px 0; color: #666; font-size: 14px;">
+                                尺寸: ${size} | 内容长度: ${input.length} 字符
+                            </p>
+                            <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #666; text-align: left;">
+                                <strong>编码内容:</strong><br>
+                                ${input.length > 100 ? input.substring(0, 100) + '...' : input}
+                            </div>
+                            <button onclick="downloadQRCode('${imageUrl}', '${input.replace(/[^\w\s-]/g, '_').substring(0, 20)}')" 
+                                    style="margin-top: 10px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                📥 下载二维码
+                            </button>
+                        </div>
+                    `;
+                    result.className = 'demo-result';
+                } else {
+                    // 处理错误响应
+                    const errorData = await response.json();
+                    result.textContent = `错误: ${errorData.error || '生成二维码失败'}`;
+                    result.className = 'demo-result demo-error';
+                }
+            } catch (error) {
+                result.textContent = `错误: ${error.message}`;
+                result.className = 'demo-result demo-error';
+            }
+        }
+
+        // 下载二维码图片
+        function downloadQRCode(imageUrl, filename) {
+            const link = document.createElement('a');
+            link.href = imageUrl;
+            link.download = `qrcode_${filename}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Diff API
+        async function callDiffAPI() {
+            const text1 = document.getElementById('diff-text1').value;
+            const text2 = document.getElementById('diff-text2').value;
+            const type = document.getElementById('diff-type').value;
+            const outputFormat = document.getElementById('diff-output-format').value;
+            const resultElement = document.getElementById('diff-result');
+            resultElement.textContent = '正在比较...';
+
+            try {
+                const response = await fetch('https://res.allbeapi.top/diff/compare', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text1, text2, type, outputFormat })
+                });
+                const data = await response.json();
+
+                if (outputFormat === 'html') {
+                    // 如果输出格式是 HTML，直接设置 innerHTML
+                    resultElement.innerHTML = data.diff || '无差异';
+                } else {
+                    // 其他格式，按 JSON 显示
+                    resultElement.textContent = JSON.stringify(data, null, 2);
+                }
+                resultElement.className = 'demo-result';
+            } catch (error) {
+                resultElement.textContent = `错误: ${error.message}`;
+                resultElement.className = 'demo-result demo-error';
+            }
+        }        // CSV API
+        async function callCSVAPI() {
+            const input = document.getElementById('csv-input').value;
+            const result = document.getElementById('csv-result');
+            
+            if (!input.trim()) {
+                result.textContent = '请输入 CSV 数据';
+                result.className = 'demo-result demo-error';
+                return;
+            }
+            
+            result.textContent = '正在解析...';
+            result.className = 'demo-result demo-loading';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/csv-parser/csv-to-json`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({csv_data: input})
+                });
+                
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    // 美化显示JSON结果
+                    result.innerHTML = `
+                        <div style="text-align: left;">
+                            <div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px; color: #666; font-size: 14px;">
+                                <strong>解析结果:</strong> 共 ${data.length} 条记录
+                            </div>
+                            <pre style="background: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.4;">${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    result.textContent = JSON.stringify(data, null, 2);
+                }
+                result.className = 'demo-result';
+            } catch (error) {
+                result.textContent = `错误: ${error.message}`;
+                result.className = 'demo-result demo-error';
+            }
+        }// Sanitize HTML API
+        async function callSanitizeAPI() {
+            const input = document.getElementById('sanitize-input').value;
+            const result = document.getElementById('sanitize-result');
+            
+            if (!input.trim()) {
+                result.textContent = '请输入 HTML';
+                result.className = 'demo-result demo-error';
+                return;
+            }
+            
+            result.textContent = '正在清理...';
+            result.className = 'demo-result demo-loading';
+            
+            try {
+                const response = await fetch(`${BASE_URL}/sanitize-html`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({html_content: input})
+                });
+                
+                const data = await response.json();
+                result.textContent = data.sanitized_html || JSON.stringify(data, null, 2);
+                result.className = 'demo-result';
+            } catch (error) {
+                result.textContent = `错误: ${error.message}`;
+                result.className = 'demo-result demo-error';
+            }
+        }
+
+        // AJV API
+        async function callAjvAPI() {
+            const schemaText = document.getElementById('ajv-schema').value;
+            const dataText = document.getElementById('ajv-data').value;
+            const result = document.getElementById('ajv-result');
+            
+            if (!schemaText.trim() || !dataText.trim()) {
+                result.textContent = '请输入 Schema 和数据';
+                result.className = 'demo-result demo-error';
+                return;
+            }
+            
+            try {
+                const schema = JSON.parse(schemaText);
+                const data = JSON.parse(dataText);
+                
+                result.textContent = '正在验证...';
+                result.className = 'demo-result demo-loading';
+                
+                const response = await fetch(`${BASE_URL}/ajv/validate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({schema: schema, data: data})
+                });
+                
+                const responseData = await response.json();
+                result.textContent = JSON.stringify(responseData, null, 2);
+                result.className = 'demo-result';
+            } catch (error) {
+                result.textContent = `错误: ${error.message}`;
+                result.className = 'demo-result demo-error';
+            }
+        }
+    </script>
+</body>
+</html>

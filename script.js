@@ -189,9 +189,7 @@ class OceanAPIExplorer {
             const block = this._createSingleAPIBlock(api, index);
             this.apiBlocksContainer.appendChild(block);
         });
-    }
-
-    _createSingleAPIBlock(api, index) {
+    }    _createSingleAPIBlock(api, index) {
         const block = document.createElement('div');
         block.className = 'api-floating-block';
         block.dataset.apiId = api.id;
@@ -201,11 +199,20 @@ class OceanAPIExplorer {
         block.style.animationDelay = `${randomDelay}s`;
         block.style.animationDuration = `${randomDuration}s`;
 
+        // 检查是否有演示支持
+        const demoSupported = ['marked', 'prettier', 'beautifulsoup', 'pygments', 'diff', 'csv-parser', 'sanitize-html', 'ajv'].includes(api.id);
+        
+        const demoButton = demoSupported ? 
+            `<button class="api-demo-btn" onclick="event.stopPropagation(); window.open('demo.html#${api.id}', '_blank')">
+                🚀 快速演示
+            </button>` : '';
+
         block.innerHTML = `
             <div class="api-block-content">
                 <div class="api-block-icon">${api.icon}</div>
                 <div class="api-block-title">${api.title}</div>
                 <div class="api-block-desc">${api.description}</div>
+                ${demoButton}
             </div>
         `;
 
