@@ -7,18 +7,34 @@ const port = 3010;
 
 // Configure CORS
 const corsOptions = {
-  origin: 'https://allbeapi.top', // Allow only this origin
+  origin: ['https://allbeapi.top', 'https://res.allbeapi.top'], // Allow both origins
   methods: ['GET', 'POST', 'OPTIONS'], // Allow these methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Allow these headers
-  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  credentials: false // Explicitly set credentials
 };
 
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable pre-flight requests for all routes
 
+// Add explicit health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', service: 'sanitize-html' });
+});
+
 app.use(express.json());
 
-app.post('/sanitize-html', (req, res) => {
+// Add logging middleware for debugging
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path} - Origin: ${req.get('Origin')}`);
+    next();
+});
+
+// Sanitize HTML endpoint - both with and without prefix for flexibility
+app.post('/sanitize-html', handleSanitizeRequest);
+app.post('/', handleSanitizeRequest); // Support root path requests
+
+function handleSanitizeRequest(req, res) {
     const { html_content, options } = req.body;
 
     if (html_content === undefined) { // html_content can be an empty string
@@ -45,7 +61,7 @@ app.post('/sanitize-html', (req, res) => {
         console.error('Error sanitizing HTML:', error);
         res.status(500).json({ error: 'Error sanitizing HTML', details: error.message });
     }
-});
+}
 
 app.listen(port, () => {
     console.log(`Sanitize HTML API listening at http://localhost:${port}`);

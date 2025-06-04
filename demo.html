@@ -1027,7 +1027,7 @@ function hello() {
                 result.textContent = `错误: ${error.message}`;
                 result.className = 'demo-result demo-error';
             }
-        }// Sanitize HTML API
+        }        // Sanitize HTML API
         async function callSanitizeAPI() {
             const input = document.getElementById('sanitize-input').value;
             const result = document.getElementById('sanitize-result');
@@ -1042,16 +1042,28 @@ function hello() {
             result.className = 'demo-result demo-loading';
             
             try {
+                console.log('发起请求到:', `${BASE_URL}/sanitize-html`);
                 const response = await fetch(`${BASE_URL}/sanitize-html`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify({html_content: input})
                 });
+                
+                console.log('响应状态:', response.status);
+                console.log('响应头:', [...response.headers.entries()]);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 
                 const data = await response.json();
                 result.textContent = data.sanitized_html || JSON.stringify(data, null, 2);
                 result.className = 'demo-result';
             } catch (error) {
+                console.error('请求错误:', error);
                 result.textContent = `错误: ${error.message}`;
                 result.className = 'demo-result demo-error';
             }
