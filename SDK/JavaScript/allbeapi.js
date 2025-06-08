@@ -14,19 +14,9 @@ class AllBeApi {
     constructor(baseUrl = 'https://res.allbeapi.top') {
         this.baseUrl = baseUrl;
 
-        this.marked = new MarkedAPI(this);
-        this.beautifulsoup = new BeautifulSoupAPI(this);
-        this.prettier = new PrettierAPI(this);
-        this.pygments = new PygmentsAPI(this);
-        this.pythonQrcode = new PythonQRCodeAPI(this); // python-qrcode -> pythonQrcode
-        this.sanitizeHtml = new SanitizeHtmlAPI(this); // sanitize-html -> sanitizeHtml
-        this.ajv = new AjvAPI(this);
         this.eslint = new ESLintAPI(this);
-        this.diff = new DiffAPI(this);
-        this.csvParser = new CsvParserAPI(this); // csv-parser -> csvParser
         this.mermaidCli = new MermaidCliAPI(this); // mermaid-cli -> mermaidCli
         this.pdfkit = new PDFKitAPI(this); // pdfkit -> pdfkit (using PDFKitAPI for consistency)
-        this.pillow = new PillowAPI(this);
     }
 
     /**
@@ -90,194 +80,6 @@ class AllBeApi {
     }
 }
 
-class MarkedAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 将 Markdown 文本转换为 HTML (Converts Markdown text to HTML)
-     * @param {string} markdown - The Markdown content.
-     * @returns {Promise<object>}
-     */
-    async render(markdown) {
-        return this.client._request('POST', '/marked/render', null, { markdown });
-    }
-}
-
-class BeautifulSoupAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 解析HTML内容 (Parses HTML content)
-     * @param {string} html - The HTML content to parse.
-     * @returns {Promise<object>}
-     */
-    async parse(html) {
-        return this.client._request('POST', '/beautifulsoup/parse', null, { html });
-    }
-    /**
-     * 提取特定元素 (Extracts specific elements from HTML)
-     * @param {string} html - The HTML content.
-     * @param {string} selector - CSS selector to extract elements.
-     * @param {object} [options] - Additional options for extraction.
-     * @returns {Promise<object>}
-     */
-    async extract(html, selector, options = {}) {
-        return this.client._request('POST', '/beautifulsoup/extract', null, { html, selector, ...options });
-    }
-    /**
-     * 提取所有链接 (Extracts all links from HTML)
-     * @param {string} html - The HTML content.
-     * @returns {Promise<object>}
-     */
-    async links(html) {
-        return this.client._request('POST', '/beautifulsoup/links', null, { html });
-    }
-    /**
-     * 提取所有图片 (Extracts all images from HTML)
-     * @param {string} html - The HTML content.
-     * @returns {Promise<object>}
-     */
-    async images(html) {
-        return this.client._request('POST', '/beautifulsoup/images', null, { html });
-    }
-    /**
-     * 清理HTML内容 (Cleans HTML content)
-     * @param {string} html - The HTML content to clean.
-     * @returns {Promise<object>}
-     */
-    async clean(html) {
-        return this.client._request('POST', '/beautifulsoup/clean', null, { html });
-    }
-    /**
-     * 获取网页并解析 (Fetches a webpage and parses its content)
-     * @param {string} url - The URL of the webpage to fetch and parse.
-     * @returns {Promise<object>}
-     */
-    async fetch(url) {
-        return this.client._request('POST', '/beautifulsoup/fetch', null, { url });
-    }
-    /**
-     * 健康检查 (Health check for BeautifulSoup API)
-     * @returns {Promise<object>}
-     */
-    async health() {
-        return this.client._request('GET', '/beautifulsoup/health');
-    }
-}
-
-class PrettierAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 格式化代码 (Formats code using Prettier)
-     * @param {string} code - The code to format.
-     * @param {string} parser - The parser to use (e.g., 'babel', 'typescript').
-     * @param {object} [options] - Prettier options.
-     * @returns {Promise<object>}
-     */
-    async format(code, parser, options = {}) {
-        return this.client._request('POST', '/prettier/format', null, { code, parser, options });
-    }
-    /**
-     * 检查代码格式 (Checks code formatting using Prettier)
-     * @param {string} code - The code to check.
-     * @param {string} parser - The parser to use.
-     * @param {object} [options] - Prettier options.
-     * @returns {Promise<object>}
-     */
-    async check(code, parser, options = {}) {
-        return this.client._request('POST', '/prettier/check', null, { code, parser, options });
-    }
-    /**
-     * 批量格式化 (Batch format multiple code snippets)
-     * @param {Array<object>} files - Array of file objects, e.g., [{ name: 'file.js', code: '...' }].
-     * @param {string} parser - The parser to use for all files.
-     * @param {object} [options] - Prettier options.
-     * @returns {Promise<object>}
-     */
-    async batch(files, parser, options = {}) { // Assuming structure based on typical batch operations
-        return this.client._request('POST', '/prettier/batch', null, { files, parser, options });
-    }
-    /**
-     * 获取支持的解析器 (Gets available Prettier parsers)
-     * @returns {Promise<object>}
-     */
-    async getParsers() {
-        return this.client._request('GET', '/prettier/parsers');
-    }
-    /**
-     * 获取配置选项 (Gets Prettier configuration options)
-     * @returns {Promise<object>}
-     */
-    async getOptions() {
-        return this.client._request('GET', '/prettier/options');
-    }
-    /**
-     * 健康检查 (Health check for Prettier API)
-     * @returns {Promise<object>}
-     */
-    async health() {
-        return this.client._request('GET', '/prettier/health');
-    }
-    /**
-     * API信息 (Get Prettier API information)
-     * @returns {Promise<object>}
-     */
-    async getInfo() {
-        return this.client._request('GET', '/prettier/info');
-    }
-}
-
-class PygmentsAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 对代码进行语法高亮 (Highlights code syntax using Pygments)
-     * @param {string} code - The code to highlight.
-     * @param {string} language - The language of the code.
-     * @param {object} [options] - Additional Pygments options (e.g., formatter, style).
-     * @returns {Promise<object>}
-     */
-    async highlight(code, language, options = {}) {
-        return this.client._request('POST', '/pygments/highlight', null, { code, language, ...options });
-    }
-}
-
-class PythonQRCodeAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 生成二维码图像 (Generates a QR code image)
-     * @param {string} data - The data to encode in the QR code.
-     * @param {object} [options] - Options like size, box_size, border, fill_color, back_color.
-     * @returns {Promise<Blob>} - The QR code image as a Blob.
-     */
-    async generateQrcode(data, options = {}) {
-        return this.client._request('POST', '/python-qrcode/generate-qrcode', null, { data, ...options });
-    }
-}
-
-class SanitizeHtmlAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 清理HTML内容，防止XSS攻击 (Sanitizes HTML content to prevent XSS attacks)
-     * @param {string} html - The HTML content to sanitize.
-     * @param {object} [options] - Sanitization options.
-     * @returns {Promise<object>}
-     */
-    async sanitize(html, options = {}) {
-        return this.client._request('POST', '/sanitize-html', null, { html, options });
-    }
-}
-
-class AjvAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 验证JSON数据是否符合Schema (Validates JSON data against a schema using Ajv)
-     * @param {object} schema - The JSON schema.
-     * @param {object} data - The JSON data to validate.
-     * @returns {Promise<object>}
-     */
-    async validate(schema, data) {
-        return this.client._request('POST', '/ajv/validate', null, { schema, data });
-    }
-}
-
 class ESLintAPI {
     constructor(client) { this.client = client; }
     /**
@@ -289,33 +91,6 @@ class ESLintAPI {
      */
     async lint(code, rules = {}, options = {}) {
         return this.client._request('POST', '/eslint/lint', null, { code, rules, ...options });
-    }
-}
-
-class DiffAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 比较两个文本的差异 (Compares two texts and returns the differences)
-     * @param {string} text1 - The first text.
-     * @param {string} text2 - The second text.
-     * @param {object} [options] - Diffing options.
-     * @returns {Promise<object>}
-     */
-    async compare(text1, text2, options = {}) {
-        return this.client._request('POST', '/diff/compare', null, { text1, text2, ...options });
-    }
-}
-
-class CsvParserAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 将CSV转换为JSON (Parses CSV data into JSON)
-     * @param {string} csvData - The CSV data as a string.
-     * @param {object} [options] - CSV parsing options (e.g., delimiter, headers).
-     * @returns {Promise<object>}
-     */
-    async parse(csvData, options = {}) {
-        return this.client._request('POST', '/csv-parser/parse', null, { csv_data: csvData, ...options });
     }
 }
 
@@ -342,20 +117,6 @@ class PDFKitAPI { // Changed from PdfkitAPI to PDFKitAPI for consistency
      */
     async generate(content, options = {}) {
         return this.client._request('POST', '/pdfkit/generate', null, { content, ...options });
-    }
-}
-
-class PillowAPI {
-    constructor(client) { this.client = client; }
-    /**
-     * 处理和编辑图像 (Processes and edits images using Pillow)
-     * @param {string} imageUrl - URL of the image to process, or base64 encoded image.
-     * @param {string} operation - The operation to perform (e.g., 'resize', 'rotate', 'filter').
-     * @param {object} [options] - Operation-specific parameters (e.g., width, height, angle, filter_name).
-     * @returns {Promise<Blob>} - The processed image as a Blob.
-     */
-    async process(imageUrl, operation, options = {}) {
-        return this.client._request('POST', '/pillow/process', null, { image_url: imageUrl, operation, ...options });
     }
 }
 
