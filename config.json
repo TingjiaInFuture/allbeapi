@@ -60,7 +60,7 @@
       {"label": "功能特性", "href": "#features"},
       {"label": "API文档", "href": "#docs"},
       {"label": "代码示例", "href": "#examples"},
-      {"label": "GitHub", "href": "https://github.com/allbeapi/allbeapi"}
+      {"label": "GitHub", "href": "https://github.com/TingjiaInFuture/allbeapi"}
     ],
     "footer": {
       "API服务": [
@@ -76,8 +76,8 @@
         {"label": "代码示例", "href": "#examples"}
       ],
       "支持": [
-        {"label": "报告问题", "href": "https://github.com/allbeapi/allbeapi/issues"},
-        {"label": "社区讨论", "href": "https://github.com/allbeapi/allbeapi/discussions"},
+        {"label": "报告问题", "href": "https://github.com/TingjiaInFuture/allbeapi/issues"},
+        {"label": "社区讨论", "href": "https://github.com/TingjiaInFuture/allbeapi/discussions"},
         {"label": "贡献指南", "href": "#contributing"},
         {"label": "许可证", "href": "#license"}
       ],
@@ -96,7 +96,7 @@
     {"value": "∞", "label": "可能性"}
   ],
   "social": {
-    "github": "https://github.com/allbeapi/allbeapi",
+    "github": "https://github.com/TingjiaInFuture/allbeapi",
     "docs": "/README.md",
     "discord": "#",
     "twitter": "#"
