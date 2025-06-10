@@ -1,0 +1,113 @@
+{
+  "site": {
+    "title": "AllBeAPI - 赋能低性能设备的云计算平台",
+    "description": "AllBeAPI是一个专为低性能设备设计的云计算平台，通过将计算密集型任务卸载到云端，让嵌入式系统、IoT设备和边缘计算设备能够执行复杂的机器学习、图像处理和3D渲染任务。",
+    "baseUrl": "https://res.allbeapi.top",
+    "version": "1.0.0",
+    "author": "AllBeAPI Team",
+    "keywords": ["API", "机器学习", "图像处理", "3D渲染", "IoT", "边缘计算"]
+  },
+  "api": {
+    "services": [
+      {
+        "name": "TensorFlow.js",
+        "description": "机器学习推理",
+        "icon": "🧠",
+        "endpoints": [
+          "/tensorflow-js/classify-image",
+          "/tensorflow-js/predict-text",
+          "/tensorflow-js/detect-objects"
+        ],
+        "features": ["图像分类", "对象检测", "文本分析", "自定义模型"]
+      },
+      {
+        "name": "OpenCV + FFmpeg",
+        "description": "图像/视频处理",
+        "icon": "🎨",
+        "endpoints": [
+          "/opencv-ffmpeg/process-image",
+          "/opencv-ffmpeg/process-video",
+          "/opencv-ffmpeg/detect-objects"
+        ],
+        "features": ["图像滤波", "视频转码", "人脸检测", "特征提取"]
+      },
+      {
+        "name": "Three.js",
+        "description": "3D渲染",
+        "icon": "🎮",
+        "endpoints": [
+          "/three-js/render-scene",
+          "/three-js/generate-model",
+          "/three-js/animate-object"
+        ],
+        "features": ["场景渲染", "3D动画", "全景图", "VR内容"]
+      },
+      {
+        "name": "开发工具",
+        "description": "代码分析与文档生成",
+        "icon": "🛠️",
+        "endpoints": [
+          "/eslint/lint",
+          "/mermaid-cli/generate-diagram",
+          "/pdfkit/generate-pdf"
+        ],
+        "features": ["代码检查", "流程图", "PDF生成", "文档工具"]
+      }
+    ]
+  },
+  "navigation": {
+    "main": [
+      {"label": "功能特性", "href": "#features"},
+      {"label": "API文档", "href": "#docs"},
+      {"label": "代码示例", "href": "#examples"},
+      {"label": "GitHub", "href": "https://github.com/allbeapi/allbeapi"}
+    ],
+    "footer": {
+      "API服务": [
+        {"label": "TensorFlow.js", "href": "#tensorflow"},
+        {"label": "OpenCV + FFmpeg", "href": "#opencv"},
+        {"label": "Three.js", "href": "#threejs"},
+        {"label": "开发工具", "href": "#tools"}
+      ],
+      "开发者资源": [
+        {"label": "JavaScript SDK", "href": "/SDK/JavaScript/"},
+        {"label": "Python SDK", "href": "/SDK/Python/"},
+        {"label": "API文档", "href": "/README.md"},
+        {"label": "代码示例", "href": "#examples"}
+      ],
+      "支持": [
+        {"label": "报告问题", "href": "https://github.com/allbeapi/allbeapi/issues"},
+        {"label": "社区讨论", "href": "https://github.com/allbeapi/allbeapi/discussions"},
+        {"label": "贡献指南", "href": "#contributing"},
+        {"label": "许可证", "href": "#license"}
+      ],
+      "关于我们": [
+        {"label": "关于项目", "href": "#about"},
+        {"label": "GitHub组织", "href": "https://github.com/allbeapi"},
+        {"label": "技术博客", "href": "#blog"},
+        {"label": "联系我们", "href": "#contact"}
+      ]
+    }
+  },
+  "stats": [
+    {"value": "6+", "label": "API服务"},
+    {"value": "2", "label": "SDK语言"},
+    {"value": "99.9%", "label": "服务可用性"},
+    {"value": "∞", "label": "可能性"}
+  ],
+  "social": {
+    "github": "https://github.com/allbeapi/allbeapi",
+    "docs": "/README.md",
+    "discord": "#",
+    "twitter": "#"
+  },
+  "analytics": {
+    "googleAnalytics": "",
+    "baiduAnalytics": ""
+  },
+  "seo": {
+    "robots": "index, follow",
+    "sitemap": "/sitemap.xml",
+    "manifest": "/manifest.json"
+  }
+}
