@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AllBeAPI - Your Lightweight Universal SDK</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #343a40;
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        header p {
+            font-size: 1.1rem;
+        }
+        nav {
+            background-color: #495057;
+            padding: 0.5rem 0;
+            text-align: center;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .hero {
+            background-color: #007bff;
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .hero h2 {
+            font-size: 2.8rem;
+            margin-top: 0;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+        .cta-button {
+            background-color: #ffffff;
+            color: #007bff;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #e9ecef;
+            color: #0056b3;
+        }
+        .section {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .section:nth-child(even) {
+            background-color: #e9ecef;
+        }
+        .section h3 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            text-align: left;
+        }
+        .feature-item {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .feature-item h4 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .code-snippet {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+        footer {
+            background-color: #343a40;
+            color: #fff;
+            text-align: center;
+            padding: 20px 0;
+            font-size: 0.9rem;
+        }
+        .language-switch {
+            text-align: right;
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+        }
+        .language-switch a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="language-switch">
+        <a href="index.html">English</a> | <a href="index_zh.html">中文</a>
+    </div>
+
+    <header>
+        <div class="container">
+            <h1>AllBeAPI</h1>
+            <p>Your Lightweight Universal SDK</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <a href="#about">About</a>
+            <a href="#features">Features</a>
+            <a href="#usage">Usage</a>
+            <a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a> 
+            <!-- TODO: Replace with actual GitHub link -->
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h2>Integrate Popular Libraries with Ease</h2>
+        <p>AllBeAPI provides a unified interface to access a wide range of common third-party libraries via simple API calls. Focus on your application logic, not on managing multiple SDKs.</p>
+        <a href="#usage" class="cta-button">Get Started</a>
+        <a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank" class="cta-button" style="margin-left: 10px; background-color: #6c757d; color:white;">View on GitHub</a>
+        <!-- TODO: Replace with actual GitHub link -->
+    </section>
+
+    <section id="about" class="section">
+        <div class="container">
+            <h3>About AllBeAPI</h3>
+            <p>A <strong>lightweight, universal SDK</strong> that integrates commonly used third-party libraries through a consistent API. This simplifies development by providing a single point of access for various functionalities, reducing the need to learn and manage multiple individual libraries and their dependencies.</p>
+        </div>
+    </section>
+
+    <section id="features" class="section">
+        <div class="container">
+            <h3>Powerful Features Out-of-the-Box</h3>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h4>Markdown Processing</h4>
+                    <p>Convert Markdown to HTML effortlessly using Marked.js integration.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>HTML Parsing & Manipulation</h4>
+                    <p>Leverage BeautifulSoup to parse, extract data from, and clean HTML content.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Code Formatting</h4>
+                    <p>Format your code beautifully with Prettier for various languages.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Syntax Highlighting</h4>
+                    <p>Use Pygments to add rich syntax highlighting to your code snippets.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>QR Code Generation</h4>
+                    <p>Generate QR codes quickly with python-qrcode.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>HTML Sanitization</h4>
+                    <p>Protect against XSS attacks by sanitizing HTML input with sanitize-html.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>JSON Schema Validation</h4>
+                    <p>Validate JSON data against schemas using Ajv.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>JavaScript/TypeScript Linting</h4>
+                    <p>Analyze your JavaScript and TypeScript code with ESLint.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Text Differencing</h4>
+                    <p>Compare texts and highlight differences with Diff.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>CSV Parsing</h4>
+                    <p>Convert CSV data to JSON format easily with csv-parser.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Diagram Generation</h4>
+                    <p>Create diagrams from text using Mermaid CLI.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>PDF Generation</h4>
+                    <p>Generate PDF documents programmatically with PDFKit.</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Image Processing</h4>
+                    <p>Perform various image manipulations with Pillow.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="usage" class="section">
+        <div class="container">
+            <h3>Easy to Use SDKs</h3>
+            <p>We provide SDKs in popular languages to get you started quickly.</p>
+            <h4>JavaScript SDK Example</h4>
+            <pre class="code-snippet"><code>// Make sure to include allbeapi.js
+// &lt;script src="SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;
+
+const apiClient = new AllBeApi();
+
+// Example: Convert Markdown to HTML
+apiClient.marked.render("# Hello AllBeAPI")
+    .then(response => {
+        console.log(response); // HTML output
+        // Assuming the response is the direct HTML string or an object containing it
+        // If it's an object like { html: "<h1>Hello AllBeAPI</h1>" }, access response.html
+    })
+    .catch(error => console.error("Error:", error));
+
+// Example: Generate QR Code (returns a Blob)
+apiClient.pythonQrcode.generateQrcode("https://res.allbeapi.top")
+    .then(blob => {
+        const imageUrl = URL.createObjectURL(blob);
+        console.log("QR Code Image URL:", imageUrl);
+        // You can then use this URL in an &lt;img&gt; tag
+        // const imgElement = document.createElement('img');
+        // imgElement.src = imageUrl;
+        // document.body.appendChild(imgElement);
+    })
+    .catch(error => console.error("Error:", error));
+</code></pre>
+            <p style="margin-top:10px; font-size:0.9em;">Check out the <a href="SDK/JavaScript/allbeapi.js" target="_blank">JavaScript SDK</a>.</p>
+
+            <h4 style="margin-top:30px;">Python SDK Example</h4>
+            <pre class="code-snippet"><code># Make sure allbeapi.py is in your PYTHONPATH or same directory
+# from allbeapi import AllBeApi # Assuming the file is named allbeapi.py
+
+# For the provided structure:
+# import sys
+# sys.path.append('SDK/Python') # Adjust if running from a different root
+# from allbeapi import AllBeApi
+
+
+client = AllBeApi()
+
+# Example: Convert Markdown to HTML
+try:
+    html_output = client.marked.render("# Hello AllBeAPI from Python")
+    print(html_output) # This will likely be a JSON string or dict
+except Exception as e:
+    print(f"Error: {e}")
+
+# Example: Generate QR Code (returns bytes)
+try:
+    qr_image_bytes = client.python_qrcode.generate_qrcode("https://res.allbeapi.top")
+    with open("example_qrcode.png", "wb") as f:
+        f.write(qr_image_bytes) # The response.content if using requests directly, or the direct bytes
+    print("QR Code saved to example_qrcode.png")
+except Exception as e:
+    print(f"Error: {e}")
+</code></pre>
+            <p style="margin-top:10px; font-size:0.9em;">Check out the <a href="SDK/Python/allbeapi.py" target="_blank">Python SDK</a>.</p>
+        </div>
+    </section>
+
+    <section id="contribute" class="section">
+        <div class="container">
+            <h3>Contribute to AllBeAPI</h3>
+            <p>AllBeAPI is an open-source project. We welcome contributions from the community! Whether it's adding new library integrations, improving documentation, or fixing bugs, your help is appreciated.</p>
+            <a href="https://github.com/TingjiaInFuture/allbeapi/issues" target="_blank" class="cta-button" style="background-color: #28a745; color:white;">Report an Issue</a>
+            <a href="https://github.com/TingjiaInFuture/allbeapi/pulls" target="_blank" class="cta-button" style="margin-left: 10px; background-color: #17a2b8; color:white;">Submit a Pull Request</a>
+            <!-- TODO: Replace with actual GitHub link -->
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="currentYear"></span> AllBeAPI Project. Licensed under the MIT License.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AllBeAPI - 轻量级通用 SDK</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Sans SC", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "WenQuanYi Micro Hei", sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            background-color: #343a40;
+            color: #fff;
+            padding: 1rem 0;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        header p {
+            font-size: 1.1rem;
+        }
+        nav {
+            background-color: #495057;
+            padding: 0.5rem 0;
+            text-align: center;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        .hero {
+            background-color: #007bff;
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .hero h2 {
+            font-size: 2.8rem;
+            margin-top: 0;
+        }
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
+        .cta-button {
+            background-color: #ffffff;
+            color: #007bff;
+            padding: 15px 30px;
+            text-decoration: none;
+            font-size: 1.1rem;
+            border-radius: 5px;
+            font-weight: bold;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #e9ecef;
+            color: #0056b3;
+        }
+        .section {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        .section:nth-child(even) {
+            background-color: #e9ecef;
+        }
+        .section h3 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            text-align: left;
+        }
+        .feature-item {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .feature-item h4 {
+            color: #007bff;
+            margin-top: 0;
+        }
+        .code-snippet {
+            background-color: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+        }
+        footer {
+            background-color: #343a40;
+            color: #fff;
+            text-align: center;
+            padding: 20px 0;
+            font-size: 0.9rem;
+        }
+        .language-switch {
+            text-align: right;
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+        }
+        .language-switch a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="language-switch">
+        <a href="index.html">English</a> | <a href="index_zh.html">中文</a>
+    </div>
+
+    <header>
+        <div class="container">
+            <h1>AllBeAPI</h1>
+            <p>您的轻量级通用 SDK</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <a href="#about">关于</a>
+            <a href="#features">特性</a>
+            <a href="#usage">使用示例</a>
+            <a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a> 
+            <!-- TODO: 请替换为实际的 GitHub 链接 -->
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h2>轻松集成流行库</h2>
+        <p>AllBeAPI 提供统一接口，通过简单的 API 调用即可访问各种常用的第三方库。让您专注于应用程序逻辑，而不是管理多个 SDK。</p>
+        <a href="#usage" class="cta-button">开始使用</a>
+        <a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank" class="cta-button" style="margin-left: 10px; background-color: #6c757d; color:white;">查看 GitHub</a>
+        <!-- TODO: 请替换为实际的 GitHub 链接 -->
+    </section>
+
+    <section id="about" class="section">
+        <div class="container">
+            <h3>关于 AllBeAPI</h3>
+            <p>一个<strong>轻量级的通用 SDK</strong>，通过一致的 API 集成了常用的第三方库。为各种功能提供单一访问点来简化开发，减少了学习和管理多个独立库及其依赖项的需求。</p>
+        </div>
+    </section>
+
+    <section id="features" class="section">
+        <div class="container">
+            <h3>开箱即用的强大功能</h3>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h4>Markdown 处理</h4>
+                    <p>使用 Marked.js 集成轻松将 Markdown 转换为 HTML。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>HTML 解析与操作</h4>
+                    <p>利用 BeautifulSoup 解析、提取数据和清理 HTML 内容。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>代码格式化</h4>
+                    <p>使用 Prettier 为多种语言美化您的代码。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>语法高亮</h4>
+                    <p>使用 Pygments 为您的代码片段添加丰富的语法高亮。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>二维码生成</h4>
+                    <p>使用 python-qrcode 快速生成二维码。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>HTML 清理</h4>
+                    <p>通过 sanitize-html 清理 HTML 输入，防止 XSS 攻击。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>JSON Schema 验证</h4>
+                    <p>使用 Ajv 根据 Schema 验证 JSON 数据。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>JavaScript/TypeScript Linting</h4>
+                    <p>使用 ESLint 分析您的 JavaScript 和 TypeScript 代码。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>文本差异比较</h4>
+                    <p>使用 Diff 比较文本并高亮显示差异。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>CSV 解析</h4>
+                    <p>使用 csv-parser 轻松将 CSV 数据转换为 JSON 格式。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>图表生成</h4>
+                    <p>使用 Mermaid CLI 从文本创建图表。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>PDF 生成</h4>
+                    <p>使用 PDFKit 以编程方式生成 PDF 文档。</p>
+                </div>
+                <div class="feature-item">
+                    <h4>图像处理</h4>
+                    <p>使用 Pillow 执行各种图像操作。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="usage" class="section">
+        <div class="container">
+            <h3>易于使用的 SDK</h3>
+            <p>我们提供流行语言的 SDK，助您快速上手。</p>
+            <h4>JavaScript SDK 示例</h4>
+            <pre class="code-snippet"><code>// 确保已引入 allbeapi.js
+// &lt;script src="SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;
+
+const apiClient = new AllBeApi();
+
+// 示例：将 Markdown 转换为 HTML
+apiClient.marked.render("# 你好 AllBeAPI")
+    .then(response => {
+        console.log(response); // HTML 输出
+        // 假设响应是直接的 HTML 字符串或包含它的对象
+        // 如果是 { html: "<h1>你好 AllBeAPI</h1>" } 这样的对象, 请访问 response.html
+    })
+    .catch(error => console.error("错误:", error));
+
+// 示例：生成二维码 (返回 Blob 对象)
+apiClient.pythonQrcode.generateQrcode("https://res.allbeapi.top")
+    .then(blob => {
+        const imageUrl = URL.createObjectURL(blob);
+        console.log("二维码图片 URL:", imageUrl);
+        // 然后您可以在 &lt;img&gt; 标签中使用此 URL
+        // const imgElement = document.createElement('img');
+        // imgElement.src = imageUrl;
+        // document.body.appendChild(imgElement);
+    })
+    .catch(error => console.error("错误:", error));
+</code></pre>
+            <p style="margin-top:10px; font-size:0.9em;">查看 <a href="SDK/JavaScript/allbeapi.js" target="_blank">JavaScript SDK</a>。</p>
+
+            <h4 style="margin-top:30px;">Python SDK 示例</h4>
+            <pre class="code-snippet"><code># 确保 allbeapi.py 在您的 PYTHONPATH 中或与脚本在同一目录
+# from allbeapi import AllBeApi # 假设文件名为 allbeapi.py
+
+# 根据项目结构:
+# import sys
+# sys.path.append('SDK/Python') # 如果从不同根目录运行，请调整路径
+# from allbeapi import AllBeApi
+
+client = AllBeApi()
+
+# 示例：将 Markdown 转换为 HTML
+try:
+    html_output = client.marked.render("# 你好，来自 Python 的 AllBeAPI")
+    print(html_output) # 这很可能是一个 JSON 字符串或字典
+except Exception as e:
+    print(f"错误: {e}")
+
+# 示例：生成二维码 (返回字节流)
+try:
+    qr_image_bytes = client.python_qrcode.generate_qrcode("https://res.allbeapi.top")
+    with open("example_qrcode_zh.png", "wb") as f:
+        f.write(qr_image_bytes) # 如果直接使用 requests，则是 response.content，否则是直接的字节流
+    print("二维码已保存至 example_qrcode_zh.png")
+except Exception as e:
+    print(f"错误: {e}")
+</code></pre>
+            <p style="margin-top:10px; font-size:0.9em;">查看 <a href="SDK/Python/allbeapi.py" target="_blank">Python SDK</a>。</p>
+        </div>
+    </section>
+
+    <section id="contribute" class="section">
+        <div class="container">
+            <h3>贡献力量</h3>
+            <p>AllBeAPI 是一个开源项目。我们欢迎社区的贡献！无论是添加新的库集成、改进文档还是修复错误，我们都感谢您的帮助。</p>
+            <a href="https://github.com/TingjiaInFuture/allbeapi/issues" target="_blank" class="cta-button" style="background-color: #28a745; color:white;">报告问题</a>
+            <a href="https://github.com/TingjiaInFuture/allbeapi/pulls" target="_blank" class="cta-button" style="margin-left: 10px; background-color: #17a2b8; color:white;">提交拉取请求</a>
+            <!-- TODO: 请替换为实际的 GitHub 链接 -->
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="currentYear"></span> AllBeAPI 项目. 基于 MIT 许可证授权。</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+    </script>
+
+</body>
+</html>
