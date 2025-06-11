@@ -78,7 +78,7 @@ class AllBeApi {
         // Handle non-JSON responses based on known endpoints
         if (path.includes('/python-qrcode/generate-qrcode') ||
             path.includes('/mermaid-cli/generate-diagram') ||
-            path.includes('/pillow/process')) {
+            path.includes('/pillow/process-image')) {
             return response.blob(); // Expected to be image/*
         } else if (path.includes('/pdfkit/generate-pdf')) {
             return response.blob(); // Expected to be application/pdf
@@ -261,7 +261,7 @@ class SanitizeHtmlAPI {
      * @returns {Promise<object>}
      */
     async sanitize(html, options = {}) {
-        return this.client._request('POST', '/sanitize-html', null, { html, options });
+        return this.client._request('POST', '/sanitize-html/sanitize-html', null, { html, options });
     }
 }
 
@@ -355,7 +355,7 @@ class PillowAPI {
      * @returns {Promise<Blob>} - The processed image as a Blob.
      */
     async process(imageUrl, operation, options = {}) {
-        return this.client._request('POST', '/pillow/process', null, { image_url: imageUrl, operation, ...options });
+        return this.client._request('POST', '/pillow/process-image', null, { image_url: imageUrl, operation, ...options });
     }
 }
 

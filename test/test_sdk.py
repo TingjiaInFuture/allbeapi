@@ -216,7 +216,7 @@ class TestAllBeApi(unittest.TestCase):
         except FileNotFoundError:
             print(f"Skipping PillowAPI process with bytes test: dummy image not found at {self.dummy_image_path}")
         except Exception as e:
-            # This can fail if the server doesn't expect multipart for /pillow/process or if params aren't passed correctly
+            # This can fail if the server doesn't expect multipart for /pillow/process-image or if params aren't passed correctly
             print(f"PillowAPI process with bytes test failed: {e}")
             # Check if response has more details if it's an HTTPError
             if hasattr(e, 'response') and e.response is not None:

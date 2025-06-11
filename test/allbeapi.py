@@ -194,7 +194,7 @@ class SanitizeHtmlAPI:
         """Sanitizes HTML content to prevent XSS attacks."""
         payload = {'html': html_content}
         if options: payload['options'] = options
-        return self.client._request('POST', '/sanitize-html', json_data=payload)
+        return self.client._request('POST', '/sanitize-html/sanitize-html', json_data=payload)
 
 class AjvAPI:
     def __init__(self, client):
@@ -240,7 +240,7 @@ class MermaidCliAPI:
 
     def generate_diagram(self, mermaid_definition, **kwargs):
         """Generates a diagram from Mermaid text definition. Returns image bytes."""
-        payload = {'mermaid': mermaid_definition, **kwargs}
+        payload = {'definition': mermaid_definition, **kwargs}
         return self.client._request('POST', '/mermaid-cli/generate-diagram', json_data=payload)
 
 class PDFKitAPI:
@@ -249,7 +249,7 @@ class PDFKitAPI:
 
     def generate(self, content, **kwargs):
         """Generates a PDF document using PDFKit. Returns PDF bytes."""
-        payload = {'content': content, **kwargs}
+        payload = {'text_content': content, **kwargs}
         return self.client._request('POST', '/pdfkit/generate-pdf', json_data=payload)
 
 class PillowAPI:
@@ -265,20 +265,20 @@ class PillowAPI:
         
         # The API documentation implies image_url is a primary way, but for local files or direct data,
         # sending as multipart/form-data might be necessary if the API supports it.
-        # The current API spec in api-index.json for /pillow/process is POST, implying JSON body.
+        # The current API spec in api-index.json for /pillow/process-image is POST, implying JSON body.
         # If it needs to handle file uploads, the server-side and this SDK client would need adjustment.
         # For now, assuming image_url is part of the JSON payload as per typical API design for URLs.
         # If `image_url_or_data` is bytes, it should be sent via `files` and `payload` should not contain `image_url`.
         
         if isinstance(image_url_or_data, str):
             payload['image_url'] = image_url_or_data
-            return self.client._request('POST', '/pillow/process', json_data=payload)
+            return self.client._request('POST', '/pillow/process-image', json_data=payload)
         elif isinstance(image_url_or_data, bytes) and files:
             # This branch assumes the API can take 'operation' and other kwargs as form fields
             # alongside the file. This is a common pattern but not explicitly in api-index.json.
             # `files` should be in the format {'image_file_name': image_data_bytes}
             # `data` (form fields) would be `payload`
-            return self.client._request('POST', '/pillow/process', data=payload, files=files)
+            return self.client._request('POST', '/pillow/process-image', data=payload, files=files)
         elif isinstance(image_url_or_data, bytes) and not files:
              raise ValueError("image_data (bytes) provided to PillowAPI.process without `files` argument. Please provide files={'image': image_data_bytes}")
         else:
