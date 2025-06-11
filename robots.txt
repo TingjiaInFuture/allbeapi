@@ -1,8 +1,0 @@
-User-agent: *
-Disallow: /
-
-# 网站地图位置
-Sitemap: https://res.allbeapi.top/sitemap.xml
-
-# 爬取延迟（秒）
-Crawl-delay: 1
