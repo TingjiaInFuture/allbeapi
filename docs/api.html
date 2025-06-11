@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Reference - AllBeAPI Documentation</title>
+    <meta name="description" content="Complete API reference for AllBeAPI. Detailed documentation for all endpoints, parameters, and response formats.">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <link rel="stylesheet" href="../assets/css/docs.css">
+    
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="highlight-light">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="highlight-dark" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="../index.html" class="navbar-brand">
+                    <span class="brand-icon">🚀</span>
+                    AllBeAPI
+                </a>
+                <ul class="navbar-nav">
+                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="api.html" class="active">API Reference</a></li>
+                    <li><a href="sdk.html">SDK Guide</a></li>
+                    <li><a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a></li>
+                </ul>
+                <div class="navbar-actions">
+                    <button class="theme-toggle" aria-label="Toggle dark mode">
+                        <span class="theme-icon-dark">🌙</span>
+                        <span class="theme-icon-light">☀️</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="docs-layout">
+        <!-- Sidebar -->
+        <aside class="docs-sidebar">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">API Reference</h3>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="#overview" class="nav-link">Overview</a></li>
+                        <li><a href="#authentication" class="nav-link">Authentication</a></li>
+                        <li><a href="#text-processing" class="nav-link">Text Processing</a>
+                            <ul class="nav-sublist">
+                                <li><a href="#marked">Markdown</a></li>
+                                <li><a href="#beautifulsoup">HTML Parsing</a></li>
+                                <li><a href="#sanitize-html">HTML Sanitization</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#code-tools" class="nav-link">Code Tools</a>
+                            <ul class="nav-sublist">
+                                <li><a href="#prettier">Code Formatting</a></li>
+                                <li><a href="#eslint">Linting</a></li>
+                                <li><a href="#pygments">Syntax Highlighting</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#data-processing" class="nav-link">Data Processing</a>
+                            <ul class="nav-sublist">
+                                <li><a href="#ajv">JSON Validation</a></li>
+                                <li><a href="#csv-parser">CSV Processing</a></li>
+                                <li><a href="#diff">Text Comparison</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#media-generation" class="nav-link">Media Generation</a>
+                            <ul class="nav-sublist">
+                                <li><a href="#qrcode">QR Codes</a></li>
+                                <li><a href="#mermaid">Diagrams</a></li>
+                                <li><a href="#pdfkit">PDF Generation</a></li>
+                                <li><a href="#pillow">Image Processing</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="#error-codes" class="nav-link">Error Codes</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="docs-main">
+            <div class="docs-content">
+                <!-- Header -->
+                <header class="docs-header">
+                    <h1>API Reference</h1>
+                    <p class="docs-lead">
+                        Complete reference documentation for the AllBeAPI REST API. All endpoints return JSON responses
+                        and support both GET and POST methods where applicable.
+                    </p>
+                    
+                    <div class="api-info-card">
+                        <div class="api-info-item">
+                            <strong>Base URL:</strong> <code>https://res.allbeapi.top</code>
+                        </div>
+                        <div class="api-info-item">
+                            <strong>Content-Type:</strong> <code>application/json</code>
+                        </div>
+                        <div class="api-info-item">
+                            <strong>Rate Limit:</strong> 1000 requests/hour
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Overview -->
+                <section id="overview" class="docs-section">
+                    <h2>Overview</h2>
+                    <p>
+                        The AllBeAPI provides a unified REST interface to access multiple popular libraries.
+                        All endpoints follow RESTful conventions and return consistent JSON responses.
+                    </p>
+                    
+                    <h3>Request Format</h3>
+                    <pre><code class="language-http">POST /library-name/endpoint
+Content-Type: application/json
+
+{
+  "parameter1": "value1",
+  "parameter2": "value2"
+}</code></pre>
+
+                    <h3>Response Format</h3>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "result": "processed output"
+  },
+  "metadata": {
+    "processing_time": 0.125,
+    "library_version": "1.0.0"
+  }
+}</code></pre>
+
+                    <h3>Error Response Format</h3>
+                    <pre><code class="language-json">{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input parameters",
+    "details": {
+      "field": "markdown",
+      "reason": "Required field missing"
+    }
+  }
+}</code></pre>
+                </section>
+
+                <!-- Authentication -->
+                <section id="authentication" class="docs-section">
+                    <h2>Authentication</h2>
+                    <p>
+                        AllBeAPI is currently free to use without authentication. For production use or higher rate limits,
+                        you can obtain an API key.
+                    </p>
+                    
+                    <h3>Using API Keys (Optional)</h3>
+                    <pre><code class="language-http">POST /marked/render
+Authorization: Bearer your-api-key-here
+Content-Type: application/json
+
+{
+  "markdown": "# Hello World"
+}</code></pre>
+                </section>
+
+                <!-- Text Processing -->
+                <section id="text-processing" class="docs-section">
+                    <h2>Text Processing</h2>
+                    
+                    <!-- Marked.js -->
+                    <div id="marked" class="api-endpoint">
+                        <h3>📝 Markdown Processing (Marked.js)</h3>
+                        <p>Convert Markdown text to HTML using the popular Marked.js library.</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="endpoint-method">POST</div>
+                            <div class="endpoint-url">/marked/render</div>
+                        </div>
+                        
+                        <h4>Parameters</h4>
+                        <div class="params-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>markdown</code></td>
+                                        <td>string</td>
+                                        <td>Yes</td>
+                                        <td>The Markdown text to convert</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>options</code></td>
+                                        <td>object</td>
+                                        <td>No</td>
+                                        <td>Marked.js options (breaks, gfm, etc.)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4>Example Request</h4>
+                        <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/marked/render \
+  -H "Content-Type: application/json" \
+  -d '{
+    "markdown": "# Hello World\n\nThis is **bold** text with a [link](https://example.com).",
+    "options": {
+      "breaks": true,
+      "gfm": true
+    }
+  }'</code></pre>
+                        
+                        <h4>Example Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "html": "&lt;h1&gt;Hello World&lt;/h1&gt;\n&lt;p&gt;This is &lt;strong&gt;bold&lt;/strong&gt; text with a &lt;a href=\"https://example.com\"&gt;link&lt;/a&gt;.&lt;/p&gt;"
+  },
+  "metadata": {
+    "processing_time": 0.045,
+    "library_version": "marked@5.1.2"
+  }
+}</code></pre>
+                    </div>
+                    
+                    <!-- BeautifulSoup -->
+                    <div id="beautifulsoup" class="api-endpoint">
+                        <h3>🔍 HTML Parsing (BeautifulSoup)</h3>
+                        <p>Parse HTML and extract data using CSS selectors or XPath expressions.</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="endpoint-method">POST</div>
+                            <div class="endpoint-url">/beautifulsoup/parse</div>
+                        </div>
+                        
+                        <h4>Parameters</h4>
+                        <div class="params-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>html</code></td>
+                                        <td>string</td>
+                                        <td>Yes</td>
+                                        <td>The HTML content to parse</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>selector</code></td>
+                                        <td>string</td>
+                                        <td>No</td>
+                                        <td>CSS selector to extract specific elements</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>action</code></td>
+                                        <td>string</td>
+                                        <td>No</td>
+                                        <td>Action to perform: "find", "find_all", "get_text"</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4>Example Request</h4>
+                        <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/beautifulsoup/parse \
+  -H "Content-Type: application/json" \
+  -d '{
+    "html": "&lt;div class=\"content\"&gt;&lt;h1&gt;Title&lt;/h1&gt;&lt;p&gt;Content here&lt;/p&gt;&lt;/div&gt;",
+    "selector": "h1",
+    "action": "get_text"
+  }'</code></pre>
+                        
+                        <h4>Example Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "result": ["Title"],
+    "count": 1
+  }
+}</code></pre>
+                    </div>
+                    
+                    <!-- HTML Sanitization -->
+                    <div id="sanitize-html" class="api-endpoint">
+                        <h3>🛡️ HTML Sanitization</h3>
+                        <p>Clean HTML content to prevent XSS attacks and ensure content safety.</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="endpoint-method">POST</div>
+                            <div class="endpoint-url">/sanitize-html/clean</div>
+                        </div>
+                        
+                        <h4>Parameters</h4>
+                        <div class="params-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>html</code></td>
+                                        <td>string</td>
+                                        <td>Yes</td>
+                                        <td>The HTML content to sanitize</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>allowedTags</code></td>
+                                        <td>array</td>
+                                        <td>No</td>
+                                        <td>List of allowed HTML tags</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>allowedAttributes</code></td>
+                                        <td>object</td>
+                                        <td>No</td>
+                                        <td>Allowed attributes per tag</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4>Example Request</h4>
+                        <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/sanitize-html/clean \
+  -H "Content-Type: application/json" \
+  -d '{
+    "html": "&lt;p&gt;Safe content&lt;/p&gt;&lt;script&gt;alert(\"xss\")&lt;/script&gt;",
+    "allowedTags": ["p", "strong", "em"],
+    "allowedAttributes": {}
+  }'</code></pre>
+                    </div>
+                </section>
+
+                <!-- Code Tools -->
+                <section id="code-tools" class="docs-section">
+                    <h2>Code Tools</h2>
+                    
+                    <!-- Prettier -->
+                    <div id="prettier" class="api-endpoint">
+                        <h3>✨ Code Formatting (Prettier)</h3>
+                        <p>Format code using Prettier with support for multiple languages and configurations.</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="endpoint-method">POST</div>
+                            <div class="endpoint-url">/prettier/format</div>
+                        </div>
+                        
+                        <h4>Parameters</h4>
+                        <div class="params-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>code</code></td>
+                                        <td>string</td>
+                                        <td>Yes</td>
+                                        <td>The code to format</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>parser</code></td>
+                                        <td>string</td>
+                                        <td>Yes</td>
+                                        <td>Parser: "babel", "typescript", "css", "html", "json", "markdown"</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>options</code></td>
+                                        <td>object</td>
+                                        <td>No</td>
+                                        <td>Prettier formatting options</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4>Example Request</h4>
+                        <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/prettier/format \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "const x=1;function test(){return x;}",
+    "parser": "babel",
+    "options": {
+      "semi": true,
+      "singleQuote": true,
+      "tabWidth": 2
+    }
+  }'</code></pre>
+                        
+                        <h4>Example Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "formatted": "const x = 1;\nfunction test() {\n  return x;\n}\n"
+  }
+}</code></pre>
+                    </div>
+                    
+                    <!-- ESLint -->
+                    <div id="eslint" class="api-endpoint">
+                        <h3>🔧 Code Linting (ESLint)</h3>
+                        <p>Analyze JavaScript and TypeScript code for errors and code quality issues.</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="endpoint-method">POST</div>
+                            <div class="endpoint-url">/eslint/analyze</div>
+                        </div>
+                        
+                        <h4>Parameters</h4>
+                        <div class="params-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>code</code></td>
+                                        <td>string</td>
+                                        <td>Yes</td>
+                                        <td>The JavaScript/TypeScript code to analyze</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>config</code></td>
+                                        <td>object</td>
+                                        <td>No</td>
+                                        <td>ESLint configuration options</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>filename</code></td>
+                                        <td>string</td>
+                                        <td>No</td>
+                                        <td>Filename for context (affects rules)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4>Example Request</h4>
+                        <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/eslint/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "var x = 1; console.log(x)",
+    "config": {
+      "rules": {
+        "no-console": "warn",
+        "prefer-const": "error"
+      }
+    }
+  }'</code></pre>
+                    </div>
+                </section>
+
+                <!-- Data Processing -->
+                <section id="data-processing" class="docs-section">
+                    <h2>Data Processing</h2>
+                    
+                    <!-- AJV -->
+                    <div id="ajv" class="api-endpoint">
+                        <h3>✅ JSON Schema Validation (AJV)</h3>
+                        <p>Validate JSON data against JSON Schema using the fastest validator available.</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="endpoint-method">POST</div>
+                            <div class="endpoint-url">/ajv/validate</div>
+                        </div>
+                        
+                        <h4>Parameters</h4>
+                        <div class="params-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>schema</code></td>
+                                        <td>object</td>
+                                        <td>Yes</td>
+                                        <td>JSON Schema definition</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>data</code></td>
+                                        <td>any</td>
+                                        <td>Yes</td>
+                                        <td>Data to validate against the schema</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4>Example Request</h4>
+                        <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/ajv/validate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": {"type": "string"},
+        "age": {"type": "number", "minimum": 0}
+      },
+      "required": ["name"]
+    },
+    "data": {
+      "name": "John Doe",
+      "age": 30
+    }
+  }'</code></pre>
+                        
+                        <h4>Example Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "valid": true,
+    "errors": []
+  }
+}</code></pre>
+                    </div>
+                </section>
+
+                <!-- Media Generation -->
+                <section id="media-generation" class="docs-section">
+                    <h2>Media Generation</h2>
+                    
+                    <!-- QR Code -->
+                    <div id="qrcode" class="api-endpoint">
+                        <h3>📱 QR Code Generation</h3>
+                        <p>Generate QR codes with customizable options and formats.</p>
+                        
+                        <div class="endpoint-details">
+                            <div class="endpoint-method">POST</div>
+                            <div class="endpoint-url">/python-qrcode/generate-qrcode</div>
+                        </div>
+                        
+                        <h4>Parameters</h4>
+                        <div class="params-table">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Parameter</th>
+                                        <th>Type</th>
+                                        <th>Required</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>data</code></td>
+                                        <td>string</td>
+                                        <td>Yes</td>
+                                        <td>Data to encode in the QR code</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>size</code></td>
+                                        <td>number</td>
+                                        <td>No</td>
+                                        <td>Size of the QR code (default: 10)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>border</code></td>
+                                        <td>number</td>
+                                        <td>No</td>
+                                        <td>Border size (default: 4)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>error_correction</code></td>
+                                        <td>string</td>
+                                        <td>No</td>
+                                        <td>Error correction level: "L", "M", "Q", "H"</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <h4>Example Request</h4>
+                        <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/python-qrcode/generate-qrcode \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": "https://allbeapi.com",
+    "size": 10,
+    "border": 4,
+    "error_correction": "M"
+  }' \
+  --output qrcode.png</code></pre>
+                        
+                        <div class="response-note">
+                            <strong>Note:</strong> This endpoint returns a binary PNG image. 
+                            The response Content-Type will be <code>image/png</code>.
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Error Codes -->
+                <section id="error-codes" class="docs-section">
+                    <h2>Error Codes</h2>
+                    <p>AllBeAPI uses standard HTTP status codes and custom error codes for specific situations.</p>
+                    
+                    <div class="error-codes-table">
+                        <h3>HTTP Status Codes</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Status Code</th>
+                                    <th>Meaning</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>200</code></td>
+                                    <td>Success</td>
+                                    <td>Request processed successfully</td>
+                                </tr>
+                                <tr>
+                                    <td><code>400</code></td>
+                                    <td>Bad Request</td>
+                                    <td>Invalid request parameters or format</td>
+                                </tr>
+                                <tr>
+                                    <td><code>401</code></td>
+                                    <td>Unauthorized</td>
+                                    <td>Invalid or missing API key</td>
+                                </tr>
+                                <tr>
+                                    <td><code>429</code></td>
+                                    <td>Rate Limit Exceeded</td>
+                                    <td>Too many requests in the given time period</td>
+                                </tr>
+                                <tr>
+                                    <td><code>500</code></td>
+                                    <td>Internal Server Error</td>
+                                    <td>Server error during processing</td>
+                                </tr>
+                                <tr>
+                                    <td><code>503</code></td>
+                                    <td>Service Unavailable</td>
+                                    <td>Service temporarily unavailable</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="error-codes-table">
+                        <h3>Custom Error Codes</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Error Code</th>
+                                    <th>Description</th>
+                                    <th>Resolution</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>VALIDATION_ERROR</code></td>
+                                    <td>Request validation failed</td>
+                                    <td>Check required parameters and data types</td>
+                                </tr>
+                                <tr>
+                                    <td><code>PROCESSING_ERROR</code></td>
+                                    <td>Error during content processing</td>
+                                    <td>Verify input data format and content</td>
+                                </tr>
+                                <tr>
+                                    <td><code>LIBRARY_ERROR</code></td>
+                                    <td>Underlying library error</td>
+                                    <td>Check input compatibility with the specific library</td>
+                                </tr>
+                                <tr>
+                                    <td><code>RATE_LIMIT_EXCEEDED</code></td>
+                                    <td>Rate limit exceeded</td>
+                                    <td>Wait before making more requests or upgrade plan</td>
+                                </tr>
+                                <tr>
+                                    <td><code>CONTENT_TOO_LARGE</code></td>
+                                    <td>Input content exceeds size limits</td>
+                                    <td>Reduce content size or split into smaller chunks</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <h3>Example Error Response</h3>
+                    <pre><code class="language-json">{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Missing required parameter 'markdown'",
+    "details": {
+      "parameter": "markdown",
+      "type": "string",
+      "required": true
+    }
+  },
+  "request_id": "req_123456789"
+}</code></pre>
+                </section>
+            </div>
+
+            <!-- Table of Contents -->
+            <aside class="docs-toc">
+                <h4>Quick Navigation</h4>
+                <nav class="toc-nav">
+                    <ul>
+                        <li><a href="#overview">Overview</a></li>
+                        <li><a href="#authentication">Authentication</a></li>
+                        <li><a href="#text-processing">Text Processing</a></li>
+                        <li><a href="#code-tools">Code Tools</a></li>
+                        <li><a href="#data-processing">Data Processing</a></li>
+                        <li><a href="#media-generation">Media Generation</a></li>
+                        <li><a href="#error-codes">Error Codes</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="toc-cta">
+                    <h5>Try it out!</h5>
+                    <p>Test the API endpoints directly from your browser or with our interactive SDK examples.</p>
+                    <a href="sdk.html" class="btn btn-sm btn-primary">SDK Guide</a>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/docs.js"></script>
+    <script>
+        // Initialize syntax highlighting
+        hljs.highlightAll();
+        
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Update highlight.js theme
+        function updateHighlightTheme(theme) {
+            const lightLink = document.getElementById('highlight-light');
+            const darkLink = document.getElementById('highlight-dark');
+            
+            if (theme === 'dark') {
+                lightLink.disabled = true;
+                darkLink.disabled = false;
+            } else {
+                lightLink.disabled = false;
+                darkLink.disabled = true;
+            }
+        }
+        
+        updateHighlightTheme(savedTheme);
+        
+        // Theme toggle
+        document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateHighlightTheme(newTheme);
+        });
+
+        // Copy code functionality
+        document.querySelectorAll('pre code').forEach(block => {
+            const button = document.createElement('button');
+            button.className = 'copy-code-btn';
+            button.innerHTML = '📋';
+            button.title = 'Copy to clipboard';
+            
+            button.addEventListener('click', async () => {
+                try {
+                    await navigator.clipboard.writeText(block.textContent);
+                    button.innerHTML = '✅';
+                    setTimeout(() => button.innerHTML = '📋', 2000);
+                } catch (err) {
+                    console.error('Failed to copy: ', err);
+                }
+            });
+            
+            block.parentNode.style.position = 'relative';
+            block.parentNode.appendChild(button);
+        });
+    </script>
+</body>
+</html>

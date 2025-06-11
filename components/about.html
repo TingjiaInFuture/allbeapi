@@ -1,0 +1,127 @@
+<!-- About Section -->
+<section id="about" class="section about-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Why AllBeAPI?</h2>
+            <p class="section-subtitle">
+                Stop managing multiple SDKs. Use one unified interface for all your needs.
+            </p>
+        </div>
+        
+        <div class="about-grid">
+            <div class="about-content">
+                <div class="about-card">
+                    <div class="about-icon">🎯</div>
+                    <h3>Unified Interface</h3>
+                    <p>Access 13+ popular libraries through a single, consistent API. No more learning different interfaces for every tool.</p>
+                </div>
+                
+                <div class="about-card">
+                    <div class="about-icon">⚡</div>
+                    <h3>Lightweight & Fast</h3>
+                    <p>Minimal overhead with maximum performance. Our SDK is designed to be efficient and resource-friendly.</p>
+                </div>
+                
+                <div class="about-card">
+                    <div class="about-icon">🔧</div>
+                    <h3>Developer Friendly</h3>
+                    <p>Simple setup, clear documentation, and intuitive APIs that make development a breeze.</p>
+                </div>
+                
+                <div class="about-card">
+                    <div class="about-icon">🌍</div>
+                    <h3>Open Source</h3>
+                    <p>Completely open source with MIT license. Contribute, modify, and use it however you want.</p>
+                </div>
+            </div>
+            
+            <div class="about-demo">
+                <div class="demo-container">
+                    <div class="demo-tabs">
+                        <button class="demo-tab active" data-lang="javascript">JavaScript</button>
+                        <button class="demo-tab" data-lang="python">Python</button>
+                        <button class="demo-tab" data-lang="curl">cURL</button>
+                    </div>
+                    
+                    <div class="demo-content">
+                        <div class="demo-code active" data-lang="javascript">
+                            <pre><code>// Initialize the API client
+const api = new AllBeApi();
+
+// Convert Markdown to HTML
+const html = await api.marked.render(`
+# Welcome to AllBeAPI
+This is **awesome**!
+`);
+
+// Generate a QR code
+const qrBlob = await api.pythonQrcode
+  .generateQrcode("https://allbeapi.com");
+
+// Validate JSON schema
+const isValid = await api.ajv.validate(
+  schema, data
+);
+
+console.log("HTML:", html);
+console.log("QR Code generated:", qrBlob);
+console.log("Valid:", isValid);</code></pre>
+                        </div>
+                        
+                        <div class="demo-code" data-lang="python">
+                            <pre><code># Initialize the API client
+from allbeapi import AllBeApi
+api = AllBeApi()
+
+# Convert Markdown to HTML
+html = api.marked.render("""
+# Welcome to AllBeAPI
+This is **awesome**!
+""")
+
+# Generate a QR code
+qr_bytes = api.python_qrcode.generate_qrcode(
+    "https://allbeapi.com"
+)
+
+# Validate JSON schema
+is_valid = api.ajv.validate(schema, data)
+
+print("HTML:", html)
+print("QR Code generated:", len(qr_bytes), "bytes")
+print("Valid:", is_valid)</code></pre>
+                        </div>
+                        
+                        <div class="demo-code" data-lang="curl">
+                            <pre><code># Convert Markdown to HTML
+curl -X POST https://res.allbeapi.top/marked/render \
+  -H "Content-Type: application/json" \
+  -d '{"markdown": "# Welcome to AllBeAPI\nThis is **awesome**!"}'
+
+# Generate QR Code
+curl -X POST https://res.allbeapi.top/python-qrcode/generate-qrcode \
+  -H "Content-Type: application/json" \
+  -d '{"data": "https://allbeapi.com"}' \
+  --output qrcode.png
+
+# Validate JSON Schema
+curl -X POST https://res.allbeapi.top/ajv/validate \
+  -H "Content-Type: application/json" \
+  -d '{"schema": {...}, "data": {...}}'</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="about-highlight">
+            <div class="highlight-card">
+                <div class="highlight-icon">💡</div>
+                <div class="highlight-content">
+                    <h4>Pro Tip</h4>
+                    <p>With AllBeAPI, you can switch between different libraries for the same functionality without changing your application code. Perfect for A/B testing and gradual migrations!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

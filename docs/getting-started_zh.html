@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>快速入门 - AllBeAPI 文档</title>
+    <meta name="description" content="在几分钟内开始使用 AllBeAPI。将我们的通用 SDK 集成到您的项目中的分步指南。">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <link rel="stylesheet" href="../assets/css/docs.css">
+    
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="highlight-light">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="highlight-dark" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <!-- Language Switch -->
+    <div class="language-switch">
+        <div class="container">
+            <a href="../index_zh.html">← 返回首页</a> | 
+            <a href="getting-started.html">English</a> | 
+            <a href="getting-started_zh.html" class="active">中文</a>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="../index_zh.html" class="navbar-brand">AllBeAPI</a>
+                <ul class="navbar-nav">
+                    <li><a href="index_zh.html">文档</a></li>
+                    <li><a href="getting-started_zh.html" class="active">快速入门</a></li>
+                    <li><a href="api_zh.html">API 参考</a></li>
+                    <li><a href="sdk_zh.html">SDK 指南</a></li>
+                    <li><a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a></li>
+                </ul>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="theme-toggle" aria-label="切换主题">🌙</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="docs-layout">
+        <!-- Sidebar -->
+        <aside class="docs-sidebar">
+            <h3 class="doc-nav-title">快速入门</h3>
+            <ul class="doc-nav-list">
+                <li><a href="#introduction" class="doc-nav-link">简介</a></li>
+                <li><a href="#installation" class="doc-nav-link">安装</a></li>
+                <li><a href="#quickstart" class="doc-nav-link">快速开始</a></li>
+                <li><a href="#examples" class="doc-nav-link">常见示例</a></li>
+                <li><a href="#next-steps" class="doc-nav-link">后续步骤</a></li>
+                <li><a href="#support" class="doc-nav-link">支持</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="docs-main">
+            <header class="docs-header">
+                <h1>快速入门 AllBeAPI</h1>
+                <p class="lead">在几分钟内开始使用 AllBeAPI。本指南将引导您完成设置和发出第一个 API 请求的过程。</p>
+            </header>
+
+            <!-- Introduction -->
+            <section id="introduction" class="docs-section">
+                <h2>欢迎！</h2>
+                <p>AllBeAPI 是一个轻量级的通用 SDK，旨在简化各种第三方库的集成。无论您是构建 Web 应用程序、自动化任务还是处理数据，AllBeAPI 都提供了一个统一的接口来简化您的开发工作流程。</p>
+                <div class="alert alert-info">
+                    <strong>提示：</strong>有关 AllBeAPI 架构和支持的库的更多详细信息，请参阅<a href="index_zh.html">概述文档</a>。
+                </div>
+            </section>
+
+            <!-- Installation -->
+            <section id="installation" class="docs-section">
+                <h2>安装</h2>
+                <p>根据您的项目需求，通过几种方式安装 AllBeAPI SDK：</p>
+                
+                <div class="tabs">
+                    <button class="tab-link active" data-tab="javascript">JavaScript</button>
+                    <button class="tab-link" data-tab="python">Python</button>
+                    <button class="tab-link" data-tab="cdn">CDN / 本地</button>
+                </div>
+
+                <div id="javascript" class="tab-content active">
+                    <h3>JavaScript (Node.js)</h3>
+                    <p>对于 Node.js 项目，您可以使用 npm 或 yarn 安装 SDK：</p>
+                    <pre><code class="language-bash"># 使用 npm
+npm install allbeapi
+
+# 使用 yarn
+yarn add allbeapi</code></pre>
+                </div>
+
+                <div id="python" class="tab-content">
+                    <h3>Python</h3>
+                    <p>对于 Python 项目，您可以使用 pip 安装 SDK：</p>
+                    <pre><code class="language-bash"># 使用 pip
+pip install allbeapi</code></pre>
+                    <p>或者，您可以直接从 GitHub 下载 <code>allbeapi.py</code> 文件并将其包含在您的项目中。</p>
+                </div>
+
+                <div id="cdn" class="tab-content">
+                    <h3>浏览器 (CDN 或本地)</h3>
+                    <p>对于客户端 JavaScript，您可以通过 CDN 包含 SDK，或下载并本地托管：</p>
+                    <pre><code class="language-html">&lt;!-- 通过 CDN --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/TingjiaInFuture/allbeapi/SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;
+
+&lt;!-- 或者下载并本地托管 --&gt;
+&lt;script src="path/to/allbeapi.js"&gt;&lt;/script&gt;</code></pre>
+                </div>
+            </section>
+
+            <!-- Quickstart -->
+            <section id="quickstart" class="docs-section">
+                <h2>快速开始：您的第一个 API 调用</h2>
+                <p>让我们通过一个简单的示例来将 Markdown 文本转换为 HTML。</p>
+
+                <div class="tabs">
+                    <button class="tab-link active" data-tab="quickstart-js">JavaScript (Node.js)</button>
+                    <button class="tab-link" data-tab="quickstart-python">Python</button>
+                    <button class="tab-link" data-tab="quickstart-browser">JavaScript (浏览器)</button>
+                </div>
+
+                <div id="quickstart-js" class="tab-content active">
+                    <p>1. <strong>初始化客户端：</strong></p>
+                    <pre><code class="language-javascript">const { AllBeApi } = require('allbeapi'); // CommonJS
+// 或者 import { AllBeApi } from 'allbeapi'; // ES Modules
+
+const api = new AllBeApi();
+// 您还可以指定自定义端点：
+// const api = new AllBeApi({ baseUrl: 'https://your-custom-endpoint.com' });</code></pre>
+
+                    <p>2. <strong>进行 API 调用：</strong></p>
+                    <pre><code class="language-javascript">async function convertMarkdown() {
+    const markdown = `# 欢迎使用 AllBeAPI
+这是您的**第一个** API 调用！
+
+## 特性
+- 易于使用
+- 功能强大
+- 开源
+`;
+
+    try {
+        const result = await api.marked.render(markdown);
+        console.log('成功！', result.data.html);
+    } catch (error) {
+        console.error('错误：', error.message);
+    }
+}
+
+convertMarkdown();</code></pre>
+                </div>
+
+                <div id="quickstart-python" class="tab-content">
+                    <p>1. <strong>初始化客户端：</strong></p>
+                    <pre><code class="language-python">from allbeapi import AllBeApi
+
+api = AllBeApi()
+# 您还可以指定自定义端点：
+# api = AllBeApi(base_url='https://your-custom-endpoint.com')</code></pre>
+
+                    <p>2. <strong>进行 API 调用：</strong></p>
+                    <pre><code class="language-python">def convert_markdown():
+    markdown = """
+# 欢迎使用 AllBeAPI
+这是您的**第一个** API 调用！
+
+## 特性
+- 易于使用
+- 功能强大
+- 开源
+"""
+    try:
+        result = api.marked.render(markdown)
+        print('成功！', result['data']['html'])
+    except Exception as e:
+        print(f'错误： {e}')
+
+convert_markdown()</code></pre>
+                </div>
+                
+                <div id="quickstart-browser" class="tab-content">
+                    <p>创建一个 HTML 文件 (例如, <code>demo.html</code>):</p>
+                    <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;AllBeAPI 演示&lt;/title&gt;
+    &lt;script src="https://cdn.jsdelivr.net/gh/TingjiaInFuture/allbeapi/SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;AllBeAPI 演示&lt;/h1&gt;
+    &lt;textarea id="markdown" placeholder="输入 markdown..." rows="5" cols="50"&gt;# 你好 AllBeAPI
+这真是 **太棒了**！&lt;/textarea&gt;
+    &lt;br&gt;
+    &lt;button onclick="convert()"&gt;转换为 HTML&lt;/button&gt;
+    &lt;h3&gt;结果：&lt;/h3&gt;
+    &lt;div id="result" style="border: 1px solid #ccc; padding: 10px; min-height: 50px;"&gt;&lt;/div&gt;
+
+    &lt;script&gt;
+        const api = new AllBeApi();
+        
+        async function convert() {
+            const markdownInput = document.getElementById('markdown').value;
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await api.marked.render(markdownInput);
+                resultDiv.innerHTML = response.data.html;
+            } catch (error) {
+                resultDiv.innerText = '错误： ' + error.message;
+                console.error('错误：', error);
+            }
+        }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                    <p>在浏览器中打开此 HTML 文件并尝试一下！</p>
+                </div>
+
+                <p>3. <strong>预期输出 (控制台或 HTML 页面)：</strong></p>
+                <pre><code class="language-html">&lt;h1 id="欢迎使用allbeapi"&gt;欢迎使用 AllBeAPI&lt;/h1&gt;
+&lt;p&gt;这是您的&lt;strong&gt;第一个&lt;/strong&gt; API 调用！&lt;/p&gt;
+&lt;h2 id="特性"&gt;特性&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;易于使用&lt;/li&gt;
+&lt;li&gt;功能强大&lt;/li&gt;
+&lt;li&gt;开源&lt;/li&gt;
+&lt;/ul&gt;</code></pre>
+                <p>恭喜！您已成功使用 AllBeAPI 进行了第一次 API 调用。</p>
+            </section>
+
+            <!-- Common Examples -->
+            <section id="examples" class="docs-section">
+                <h2>常见示例</h2>
+                <p>以下是一些演示 AllBeAPI 功能的常见用例：</p>
+                <div class="grid grid-2">
+                    <div class="example-card">
+                        <h3>博客文章处理 (JS)</h3>
+                        <p>将 Markdown 转换为 HTML，生成二维码并清理 HTML 以确保安全。</p>
+                        <pre><code class="language-javascript">async function processBlogPost(markdownContent, postUrl) {
+    const api = new AllBeApi();
+    
+    // 将 Markdown 转换为 HTML
+    const htmlResult = await api.marked.render(markdownContent);
+    
+    // 为分享生成二维码
+    // 注意：pythonQrcode.generateQrcode 返回 Blob 对象
+    const qrBlob = await api.pythonQrcode.generateQrcode(postUrl); 
+    
+    // 清理 HTML 以确保安全
+    const cleanHtmlResult = await api.sanitizeHtml.clean(htmlResult.data.html);
+    
+    return { 
+        html: cleanHtmlResult.data.html, 
+        qrCodeBlob: qrBlob // 在浏览器中：URL.createObjectURL(qrBlob)
+    };
+}</code></pre>
+                    </div>
+                    
+                    <div class="example-card">
+                        <h3>代码处理 (Python)</h3>
+                        <p>格式化代码，进行语法检查（如果适用）并添加语法高亮。</p>
+                        <pre><code class="language-python">from allbeapi import AllBeApi
+
+def process_code(code_string, language='python', parser='python'):
+    api = AllBeApi()
+    
+    # 格式化代码
+    formatted_code = api.prettier.format(code_string, parser=parser)['data']['formatted']
+    
+    # 如果是 JavaScript，进行语法检查
+    lint_results = None
+    if language == 'javascript' or parser == 'babel': # 假设 parser 'babel' 用于 JS
+        lint_results = api.eslint.analyze(formatted_code)['data']
+    
+    # 添加语法高亮
+    highlighted_code = api.pygments.highlight(formatted_code, lexer=language)['data']['highlighted']
+    
+    return {
+        'formatted': formatted_code,
+        'lint_results': lint_results,
+        'highlighted': highlighted_code
+    }</code></pre>
+                    </div>
+
+                    <div class="example-card">
+                        <h3>数据验证和解析 (JS)</h3>
+                        <p>根据模式验证 JSON 数据并解析 CSV 数据。</p>
+                        <pre><code class="language-javascript">async function processData(schema, jsonData, csvData) {
+    const api = new AllBeApi();
+    
+    // 根据模式验证 JSON
+    const validationResult = await api.ajv.validate(schema, jsonData);
+    
+    if (!validationResult.data.valid) {
+        console.error('JSON 验证错误：', validationResult.data.errors);
+    }
+    
+    // 解析 CSV 数据
+    const parsedCsvResult = await api.csvParser.parse(csvData);
+    
+    return { 
+        validation: validationResult.data, 
+        parsedCsv: parsedCsvResult.data 
+    };
+}</code></pre>
+                    </div>
+                </div>
+                <p>有关更多详细示例和 API 端点，请参阅 <a href="api_zh.html">API 参考</a> 和 <a href="sdk_zh.html">SDK 指南</a>。</p>
+            </section>
+
+            <!-- Next Steps -->
+            <section id="next-steps" class="docs-section">
+                <h2>后续步骤</h2>
+                <p>现在您已经基本了解了 AllBeAPI，接下来可以：</p>
+                <ul>
+                    <li>深入研究 <a href="api_zh.html">API 参考</a> 以获取所有可用端点和参数的详细信息。</li>
+                    <li>探索 <a href="sdk_zh.html">SDK 指南</a> 以获取有关 JavaScript 和 Python SDK 的高级用法和功能。</li>
+                    <li>查看 <a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub 仓库</a> 中的示例和源代码。</li>
+                    <li>加入我们的社区并为项目做出贡献！</li>
+                </ul>
+            </section>
+
+            <!-- Support -->
+            <section id="support" class="docs-section">
+                <h2>获取支持</h2>
+                <p>如果您遇到任何问题或有任何疑问，请随时：</p>
+                <ul>
+                    <li>在 <a href="https://github.com/TingjiaInFuture/allbeapi/issues" target="_blank">GitHub Issues</a> 上报告问题。</li>
+                    <li>联系我们获取支持 (如果提供了联系方式)。</li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; <span id="currentYear"></span> AllBeAPI 项目。根据 MIT 许可证授权。</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/docs.js"></script>
+    <script>
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+        hljs.highlightAll();
+    </script>
+</body>
+</html>

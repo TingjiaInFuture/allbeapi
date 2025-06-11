@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - AllBeAPI Documentation</title>
+    <meta name="description" content="Get started with AllBeAPI in minutes. Step-by-step guide to integrate our universal SDK into your project.">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <link rel="stylesheet" href="../assets/css/docs.css">
+    
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="highlight-light">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="highlight-dark" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="../index.html" class="navbar-brand">
+                    <span class="brand-icon">🚀</span>
+                    AllBeAPI
+                </a>
+                <ul class="navbar-nav">
+                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="getting-started.html" class="active">Getting Started</a></li>
+                    <li><a href="api_new.html">API Reference</a></li>
+                    <li><a href="sdk_new.html">SDK Guide</a></li>
+                    <li><a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a></li>
+                </ul>
+                <div class="navbar-actions">
+                    <button class="theme-toggle" aria-label="Toggle dark mode">
+                        <span class="theme-icon-dark">🌙</span>
+                        <span class="theme-icon-light">☀️</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="docs-layout">
+        <!-- Sidebar -->
+        <aside class="docs-sidebar">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">Getting Started</h3>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="#introduction" class="nav-link">Introduction</a></li>
+                        <li><a href="#quick-start" class="nav-link">Quick Start</a></li>
+                        <li><a href="#installation" class="nav-link">Installation</a></li>
+                        <li><a href="#first-request" class="nav-link">First API Request</a></li>
+                        <li><a href="#examples" class="nav-link">Common Examples</a></li>
+                        <li><a href="#next-steps" class="nav-link">Next Steps</a></li>
+                        <li><a href="#support" class="nav-link">Getting Help</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="docs-main">
+            <div class="docs-content">
+                <!-- Header -->
+                <header class="docs-header">
+                    <h1>Getting Started with AllBeAPI</h1>
+                    <p class="docs-lead">
+                        Welcome to AllBeAPI! This guide will get you up and running in just a few minutes.
+                        Learn how to make your first API call and integrate AllBeAPI into your project.
+                    </p>
+                    
+                    <div class="getting-started-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon">⏱️</div>
+                            <div class="stat-info">
+                                <div class="stat-number">5 minutes</div>
+                                <div class="stat-label">to get started</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📦</div>
+                            <div class="stat-info">
+                                <div class="stat-number">2 SDKs</div>
+                                <div class="stat-label">JavaScript & Python</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🎯</div>
+                            <div class="stat-info">
+                                <div class="stat-number">13+</div>
+                                <div class="stat-label">integrated libraries</div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- Introduction -->
+                <section id="introduction" class="docs-section">
+                    <h2>What is AllBeAPI?</h2>
+                    <p>
+                        AllBeAPI is a universal SDK that provides a unified interface to access popular third-party libraries
+                        through simple API calls. Instead of managing multiple dependencies and learning different APIs,
+                        you can use one consistent interface for all your needs.
+                    </p>
+                    
+                    <div class="intro-grid">
+                        <div class="intro-card">
+                            <div class="intro-icon">🎯</div>
+                            <h3>One Interface, Many Libraries</h3>
+                            <p>Access Markdown processing, QR code generation, code formatting, image manipulation, and more through a single API.</p>
+                        </div>
+                        
+                        <div class="intro-card">
+                            <div class="intro-icon">⚡</div>
+                            <h3>Easy Integration</h3>
+                            <p>Get started in minutes with our JavaScript and Python SDKs, or use the REST API directly from any language.</p>
+                        </div>
+                        
+                        <div class="intro-card">
+                            <div class="intro-icon">🌍</div>
+                            <h3>Open Source</h3>
+                            <p>Completely open source with MIT license. Self-host, contribute, or use our public API for free.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Quick Start -->
+                <section id="quick-start" class="docs-section">
+                    <h2>Quick Start</h2>
+                    <p>
+                        The fastest way to try AllBeAPI is with a simple API call. Choose your preferred method below:
+                    </p>
+                    
+                    <div class="quickstart-options">
+                        <div class="quickstart-tabs">
+                            <div class="tab-buttons">
+                                <button class="tab-btn active" data-tab="browser">🌐 Browser</button>
+                                <button class="tab-btn" data-tab="node">📦 Node.js</button>
+                                <button class="tab-btn" data-tab="python">🐍 Python</button>
+                                <button class="tab-btn" data-tab="curl">🔗 cURL</button>
+                            </div>
+                            
+                            <div class="tab-content">
+                                <!-- Browser Tab -->
+                                <div class="tab-pane active" data-tab="browser">
+                                    <h3>Try in Browser (30 seconds)</h3>
+                                    <p>Copy and paste this into an HTML file and open it in your browser:</p>
+                                    <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;AllBeAPI Demo&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;AllBeAPI Demo&lt;/h1&gt;
+    &lt;textarea id="markdown" placeholder="Enter markdown..."&gt;# Hello AllBeAPI
+This is **awesome**!&lt;/textarea&gt;
+    &lt;button onclick="convert()"&gt;Convert to HTML&lt;/button&gt;
+    &lt;div id="result"&gt;&lt;/div&gt;
+
+    &lt;script src="https://cdn.jsdelivr.net/gh/TingjiaInFuture/allbeapi/SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;
+    &lt;script&gt;
+        const api = new AllBeApi();
+        
+        async function convert() {
+            const markdown = document.getElementById('markdown').value;
+            const result = document.getElementById('result');
+            
+            try {
+                const response = await api.marked.render(markdown);
+                result.innerHTML = '&lt;h3&gt;Result:&lt;/h3&gt;' + response;
+            } catch (error) {
+                result.innerHTML = '&lt;p style="color: red;"&gt;Error: ' + error.message + '&lt;/p&gt;';
+            }
+        }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                                </div>
+                                
+                                <!-- Node.js Tab -->
+                                <div class="tab-pane" data-tab="node">
+                                    <h3>Node.js Setup</h3>
+                                    <p>Create a new Node.js project and try AllBeAPI:</p>
+                                    <pre><code class="language-bash"># Create new project
+mkdir allbeapi-demo
+cd allbeapi-demo
+npm init -y
+
+# Download the SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js</code></pre>
+                                    
+                                    <p>Create <code>demo.js</code>:</p>
+                                    <pre><code class="language-javascript">const AllBeApi = require('./allbeapi.js');
+
+async function demo() {
+    const api = new AllBeApi();
+    
+    try {
+        // Convert Markdown to HTML
+        const html = await api.marked.render('# Hello AllBeAPI\nThis is **awesome**!');
+        console.log('HTML:', html);
+        
+        // Generate QR Code
+        const qrBlob = await api.pythonQrcode.generateQrcode('https://allbeapi.com');
+        console.log('QR Code generated, size:', qrBlob.size, 'bytes');
+        
+    } catch (error) {
+        console.error('Error:', error.message);
+    }
+}
+
+demo();</code></pre>
+                                    
+                                    <p>Run the demo:</p>
+                                    <pre><code class="language-bash">node demo.js</code></pre>
+                                </div>
+                                
+                                <!-- Python Tab -->
+                                <div class="tab-pane" data-tab="python">
+                                    <h3>Python Setup</h3>
+                                    <p>Download and try the Python SDK:</p>
+                                    <pre><code class="language-bash"># Download the SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py</code></pre>
+                                    
+                                    <p>Create <code>demo.py</code>:</p>
+                                    <pre><code class="language-python">from allbeapi import AllBeApi
+
+def main():
+    api = AllBeApi()
+    
+    try:
+        # Convert Markdown to HTML
+        html = api.marked.render('# Hello AllBeAPI\nThis is **awesome**!')
+        print('HTML:', html)
+        
+        # Generate QR Code
+        qr_bytes = api.python_qrcode.generate_qrcode('https://allbeapi.com')
+        with open('demo_qr.png', 'wb') as f:
+            f.write(qr_bytes)
+        print('QR Code saved as demo_qr.png')
+        
+    except Exception as error:
+        print('Error:', error)
+
+if __name__ == '__main__':
+    main()</code></pre>
+                                    
+                                    <p>Run the demo:</p>
+                                    <pre><code class="language-bash">python demo.py</code></pre>
+                                </div>
+                                
+                                <!-- cURL Tab -->
+                                <div class="tab-pane" data-tab="curl">
+                                    <h3>Direct API Calls</h3>
+                                    <p>Test AllBeAPI directly with cURL:</p>
+                                    <pre><code class="language-bash"># Convert Markdown to HTML
+curl -X POST https://res.allbeapi.top/marked/render \
+  -H "Content-Type: application/json" \
+  -d '{"markdown": "# Hello AllBeAPI\nThis is **awesome**!"}'
+
+# Generate QR Code
+curl -X POST https://res.allbeapi.top/python-qrcode/generate-qrcode \
+  -H "Content-Type: application/json" \
+  -d '{"data": "https://allbeapi.com"}' \
+  --output demo_qr.png
+
+# Format JavaScript code
+curl -X POST https://res.allbeapi.top/prettier/format \
+  -H "Content-Type: application/json" \
+  -d '{"code": "const x=1;console.log(x);", "parser": "babel"}'</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Installation -->
+                <section id="installation" class="docs-section">
+                    <h2>Installation Options</h2>
+                    <p>
+                        Choose the installation method that works best for your project:
+                    </p>
+                    
+                    <div class="installation-grid">
+                        <div class="install-card">
+                            <div class="install-header">
+                                <div class="install-icon">🌐</div>
+                                <h3>Browser (CDN)</h3>
+                            </div>
+                            <div class="install-body">
+                                <p>Include directly in your HTML for instant access:</p>
+                                <pre><code class="language-html">&lt;script src="https://cdn.jsdelivr.net/gh/TingjiaInFuture/allbeapi/SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;</code></pre>
+                                <div class="install-pros">
+                                    <strong>Pros:</strong> No build step, instant setup, cached by CDN
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="install-card">
+                            <div class="install-header">
+                                <div class="install-icon">📦</div>
+                                <h3>npm Package</h3>
+                            </div>
+                            <div class="install-body">
+                                <p>Install via npm for modern JavaScript projects:</p>
+                                <pre><code class="language-bash">npm install allbeapi</code></pre>
+                                <pre><code class="language-javascript">import { AllBeApi } from 'allbeapi';</code></pre>
+                                <div class="install-pros">
+                                    <strong>Pros:</strong> Version control, TypeScript support, tree shaking
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="install-card">
+                            <div class="install-header">
+                                <div class="install-icon">🐍</div>
+                                <h3>Python Package</h3>
+                            </div>
+                            <div class="install-body">
+                                <p>Install via pip for Python projects:</p>
+                                <pre><code class="language-bash">pip install allbeapi</code></pre>
+                                <pre><code class="language-python">from allbeapi import AllBeApi</code></pre>
+                                <div class="install-pros">
+                                    <strong>Pros:</strong> Easy dependency management, virtual environment support
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="install-card">
+                            <div class="install-header">
+                                <div class="install-icon">📁</div>
+                                <h3>Direct Download</h3>
+                            </div>
+                            <div class="install-body">
+                                <p>Download SDK files directly:</p>
+                                <div class="download-links">
+                                    <a href="../SDK/JavaScript/allbeapi.js" class="btn btn-outline btn-sm" download>JavaScript SDK</a>
+                                    <a href="../SDK/Python/allbeapi.py" class="btn btn-outline btn-sm" download>Python SDK</a>
+                                </div>
+                                <div class="install-pros">
+                                    <strong>Pros:</strong> No external dependencies, full control
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- First Request -->
+                <section id="first-request" class="docs-section">
+                    <h2>Your First API Request</h2>
+                    <p>
+                        Let's walk through making your first API request step by step:
+                    </p>
+                    
+                    <div class="step-by-step">
+                        <div class="step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h3>Initialize the Client</h3>
+                                <p>Create an instance of the AllBeAPI client:</p>
+                                <div class="step-tabs">
+                                    <button class="step-tab active" data-lang="js">JavaScript</button>
+                                    <button class="step-tab" data-lang="py">Python</button>
+                                </div>
+                                <div class="step-code">
+                                    <pre class="step-code-block active" data-lang="js"><code class="language-javascript">const api = new AllBeApi();
+// You can also specify a custom endpoint:
+// const api = new AllBeApi('https://your-custom-endpoint.com');</code></pre>
+                                    <pre class="step-code-block" data-lang="py"><code class="language-python">from allbeapi import AllBeApi
+
+api = AllBeApi()
+# You can also specify a custom endpoint:
+# api = AllBeApi('https://your-custom-endpoint.com')</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h3>Make Your First Call</h3>
+                                <p>Let's convert some Markdown to HTML:</p>
+                                <div class="step-tabs">
+                                    <button class="step-tab active" data-lang="js">JavaScript</button>
+                                    <button class="step-tab" data-lang="py">Python</button>
+                                </div>
+                                <div class="step-code">
+                                    <pre class="step-code-block active" data-lang="js"><code class="language-javascript">const markdown = `
+# Welcome to AllBeAPI
+This is your **first** API call!
+
+## Features
+- Easy to use
+- Powerful
+- Open source
+`;
+
+try {
+    const html = await api.marked.render(markdown);
+    console.log('Success!', html);
+} catch (error) {
+    console.error('Error:', error.message);
+}</code></pre>
+                                    <pre class="step-code-block" data-lang="py"><code class="language-python">markdown = """
+# Welcome to AllBeAPI
+This is your **first** API call!
+
+## Features
+- Easy to use
+- Powerful
+- Open source
+"""
+
+try:
+    html = api.marked.render(markdown)
+    print('Success!', html)
+except Exception as error:
+    print('Error:', error)</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h3>Handle the Response</h3>
+                                <p>AllBeAPI returns structured responses:</p>
+                                <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "html": "&lt;h1&gt;Welcome to AllBeAPI&lt;/h1&gt;\n&lt;p&gt;This is your &lt;strong&gt;first&lt;/strong&gt; API call!&lt;/p&gt;\n&lt;h2&gt;Features&lt;/h2&gt;\n&lt;ul&gt;\n&lt;li&gt;Easy to use&lt;/li&gt;\n&lt;li&gt;Powerful&lt;/li&gt;\n&lt;li&gt;Open source&lt;/li&gt;\n&lt;/ul&gt;"
+  },
+  "metadata": {
+    "processing_time": 0.045,
+    "library_version": "marked@5.1.2"
+  }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Common Examples -->
+                <section id="examples" class="docs-section">
+                    <h2>Common Use Cases</h2>
+                    <p>
+                        Here are some common scenarios and how to implement them with AllBeAPI:
+                    </p>
+                    
+                    <div class="examples-grid">
+                        <div class="example-card">
+                            <div class="example-header">
+                                <div class="example-icon">📝</div>
+                                <h3>Blog Content Processing</h3>
+                            </div>
+                            <div class="example-body">
+                                <p>Convert markdown blog posts to HTML and generate social sharing QR codes:</p>
+                                <pre><code class="language-javascript">async function processBlogPost(markdown, postUrl) {
+    // Convert markdown to HTML
+    const html = await api.marked.render(markdown);
+    
+    // Generate QR code for sharing
+    const qrBlob = await api.pythonQrcode.generateQrcode(postUrl);
+    
+    // Sanitize HTML for safety
+    const cleanHtml = await api.sanitizeHtml.clean(html, {
+        allowedTags: ['h1', 'h2', 'h3', 'p', 'strong', 'em', 'ul', 'li'],
+        allowedAttributes: {}
+    });
+    
+    return { html: cleanHtml, qrCode: qrBlob };
+}</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="example-card">
+                            <div class="example-header">
+                                <div class="example-icon">🔧</div>
+                                <h3>Code Processing Pipeline</h3>
+                            </div>
+                            <div class="example-body">
+                                <p>Format, lint, and highlight code in one pipeline:</p>
+                                <pre><code class="language-python">def process_code(code, language='javascript'):
+    # Format the code
+    formatted = api.prettier.format(code, parser='babel')
+    
+    # Lint for errors
+    lint_result = api.eslint.analyze(formatted)
+    
+    # Add syntax highlighting
+    highlighted = api.pygments.highlight(formatted, language)
+    
+    return {
+        'formatted': formatted,
+        'lint_errors': lint_result.get('errors', []),
+        'highlighted': highlighted
+    }</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="example-card">
+                            <div class="example-header">
+                                <div class="example-icon">📊</div>
+                                <h3>Data Validation & Processing</h3>
+                            </div>
+                            <div class="example-body">
+                                <p>Validate JSON data and process CSV files:</p>
+                                <pre><code class="language-javascript">async function validateAndProcess(jsonData, csvData, schema) {
+    // Validate JSON against schema
+    const validation = await api.ajv.validate(schema, jsonData);
+    
+    if (!validation.valid) {
+        throw new Error('Data validation failed');
+    }
+    
+    // Parse CSV data
+    const parsedCsv = await api.csvParser.parse(csvData);
+    
+    return {
+        validatedData: jsonData,
+        csvRecords: parsedCsv
+    };
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Next Steps -->
+                <section id="next-steps" class="docs-section">
+                    <h2>Next Steps</h2>
+                    <p>
+                        Now that you've made your first API call, here's what to explore next:
+                    </p>
+                    
+                    <div class="next-steps-grid">
+                        <div class="next-step-card">
+                            <div class="next-step-icon">📚</div>
+                            <h3>Explore All APIs</h3>
+                            <p>Discover all 13+ integrated libraries and their capabilities.</p>
+                            <a href="api_new.html" class="btn btn-primary">API Reference</a>
+                        </div>
+                        
+                        <div class="next-step-card">
+                            <div class="next-step-icon">🛠️</div>
+                            <h3>SDK Deep Dive</h3>
+                            <p>Learn advanced SDK features, error handling, and best practices.</p>
+                            <a href="sdk_new.html" class="btn btn-primary">SDK Guide</a>
+                        </div>
+                        
+                        <div class="next-step-card">
+                            <div class="next-step-icon">💡</div>
+                            <h3>See Examples</h3>
+                            <p>Browse real-world examples and integration patterns.</p>
+                            <a href="examples.html" class="btn btn-primary">Examples</a>
+                        </div>
+                        
+                        <div class="next-step-card">
+                            <div class="next-step-icon">🤝</div>
+                            <h3>Join Community</h3>
+                            <p>Get help, share ideas, and contribute to the project.</p>
+                            <a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank" class="btn btn-primary">GitHub</a>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Support -->
+                <section id="support" class="docs-section">
+                    <h2>Getting Help</h2>
+                    <p>
+                        Need help or have questions? Here are the best ways to get support:
+                    </p>
+                    
+                    <div class="support-options">
+                        <div class="support-card">
+                            <div class="support-icon">📖</div>
+                            <h3>Documentation</h3>
+                            <p>Comprehensive guides and API reference</p>
+                            <a href="index.html" class="support-link">Browse Docs</a>
+                        </div>
+                        
+                        <div class="support-card">
+                            <div class="support-icon">💬</div>
+                            <h3>GitHub Discussions</h3>
+                            <p>Ask questions and discuss with the community</p>
+                            <a href="https://github.com/TingjiaInFuture/allbeapi/discussions" target="_blank" class="support-link">Join Discussion</a>
+                        </div>
+                        
+                        <div class="support-card">
+                            <div class="support-icon">🐛</div>
+                            <h3>Issue Tracker</h3>
+                            <p>Report bugs or request new features</p>
+                            <a href="https://github.com/TingjiaInFuture/allbeapi/issues" target="_blank" class="support-link">Report Issue</a>
+                        </div>
+                        
+                        <div class="support-card">
+                            <div class="support-icon">💡</div>
+                            <h3>Examples Repository</h3>
+                            <p>Browse code examples and use cases</p>
+                            <a href="https://github.com/TingjiaInFuture/allbeapi/tree/main/examples" target="_blank" class="support-link">View Examples</a>
+                        </div>
+                    </div>
+                    
+                    <div class="support-cta">
+                        <h3>Ready to Build Something Amazing?</h3>
+                        <p>You now have everything you need to start using AllBeAPI in your projects!</p>
+                        <div class="cta-buttons">
+                            <a href="api_new.html" class="btn btn-primary btn-lg">Explore APIs</a>
+                            <a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank" class="btn btn-outline btn-lg">Star on GitHub</a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Table of Contents -->
+            <aside class="docs-toc">
+                <h4>On This Page</h4>
+                <nav class="toc-nav">
+                    <ul>
+                        <li><a href="#introduction">Introduction</a></li>
+                        <li><a href="#quick-start">Quick Start</a></li>
+                        <li><a href="#installation">Installation</a></li>
+                        <li><a href="#first-request">First Request</a></li>
+                        <li><a href="#examples">Examples</a></li>
+                        <li><a href="#next-steps">Next Steps</a></li>
+                        <li><a href="#support">Getting Help</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/docs.js"></script>
+    <script>
+        // Initialize syntax highlighting
+        hljs.highlightAll();
+        
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Update highlight.js theme
+        function updateHighlightTheme(theme) {
+            const lightLink = document.getElementById('highlight-light');
+            const darkLink = document.getElementById('highlight-dark');
+            
+            if (theme === 'dark') {
+                lightLink.disabled = true;
+                darkLink.disabled = false;
+            } else {
+                lightLink.disabled = false;
+                darkLink.disabled = true;
+            }
+        }
+        
+        updateHighlightTheme(savedTheme);
+        
+        // Theme toggle
+        document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateHighlightTheme(newTheme);
+        });
+
+        // Tab functionality for quickstart and steps
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const container = btn.closest('.quickstart-tabs');
+                const targetTab = btn.dataset.tab;
+                
+                // Update active button
+                container.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update active pane
+                container.querySelectorAll('.tab-pane').forEach(pane => {
+                    pane.classList.remove('active');
+                    if (pane.dataset.tab === targetTab) {
+                        pane.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        // Step tabs functionality
+        document.querySelectorAll('.step-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const container = tab.closest('.step-content');
+                const targetLang = tab.dataset.lang;
+                
+                // Update active tab
+                container.querySelectorAll('.step-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Update active code block
+                container.querySelectorAll('.step-code-block').forEach(block => {
+                    block.classList.remove('active');
+                    if (block.dataset.lang === targetLang) {
+                        block.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

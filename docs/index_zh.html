@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档 - AllBeAPI</title>
+    <meta name="description" content="AllBeAPI 完整文档 - SDK 指南、API 参考和示例。">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+</head>
+<body>
+    <!-- Language Switch -->
+    <div class="language-switch">
+        <div class="container">
+            <a href="../index.html">← 返回首页</a> | 
+            <a href="index.html">English</a> | 
+            <a href="index_zh.html" class="active">中文</a>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="../index.html" class="navbar-brand">AllBeAPI</a>
+                <ul class="navbar-nav">
+                    <li><a href="index_zh.html" class="active">文档</a></li>
+                    <li><a href="getting-started_zh.html">快速入门</a></li>
+                    <li><a href="api_zh.html">API 参考</a></li>
+                    <li><a href="sdk_zh.html">SDK 指南</a></li>
+                    <li><a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a></li>
+                </ul>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="theme-toggle" aria-label="切换主题">🌙</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="display: grid; grid-template-columns: 250px 1fr; gap: 2rem; margin-top: 2rem;">
+        <!-- Documentation Navigation -->
+        <aside class="doc-nav">
+            <h3 class="doc-nav-title">文档</h3>
+            <ul class="doc-nav-list">
+                <li class="doc-nav-item">
+                    <a href="index_zh.html" class="doc-nav-link active">概述</a>
+                </li>
+                <li class="doc-nav-item">
+                    <a href="getting-started_zh.html" class="doc-nav-link">快速入门</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="getting-started_zh.html#installation" class="doc-nav-link">安装</a></li>
+                        <li><a href="getting-started_zh.html#quickstart" class="doc-nav-link">快速开始</a></li>
+                        <li><a href="getting-started_zh.html#examples" class="doc-nav-link">示例</a></li>
+                    </ul>
+                </li>
+                <li class="doc-nav-item">
+                    <a href="api_zh.html" class="doc-nav-link">API 参考</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="api_zh.html#marked" class="doc-nav-link">Markdown (Marked)</a></li>
+                        <li><a href="api_zh.html#beautifulsoup" class="doc-nav-link">HTML 解析</a></li>
+                        <li><a href="api_zh.html#prettier" class="doc-nav-link">代码格式化</a></li>
+                        <li><a href="api_zh.html#qrcode" class="doc-nav-link">二维码</a></li>
+                        <li><a href="api_zh.html#all-apis" class="doc-nav-link">所有 API</a></li>
+                    </ul>
+                </li>
+                <li class="doc-nav-item">
+                    <a href="sdk_zh.html" class="doc-nav-link">SDK 指南</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="sdk_zh.html#javascript" class="doc-nav-link">JavaScript SDK</a></li>
+                        <li><a href="sdk_zh.html#python" class="doc-nav-link">Python SDK</a></li>
+                        <li><a href="sdk_zh.html#rest" class="doc-nav-link">REST API</a></li>
+                    </ul>
+                </li>
+                <li class="doc-nav-item">
+                    <a href="contributing_zh.html" class="doc-nav-link">贡献</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Documentation Content -->
+        <main class="doc-content">
+            <h1>AllBeAPI 文档</h1>
+            <p class="lead">欢迎阅读 AllBeAPI 综合文档——您轻量级的通用 SDK，用于集成流行的第三方库。</p>
+
+            <div class="alert alert-info">
+                <strong>AllBeAPI 新手？</strong> 请从我们的 <a href="getting-started_zh.html">快速入门指南</a> 开始快速了解。
+            </div>
+
+            <section id="overview">
+                <h2>什么是 AllBeAPI？</h2>
+                <p>AllBeAPI 是一个轻量级的通用 SDK，它提供了一个统一的接口来访问各种常用的第三方库。AllBeAPI 无需学习和管理多个独立的库，而是提供：</p>
+                
+                <ul>
+                    <li><strong>统一接口：</strong>所有集成库的一致 API</li>
+                    <li><strong>多种 SDK：</strong>支持 JavaScript、Python 和直接 REST API 调用</li>
+                    <li><strong>13+ 集成：</strong>用于常见开发任务的流行库</li>
+                    <li><strong>易于使用：</strong>安装简单，配置最少</li>
+                </ul>
+            </section>
+
+            <section id="architecture">
+                <h2>架构</h2>
+                <p>AllBeAPI 遵循微服务架构，其中每个集成库都作为独立服务运行：</p>
+                
+                <div class="code-example">
+                    <pre class="code-block" data-language="text">┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│  JavaScript   │    │     Python      │    │    REST API     │
+│      SDK        │    │      SDK        │    │     客户端      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         └───────────────────────┼───────────────────────┘
+                                 │
+                    ┌─────────────────┐
+                    │   AllBeAPI      │
+                    │    网关         │
+                    └─────────────────┘
+                                 │
+         ┌───────────────────────┼───────────────────────┐
+         │                       │                       │
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Marked    │    │ BeautifulSoup│    │  Prettier   │    │     ...     │
+│   服务      │    │    服务     │    │    服务     │    │    服务     │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘</pre>
+                </div>
+            </section>
+
+            <section id="supported-libraries">
+                <h2>支持的库</h2>
+                <p>AllBeAPI 目前集成了以下流行库：</p>
+
+                <div class="grid grid-2">
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <div class="api-card-title">
+                                <h3>文本处理</h3>
+                                <span class="api-badge">4 个 API</span>
+                            </div>
+                        </div>
+                        <div class="api-card-body">
+                            <ul class="api-endpoints">
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Marked.js - Markdown 转 HTML</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Prettier - 代码格式化</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Pygments - 语法高亮</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Diff - 文本比较</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <div class="api-card-title">
+                                <h3>数据处理</h3>
+                                <span class="api-badge">4 个 API</span>
+                            </div>
+                        </div>
+                        <div class="api-card-body">
+                            <ul class="api-endpoints">
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">BeautifulSoup - HTML 解析</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">CSV Parser - CSV 转 JSON</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Ajv - JSON 验证</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">ESLint - 代码检查</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <div class="api-card-title">
+                                <h3>媒体生成</h3>
+                                <span class="api-badge">3 个 API</span>
+                            </div>
+                        </div>
+                        <div class="api-card-body">
+                            <ul class="api-endpoints">
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">QR Code - 图像生成</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Mermaid - 图表创建</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">PDFKit - PDF 生成</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <div class="api-card-title">
+                                <h3>安全与工具</h3>
+                                <span class="api-badge">2 个 API</span>
+                            </div>
+                        </div>
+                        <div class="api-card-body">
+                            <ul class="api-endpoints">
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Sanitize HTML - XSS 防护</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Pillow - 图像处理</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="quick-example">
+                <h2>快速示例</h2>
+                <p>这是一个简单的示例，展示了如何使用 JavaScript SDK 来使用 AllBeAPI：</p>
+
+                <div class="code-example">
+                    <div class="code-tabs">
+                        <button class="code-tab active">JavaScript</button>
+                        <button class="code-tab">Python</button>
+                    </div>
+                    <div class="code-content">
+                        <pre class="code-block" data-language="javascript">// 初始化 AllBeAPI 客户端
+const api = new AllBeApi();
+
+// 将 Markdown 转换为 HTML
+const markdown = "# 你好世界
+这是 **粗体** 文本。";
+const htmlResult = await api.marked.render(markdown);
+console.log(htmlResult);
+
+// 生成二维码
+const qrBlob = await api.pythonQrcode.generateQrcode("https://allbeapi.com");
+const imageUrl = URL.createObjectURL(qrBlob);
+
+// 显示二维码
+const img = document.createElement('img');
+img.src = imageUrl;
+document.body.appendChild(img);</pre>
+
+                        <pre class="code-block" data-language="python" style="display: none;">from allbeapi import AllBeApi
+
+# 初始化 AllBeAPI 客户端
+api = AllBeApi()
+
+# 将 Markdown 转换为 HTML
+markdown = "# 你好世界
+这是 **粗体** 文本。"
+html_result = api.marked.render(markdown)
+print(html_result)
+
+# 生成二维码
+qr_bytes = api.python_qrcode.generate_qrcode("https://allbeapi.com")
+with open("qrcode.png", "wb") as f:
+    f.write(qr_bytes)</pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="next-steps">
+                <h2>后续步骤</h2>
+                <div class="grid grid-3">
+                    <div class="card">
+                        <h3>🚀 快速入门</h3>
+                        <p>了解如何在您的项目中安装和配置 AllBeAPI。</p>
+                        <a href="getting-started_zh.html" class="btn btn-primary">开始使用</a>
+                    </div>
+                    <div class="card">
+                        <h3>📚 API 参考</h3>
+                        <p>浏览包含示例的完整 API 文档。</p>
+                        <a href="api_zh.html" class="btn btn-outline">API 文档</a>
+                    </div>
+                    <div class="card">
+                        <h3>💻 SDK 指南</h3>
+                        <p>了解如何使用 JavaScript 和 Python SDK。</p>
+                        <a href="sdk_zh.html" class="btn btn-outline">SDK 指南</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; <span id="currentYear"></span> AllBeAPI 项目。根据 MIT 许可证授权。</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../assets/js/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+        hljs.highlightAll();
+    </script>
+</body>
+</html>

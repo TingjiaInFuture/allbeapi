@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDK Guide - AllBeAPI Documentation</title>
+    <meta name="description" content="Complete guide to using AllBeAPI SDKs in JavaScript and Python. Learn how to integrate and use our universal SDK in your projects.">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <link rel="stylesheet" href="../assets/css/docs.css">
+    
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="highlight-light">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="highlight-dark" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="../index.html" class="navbar-brand">
+                    <span class="brand-icon">🚀</span>
+                    AllBeAPI
+                </a>
+                <ul class="navbar-nav">
+                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="api.html">API Reference</a></li>
+                    <li><a href="sdk.html" class="active">SDK Guide</a></li>
+                    <li><a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a></li>
+                </ul>
+                <div class="navbar-actions">
+                    <button class="theme-toggle" aria-label="Toggle dark mode">
+                        <span class="theme-icon-dark">🌙</span>
+                        <span class="theme-icon-light">☀️</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="docs-layout">
+        <!-- Sidebar -->
+        <aside class="docs-sidebar">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">SDK Guide</h3>
+                <nav class="sidebar-nav">
+                    <ul>
+                        <li><a href="#overview" class="nav-link">Overview</a></li>
+                        <li><a href="#installation" class="nav-link">Installation</a></li>
+                        <li><a href="#javascript-sdk" class="nav-link">JavaScript SDK</a></li>
+                        <li><a href="#python-sdk" class="nav-link">Python SDK</a></li>
+                        <li><a href="#configuration" class="nav-link">Configuration</a></li>
+                        <li><a href="#error-handling" class="nav-link">Error Handling</a></li>
+                        <li><a href="#best-practices" class="nav-link">Best Practices</a></li>
+                        <li><a href="#examples" class="nav-link">Examples</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="docs-main">
+            <div class="docs-content">
+                <!-- Header -->
+                <header class="docs-header">
+                    <h1>SDK Guide</h1>
+                    <p class="docs-lead">
+                        Learn how to integrate and use AllBeAPI SDKs in your JavaScript and Python projects.
+                        Our SDKs provide a simple, consistent interface to access all available libraries.
+                    </p>
+                </header>
+
+                <!-- Overview -->
+                <section id="overview" class="docs-section">
+                    <h2>Overview</h2>
+                    <p>
+                        AllBeAPI provides SDKs for JavaScript and Python that make it easy to integrate our universal
+                        library interface into your applications. Both SDKs offer the same functionality with
+                        language-specific optimizations and idioms.
+                    </p>
+                    
+                    <div class="feature-comparison">
+                        <div class="comparison-card">
+                            <h3>🟨 JavaScript SDK</h3>
+                            <ul>
+                                <li>Promise-based async/await support</li>
+                                <li>Browser and Node.js compatible</li>
+                                <li>TypeScript definitions included</li>
+                                <li>Automatic request/response handling</li>
+                                <li>Built-in error handling</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="comparison-card">
+                            <h3>🐍 Python SDK</h3>
+                            <ul>
+                                <li>Pythonic API design</li>
+                                <li>Type hints for better IDE support</li>
+                                <li>Automatic retry mechanism</li>
+                                <li>Session management</li>
+                                <li>Comprehensive error handling</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Installation -->
+                <section id="installation" class="docs-section">
+                    <h2>Installation</h2>
+                    
+                    <div class="installation-options">
+                        <div class="install-option">
+                            <h3>NPM (Recommended for JavaScript)</h3>
+                            <pre><code class="language-bash"># Install via npm
+npm install allbeapi
+
+# Install via yarn
+yarn add allbeapi</code></pre>
+                        </div>
+                        
+                        <div class="install-option">
+                            <h3>Direct Download (JavaScript)</h3>
+                            <pre><code class="language-html">&lt;!-- Include in your HTML --&gt;
+&lt;script src="https://cdn.allbeapi.com/js/allbeapi.min.js"&gt;&lt;/script&gt;
+
+&lt;!-- Or download and host locally --&gt;
+&lt;script src="path/to/allbeapi.js"&gt;&lt;/script&gt;</code></pre>
+                        </div>
+                        
+                        <div class="install-option">
+                            <h3>PIP (Recommended for Python)</h3>
+                            <pre><code class="language-bash"># Install via pip
+pip install allbeapi
+
+# Install specific version
+pip install allbeapi==1.0.0</code></pre>
+                        </div>
+                        
+                        <div class="install-option">
+                            <h3>Direct Download (Python)</h3>
+                            <pre><code class="language-bash"># Download the Python SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py
+
+# Or clone the repository
+git clone https://github.com/TingjiaInFuture/allbeapi.git</code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- JavaScript SDK -->
+                <section id="javascript-sdk" class="docs-section">
+                    <h2>JavaScript SDK</h2>
+                    
+                    <h3>Basic Usage</h3>
+                    <pre><code class="language-javascript">// Import the SDK (ES6 modules)
+import { AllBeApi } from 'allbeapi';
+
+// Or use CommonJS
+const { AllBeApi } = require('allbeapi');
+
+// Or use the global variable (browser)
+// const api = new AllBeApi();
+
+// Initialize the client
+const api = new AllBeApi({
+    baseUrl: 'https://res.allbeapi.top', // Optional: custom endpoint
+    timeout: 10000, // Optional: request timeout in ms
+    apiKey: 'your-api-key' // Optional: if you have one
+});
+
+// Use async/await
+async function example() {
+    try {
+        // Convert Markdown to HTML
+        const html = await api.marked.render('# Hello World');
+        console.log(html);
+        
+        // Generate QR Code
+        const qrBlob = await api.pythonQrcode.generateQrcode('https://allbeapi.com');
+        console.log('QR Code generated:', qrBlob);
+        
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}</code></pre>
+
+                    <h3>Available Methods</h3>
+                    <div class="method-grid">
+                        <div class="method-card">
+                            <h4>Text Processing</h4>
+                            <pre><code class="language-javascript">// Markdown to HTML
+await api.marked.render(markdown);
+
+// HTML parsing and extraction
+await api.beautifulsoup.parse(html, selector);
+
+// HTML sanitization
+await api.sanitizeHtml.clean(html, options);</code></pre>
+                        </div>
+                        
+                        <div class="method-card">
+                            <h4>Code Tools</h4>
+                            <pre><code class="language-javascript">// Code formatting
+await api.prettier.format(code, { parser: 'babel' });
+
+// Code linting
+await api.eslint.analyze(code, config);
+
+// Syntax highlighting
+await api.pygments.highlight(code, language);</code></pre>
+                        </div>
+                        
+                        <div class="method-card">
+                            <h4>Data Processing</h4>
+                            <pre><code class="language-javascript">// JSON schema validation
+await api.ajv.validate(schema, data);
+
+// CSV to JSON conversion
+await api.csvParser.parse(csvData);
+
+// Text comparison
+await api.diff.compare(text1, text2);</code></pre>
+                        </div>
+                        
+                        <div class="method-card">
+                            <h4>Media Generation</h4>
+                            <pre><code class="language-javascript">// QR code generation
+await api.pythonQrcode.generateQrcode(data);
+
+// Diagram creation
+await api.mermaidCli.render(diagram);
+
+// PDF generation
+await api.pdfkit.create(content);
+
+// Image processing
+await api.pillow.resize(image, width, height);</code></pre>
+                        </div>
+                    </div>
+
+                    <h3>Browser Example</h3>
+                    <pre><code class="language-html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;AllBeAPI Example&lt;/title&gt;
+    &lt;script src="https://cdn.allbeapi.com/js/allbeapi.min.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;textarea id="markdown-input" placeholder="Enter markdown..."&gt;&lt;/textarea&gt;
+    &lt;button onclick="convertMarkdown()"&gt;Convert&lt;/button&gt;
+    &lt;div id="html-output"&gt;&lt;/div&gt;
+
+    &lt;script&gt;
+        const api = new AllBeApi();
+        
+        async function convertMarkdown() {
+            const input = document.getElementById('markdown-input').value;
+            const output = document.getElementById('html-output');
+            
+            try {
+                const html = await api.marked.render(input);
+                output.innerHTML = html;
+            } catch (error) {
+                output.innerHTML = '&lt;p style="color: red;"&gt;Error: ' + error.message + '&lt;/p&gt;';
+            }
+        }
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </section>
+
+                <!-- Python SDK -->
+                <section id="python-sdk" class="docs-section">
+                    <h2>Python SDK</h2>
+                    
+                    <h3>Basic Usage</h3>
+                    <pre><code class="language-python"># Import the SDK
+from allbeapi import AllBeApi
+
+# Initialize the client
+api = AllBeApi(
+    base_url='https://res.allbeapi.top',  # Optional: custom endpoint
+    timeout=10,  # Optional: request timeout in seconds
+    api_key='your-api-key'  # Optional: if you have one
+)
+
+# Basic usage examples
+def main():
+    try:
+        # Convert Markdown to HTML
+        html = api.marked.render('# Hello World')
+        print(f"HTML: {html}")
+        
+        # Generate QR Code
+        qr_bytes = api.python_qrcode.generate_qrcode('https://allbeapi.com')
+        with open('qr.png', 'wb') as f:
+            f.write(qr_bytes)
+        print("QR code saved to qr.png")
+        
+        # Format Python code
+        formatted = api.prettier.format('x=1;y=2', parser='python')
+        print(f"Formatted: {formatted}")
+        
+    except Exception as error:
+        print(f"Error: {error}")
+
+if __name__ == "__main__":
+    main()</code></pre>
+
+                    <h3>Available Methods</h3>
+                    <div class="method-grid">
+                        <div class="method-card">
+                            <h4>Text Processing</h4>
+                            <pre><code class="language-python"># Markdown to HTML
+html = api.marked.render(markdown)
+
+# HTML parsing
+data = api.beautifulsoup.parse(html, selector)
+
+# HTML sanitization
+clean = api.sanitize_html.clean(html, options)</code></pre>
+                        </div>
+                        
+                        <div class="method-card">
+                            <h4>Code Tools</h4>
+                            <pre><code class="language-python"># Code formatting
+formatted = api.prettier.format(code, parser='python')
+
+# Syntax highlighting
+highlighted = api.pygments.highlight(code, 'python')
+
+# Code analysis (if available)
+analysis = api.eslint.analyze(js_code)</code></pre>
+                        </div>
+                        
+                        <div class="method-card">
+                            <h4>Data Processing</h4>
+                            <pre><code class="language-python"># JSON validation
+is_valid = api.ajv.validate(schema, data)
+
+# CSV processing
+json_data = api.csv_parser.parse(csv_string)
+
+# Text comparison
+diff = api.diff.compare(text1, text2)</code></pre>
+                        </div>
+                        
+                        <div class="method-card">
+                            <h4>Media Generation</h4>
+                            <pre><code class="language-python"># QR code generation
+qr_bytes = api.python_qrcode.generate_qrcode(url)
+
+# Image processing
+resized = api.pillow.resize_image(image_bytes, 300, 200)
+
+# PDF generation
+pdf_bytes = api.pdfkit.create_pdf(content)</code></pre>
+                        </div>
+                    </div>
+
+                    <h3>Complete Example</h3>
+                    <pre><code class="language-python">#!/usr/bin/env python3
+"""
+AllBeAPI Python SDK Example
+This example demonstrates various features of the AllBeAPI Python SDK.
+"""
+
+import os
+import json
+from allbeapi import AllBeApi
+
+def main():
+    # Initialize API client
+    api = AllBeApi()
+    
+    # Example 1: Blog post processing
+    print("=== Blog Post Processing ===")
+    
+    markdown_content = """
+    # My Tech Blog Post
+    
+    This post covers **important** topics in web development.
+    
+    ## Code Example
+    ```python
+    def hello_world():
+        print("Hello, AllBeAPI!")
+    ```
+    
+    Visit our [website](https://allbeapi.com) for more info.
+    """
+    
+    try:
+        # Convert markdown to HTML
+        html = api.marked.render(markdown_content)
+        print(f"Generated HTML (first 100 chars): {html[:100]}...")
+        
+        # Create a QR code for sharing
+        qr_bytes = api.python_qrcode.generate_qrcode("https://myblog.com/post/1")
+        
+        # Save QR code
+        with open("blog_share.png", "wb") as f:
+            f.write(qr_bytes)
+        print("✅ QR code saved as blog_share.png")
+        
+    except Exception as e:
+        print(f"❌ Error in blog processing: {e}")
+    
+    # Example 2: Data validation
+    print("\n=== Data Validation ===")
+    
+    schema = {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "age": {"type": "number", "minimum": 0},
+            "email": {"type": "string", "format": "email"}
+        },
+        "required": ["name", "age"]
+    }
+    
+    valid_data = {"name": "John Doe", "age": 30, "email": "john@example.com"}
+    invalid_data = {"name": "Jane", "age": -5}
+    
+    try:
+        # Validate data
+        result1 = api.ajv.validate(schema, valid_data)
+        result2 = api.ajv.validate(schema, invalid_data)
+        
+        print(f"Valid data validation: {result1}")
+        print(f"Invalid data validation: {result2}")
+        
+    except Exception as e:
+        print(f"❌ Error in validation: {e}")
+    
+    # Example 3: Code formatting
+    print("\n=== Code Formatting ===")
+    
+    messy_code = "def func(x,y):return x+y;print('hello')"
+    
+    try:
+        formatted = api.prettier.format(messy_code, parser='python')
+        print(f"Original: {messy_code}")
+        print(f"Formatted: {formatted}")
+        
+    except Exception as e:
+        print(f"❌ Error in formatting: {e}")
+
+if __name__ == "__main__":
+    main()</code></pre>
+                </section>
+
+                <!-- Configuration -->
+                <section id="configuration" class="docs-section">
+                    <h2>Configuration</h2>
+                    
+                    <h3>JavaScript Configuration</h3>
+                    <pre><code class="language-javascript">const api = new AllBeApi({
+    // Base URL for the API (default: https://res.allbeapi.top)
+    baseUrl: 'https://your-custom-endpoint.com',
+    
+    // Request timeout in milliseconds (default: 10000)
+    timeout: 15000,
+    
+    // API key if required
+    apiKey: process.env.ALLBEAPI_KEY,
+    
+    // Custom headers
+    headers: {
+        'User-Agent': 'MyApp/1.0.0',
+        'X-Custom-Header': 'value'
+    },
+    
+    // Retry configuration
+    retry: {
+        attempts: 3,
+        delay: 1000
+    }
+});</code></pre>
+
+                    <h3>Python Configuration</h3>
+                    <pre><code class="language-python">import os
+from allbeapi import AllBeApi
+
+api = AllBeApi(
+    # Base URL for the API
+    base_url='https://your-custom-endpoint.com',
+    
+    # Request timeout in seconds
+    timeout=15,
+    
+    # API key if required
+    api_key=os.getenv('ALLBEAPI_KEY'),
+    
+    # Custom headers
+    headers={
+        'User-Agent': 'MyApp/1.0.0',
+        'X-Custom-Header': 'value'
+    },
+    
+    # Session configuration
+    session_config={
+        'verify_ssl': True,
+        'max_retries': 3
+    }
+)</code></pre>
+                </section>
+
+                <!-- Error Handling -->
+                <section id="error-handling" class="docs-section">
+                    <h2>Error Handling</h2>
+                    
+                    <h3>JavaScript Error Handling</h3>
+                    <pre><code class="language-javascript">try {
+    const result = await api.marked.render(markdown);
+    console.log('Success:', result);
+} catch (error) {
+    // Handle different types of errors
+    if (error.response) {
+        // Server responded with error status
+        console.error('Server Error:', error.response.status, error.response.data);
+    } else if (error.request) {
+        // Request was made but no response received
+        console.error('Network Error:', error.message);
+    } else {
+        // Something else happened
+        console.error('Error:', error.message);
+    }
+}</code></pre>
+
+                    <h3>Python Error Handling</h3>
+                    <pre><code class="language-python">from allbeapi import AllBeApi, AllBeApiError, NetworkError, ValidationError
+
+api = AllBeApi()
+
+try:
+    result = api.marked.render(markdown)
+    print(f'Success: {result}')
+except ValidationError as e:
+    print(f'Validation Error: {e}')
+except NetworkError as e:
+    print(f'Network Error: {e}')
+except AllBeApiError as e:
+    print(f'API Error: {e}')
+except Exception as e:
+    print(f'Unexpected Error: {e}')</code></pre>
+                </section>
+
+                <!-- Best Practices -->
+                <section id="best-practices" class="docs-section">
+                    <h2>Best Practices</h2>
+                    
+                    <div class="best-practices-grid">
+                        <div class="practice-card">
+                            <h3>🔐 Security</h3>
+                            <ul>
+                                <li>Never expose API keys in client-side code</li>
+                                <li>Use environment variables for configuration</li>
+                                <li>Validate and sanitize all user inputs</li>
+                                <li>Use HTTPS endpoints only</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="practice-card">
+                            <h3>⚡ Performance</h3>
+                            <ul>
+                                <li>Reuse API client instances</li>
+                                <li>Implement proper caching strategies</li>
+                                <li>Use appropriate timeout values</li>
+                                <li>Handle rate limiting gracefully</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="practice-card">
+                            <h3>🛠️ Error Handling</h3>
+                            <ul>
+                                <li>Always wrap API calls in try-catch blocks</li>
+                                <li>Implement retry logic for transient failures</li>
+                                <li>Log errors appropriately</li>
+                                <li>Provide meaningful error messages to users</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="practice-card">
+                            <h3>📊 Monitoring</h3>
+                            <ul>
+                                <li>Monitor API response times</li>
+                                <li>Track error rates and types</li>
+                                <li>Set up alerts for critical failures</li>
+                                <li>Use structured logging</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Examples -->
+                <section id="examples" class="docs-section">
+                    <h2>Real-World Examples</h2>
+                    
+                    <div class="example-tabs">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" data-tab="blog">📝 Blog System</button>
+                            <button class="tab-btn" data-tab="docs">📚 Documentation Generator</button>
+                            <button class="tab-btn" data-tab="validator">✅ Data Validator</button>
+                        </div>
+                        
+                        <div class="tab-content">
+                            <div class="tab-pane active" data-tab="blog">
+                                <h3>Blog Content Management System</h3>
+                                <pre><code class="language-javascript">// Blog post processor using AllBeAPI
+class BlogProcessor {
+    constructor() {
+                        this.api = new AllBeApi();
+    }
+    
+    async processPost(markdownContent, metadata) {
+        try {
+            // Convert markdown to HTML
+            const html = await this.api.marked.render(markdownContent);
+            
+            // Generate social sharing QR code
+            const shareUrl = `https://myblog.com/post/${metadata.slug}`;
+            const qrBlob = await this.api.pythonQrcode.generateQrcode(shareUrl);
+            
+            // Create PDF version
+            const pdfBuffer = await this.api.pdfkit.create({
+                content: html,
+                title: metadata.title,
+                author: metadata.author
+            });
+            
+            return {
+                html,
+                qrCode: qrBlob,
+                pdf: pdfBuffer,
+                shareUrl
+            };
+        } catch (error) {
+            throw new Error(`Failed to process blog post: ${error.message}`);
+        }
+    }
+}</code></pre>
+                            </div>
+                            
+                            <div class="tab-pane" data-tab="docs">
+                                <h3>Automated Documentation Generator</h3>
+                                <pre><code class="language-python">import os
+from pathlib import Path
+from allbeapi import AllBeApi
+
+class DocumentationGenerator:
+    def __init__(self):
+        self.api = AllBeApi()
+    
+    def generate_docs(self, source_dir, output_dir):
+        """Generate documentation from markdown files."""
+        source_path = Path(source_dir)
+        output_path = Path(output_dir)
+        output_path.mkdir(exist_ok=True)
+        
+        for md_file in source_path.glob('**/*.md'):
+            try:
+                # Read markdown content
+                content = md_file.read_text(encoding='utf-8')
+                
+                # Convert to HTML
+                html = self.api.marked.render(content)
+                
+                # Create styled HTML document
+                full_html = self._create_html_document(html, md_file.stem)
+                
+                # Write output
+                output_file = output_path / f"{md_file.stem}.html"
+                output_file.write_text(full_html, encoding='utf-8')
+                
+                print(f"✅ Generated: {output_file}")
+                
+            except Exception as e:
+                print(f"❌ Error processing {md_file}: {e}")
+    
+    def _create_html_document(self, content, title):
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>{title}</title>
+            <link rel="stylesheet" href="styles.css">
+        </head>
+        <body>
+            <div class="container">
+                {content}
+            </div>
+        </body>
+        </html>
+        """</code></pre>
+                            </div>
+                            
+                            <div class="tab-pane" data-tab="validator">
+                                <h3>Universal Data Validator</h3>
+                                <pre><code class="language-javascript">class DataValidator {
+    constructor() {
+        this.api = new AllBeApi();
+    }
+    
+    async validateUserData(userData, schema) {
+        const validationResult = {
+            isValid: false,
+            errors: [],
+            sanitizedData: null
+        };
+        
+        try {
+            // Validate against JSON schema
+            const schemaValidation = await this.api.ajv.validate(schema, userData);
+            
+            if (!schemaValidation.valid) {
+                validationResult.errors.push(...schemaValidation.errors);
+                return validationResult;
+            }
+            
+            // Sanitize HTML content if present
+            if (userData.bio) {
+                userData.bio = await this.api.sanitizeHtml.clean(userData.bio, {
+                    allowedTags: ['p', 'br', 'strong', 'em'],
+                    allowedAttributes: {}
+                });
+            }
+            
+            validationResult.isValid = true;
+            validationResult.sanitizedData = userData;
+            
+        } catch (error) {
+            validationResult.errors.push(`Validation failed: ${error.message}`);
+        }
+        
+        return validationResult;
+    }
+}</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Table of Contents -->
+            <aside class="docs-toc">
+                <h4>On This Page</h4>
+                <nav class="toc-nav">
+                    <ul>
+                        <li><a href="#overview">Overview</a></li>
+                        <li><a href="#installation">Installation</a></li>
+                        <li><a href="#javascript-sdk">JavaScript SDK</a></li>
+                        <li><a href="#python-sdk">Python SDK</a></li>
+                        <li><a href="#configuration">Configuration</a></li>
+                        <li><a href="#error-handling">Error Handling</a></li>
+                        <li><a href="#best-practices">Best Practices</a></li>
+                        <li><a href="#examples">Examples</a></li>
+                    </ul>
+                </nav>
+            </aside>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/docs.js"></script>
+    <script>
+        // Initialize syntax highlighting
+        hljs.highlightAll();
+        
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Update highlight.js theme
+        function updateHighlightTheme(theme) {
+            const lightLink = document.getElementById('highlight-light');
+            const darkLink = document.getElementById('highlight-dark');
+            
+            if (theme === 'dark') {
+                lightLink.disabled = true;
+                darkLink.disabled = false;
+            } else {
+                lightLink.disabled = false;
+                darkLink.disabled = true;
+            }
+        }
+        
+        updateHighlightTheme(savedTheme);
+        
+        // Theme toggle
+        document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateHighlightTheme(newTheme);
+        });
+    </script>
+</body>
+</html>

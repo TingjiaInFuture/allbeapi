@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 参考 - AllBeAPI 文档</title>
+    <meta name="description" content="AllBeAPI 完整 API 参考。所有端点、参数和响应格式的详细文档。">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <link rel="stylesheet" href="../assets/css/docs.css">
+    
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css" id="highlight-light">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" id="highlight-dark" disabled>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+</head>
+<body>
+    <!-- Language Switch -->
+    <div class="language-switch">
+        <div class="container">
+            <a href="../index_zh.html">← 返回首页</a> | 
+            <a href="api.html">English</a> | 
+            <a href="api_zh.html" class="active">中文</a>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="../index_zh.html" class="navbar-brand">AllBeAPI</a>
+                <ul class="navbar-nav">
+                    <li><a href="index_zh.html">文档</a></li>
+                    <li><a href="getting-started_zh.html">快速入门</a></li>
+                    <li><a href="api_zh.html" class="active">API 参考</a></li>
+                    <li><a href="sdk_zh.html">SDK 指南</a></li>
+                    <li><a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a></li>
+                </ul>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="theme-toggle" aria-label="切换主题">🌙</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="docs-layout">
+        <!-- Sidebar -->
+        <aside class="docs-sidebar">
+            <h3 class="doc-nav-title">API 参考</h3>
+            <ul class="doc-nav-list">
+                <li><a href="#introduction" class="doc-nav-link">简介</a></li>
+                <li><a href="#base-url" class="doc-nav-link">基础 URL</a></li>
+                <li><a href="#request-format" class="doc-nav-link">请求格式</a></li>
+                <li><a href="#response-format" class="doc-nav-link">响应格式</a></li>
+                <li><a href="#authentication" class="doc-nav-link">认证</a></li>
+                <li>
+                    <a href="#text-processing" class="doc-nav-link">文本处理</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="#marked" class="doc-nav-link">Markdown (Marked)</a></li>
+                        <li><a href="#beautifulsoup" class="doc-nav-link">HTML 解析 (BeautifulSoup)</a></li>
+                        <li><a href="#sanitize-html" class="doc-nav-link">HTML 清理</a></li>
+                        <li><a href="#diff" class="doc-nav-link">文本比较 (Diff)</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#code-tools" class="doc-nav-link">代码工具</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="#prettier" class="doc-nav-link">代码格式化 (Prettier)</a></li>
+                        <li><a href="#eslint" class="doc-nav-link">代码检查 (ESLint)</a></li>
+                        <li><a href="#pygments" class="doc-nav-link">语法高亮 (Pygments)</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#data-processing" class="doc-nav-link">数据处理</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="#csv-parser" class="doc-nav-link">CSV 解析</a></li>
+                        <li><a href="#ajv" class="doc-nav-link">JSON 模式验证 (Ajv)</a></li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#media-generation" class="doc-nav-link">媒体生成</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="#qrcode" class="doc-nav-link">二维码 (Python QR Code)</a></li>
+                        <li><a href="#mermaid-cli" class="doc-nav-link">图表 (Mermaid CLI)</a></li>
+                        <li><a href="#pdfkit" class="doc-nav-link">PDF 生成 (PDFKit)</a></li>
+                        <li><a href="#pillow" class="doc-nav-link">图像处理 (Pillow)</a></li>
+                    </ul>
+                </li>
+                <li><a href="#error-codes" class="doc-nav-link">错误代码</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="docs-main">
+            <header class="docs-header">
+                <h1>AllBeAPI API 参考</h1>
+                <p class="lead">本部分提供了 AllBeAPI 中所有可用 API 端点的详细文档。每个端点都包含请求/响应格式、参数和示例。</p>
+            </header>
+
+            <section id="introduction" class="docs-section">
+                <h2>简介</h2>
+                <p>AllBeAPI 提供了一组 RESTful API 端点，用于访问各种第三方库的功能。这些 API 设计简单且易于集成。</p>
+            </section>
+
+            <section id="base-url" class="docs-section">
+                <h2>基础 URL</h2>
+                <p>所有 API 请求的基础 URL 是：</p>
+                <pre><code class="language-http">https://res.allbeapi.top</code></pre>
+                <p>SDK 会自动处理此基础 URL。如果您直接进行 HTTP 调用，请确保在请求中使用此 URL。</p>
+            </section>
+
+            <section id="request-format" class="docs-section">
+                <h2>请求格式</h2>
+                <p>所有 <code>POST</code> 请求都应将数据作为 JSON 对象在请求体中发送，并将 <code>Content-Type</code> 标头设置为 <code>application/json</code>。</p>
+                <pre><code class="language-http">POST /service/action
+Content-Type: application/json
+
+{
+  "parameter1": "value1",
+  "parameter2": "value2"
+}</code></pre>
+            </section>
+
+            <section id="response-format" class="docs-section">
+                <h2>响应格式</h2>
+                <p>所有 API 响应都遵循标准的 JSON 结构：</p>
+                <h3>成功响应</h3>
+                <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "result": "处理后的输出"
+    // ... 特定于端点的其他数据
+  },
+  "metadata": {
+    "processing_time": 0.125, // 处理时间（秒）
+    "library_version": "1.0.0" // 使用的库版本
+  }
+}</code></pre>
+
+                <h3>错误响应</h3>
+                <pre><code class="language-json">{
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR", // 错误代码
+    "message": "无效的输入参数", // 错误消息
+    "details": { /* 特定于错误的详细信息 */ }
+  },
+  "request_id": "req_123456789" // 可选的请求 ID，用于跟踪
+}</code></pre>
+            </section>
+
+            <section id="authentication" class="docs-section">
+                <h2>认证</h2>
+                <p>目前，大多数 AllBeAPI 端点都是公开的，不需要认证。但是，将来可能会为某些端点或更高的速率限制引入 API 密钥。</p>
+                <p>如果需要 API 密钥，您需要在请求的 <code>Authorization</code> 标头中将其作为持有者令牌传递：</p>
+                <pre><code class="language-http">Authorization: Bearer your-api-key-here</code></pre>
+                <p>SDK 提供了在初始化期间配置 API 密钥的选项。</p>
+            </section>
+
+            <!-- Text Processing Endpoints -->
+            <section id="text-processing" class="docs-section">
+                <h2>文本处理</h2>
+
+                <div id="marked" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /marked/render</h3>
+                    <p>使用 Marked.js 将 Markdown 文本转换为 HTML。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>markdown</code> (string, <strong>必需</strong>): 要转换的 Markdown 字符串。</li>
+                        <li><code>options</code> (object, 可选): <a href="https://marked.js.org/using_advanced#options" target="_blank">Marked.js 选项</a>对象。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/marked/render \
+  -H "Content-Type: application/json" \
+  -d '{
+    "markdown": "# 你好世界\n\n这是 **粗体** 文本。",
+    "options": { "gfm": true, "breaks": false }
+  }'</code></pre>
+                    <h4>示例响应</h4>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "html": "&lt;h1 id=\"你好世界\"&gt;你好世界&lt;/h1&gt;\n&lt;p&gt;这是 &lt;strong&gt;粗体&lt;/strong&gt; 文本。&lt;/p&gt;"
+  },
+  "metadata": {
+    "processing_time": 0.03,
+    "library_version": "marked@x.y.z" 
+  }
+}</code></pre>
+                </div>
+
+                <div id="beautifulsoup" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /beautifulsoup/parse</h3>
+                    <p>使用 BeautifulSoup 解析 HTML 并使用 CSS 选择器或 XPath 表达式提取数据。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>html</code> (string, <strong>必需</strong>): 要解析的 HTML 字符串。</li>
+                        <li><code>selector</code> (string, <strong>必需</strong>): 用于元素选择的 CSS 选择器或 XPath 表达式。</li>
+                        <li><code>action</code> (string, 可选, 默认: <code>"get_text"</code>): 要执行的操作。可以是 <code>"get_text"</code>, <code>"get_html"</code>, <code>"get_attribute"</code>。</li>
+                        <li><code>attribute_name</code> (string, 可选): 如果 <code>action</code> 是 <code>"get_attribute"</code>，则为要获取的属性名称。</li>
+                        <li><code>base_url</code> (string, 可选): 用于解析相对 URL 的基础 URL。</li>
+                        <li><code>parser</code> (string, 可选, 默认: <code>"html.parser"</code>): 要使用的解析器 (例如, <code>"lxml"</code>, <code>"html5lib"</code>)。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/beautifulsoup/parse \
+  -H "Content-Type: application/json" \
+  -d '{
+    "html": "&lt;div class=\"content\"&gt;&lt;h1&gt;标题&lt;/h1&gt;&lt;p&gt;内容在此&lt;/p&gt;&lt;/div&gt;",
+    "selector": "h1",
+    "action": "get_text"
+  }'</code></pre>
+                    <h4>示例响应</h4>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "result": ["标题"],
+    "count": 1
+  },
+  "metadata": {
+    "processing_time": 0.05,
+    "library_version": "beautifulsoup4@x.y.z"
+  }
+}</code></pre>
+                </div>
+
+                <div id="sanitize-html" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /sanitize-html/clean</h3>
+                    <p>使用 sanitize-html 清理 HTML 内容以防止 XSS 攻击。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>html</code> (string, <strong>必需</strong>): 要清理的 HTML 字符串。</li>
+                        <li><code>options</code> (object, 可选): <a href="https://www.npmjs.com/package/sanitize-html#options" target="_blank">sanitize-html 选项</a>对象。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/sanitize-html/clean \
+  -H "Content-Type: application/json" \
+  -d '{
+    "html": "&lt;p&gt;安全内容&lt;/p&gt;&lt;script&gt;alert(\"xss\")&lt;/script&gt;",
+    "options": { "allowedTags": ["p", "strong", "em"], "allowedAttributes": {} }
+  }'</code></pre>
+                    <h4>示例响应</h4>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "html": "&lt;p&gt;安全内容&lt;/p&gt;"
+  },
+  "metadata": {
+    "processing_time": 0.02,
+    "library_version": "sanitize-html@x.y.z"
+  }
+}</code></pre>
+                </div>
+
+                <div id="diff" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /diff/compare</h3>
+                    <p>使用 diff 库比较两个文本块并生成差异。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>text1</code> (string, <strong>必需</strong>): 第一个文本字符串。</li>
+                        <li><code>text2</code> (string, <strong>必需</strong>): 第二个文本字符串。</li>
+                        <li><code>type</code> (string, 可选, 默认: <code>"chars"</code>): 差异类型。可以是 <code>"chars"</code>, <code>"words"</code>, <code>"lines"</code>, <code>"json"</code>。</li>
+                        <li><code>options</code> (object, 可选): 特定于差异类型的其他选项。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/diff/compare \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text1": "这是旧文本。",
+    "text2": "这是新文本。",
+    "type": "words"
+  }'</code></pre>
+                    <h4>示例响应</h4>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "diff": [
+      { "value": "这是 ", "added": false, "removed": false },
+      { "value": "旧", "added": false, "removed": true },
+      { "value": "新", "added": true, "removed": false },
+      { "value": "文本。", "added": false, "removed": false }
+    ]
+  },
+  "metadata": {
+    "processing_time": 0.01,
+    "library_version": "diff@x.y.z"
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Code Tools Endpoints -->
+            <section id="code-tools" class="docs-section">
+                <h2>代码工具</h2>
+
+                <div id="prettier" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /prettier/format</h3>
+                    <p>使用 Prettier 格式化代码片段。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>code</code> (string, <strong>必需</strong>): 要格式化的代码字符串。</li>
+                        <li><code>parser</code> (string, <strong>必需</strong>): 要使用的 Prettier 解析器 (例如, <code>"babel"</code>, <code>"typescript"</code>, <code>"css"</code>, <code>"html"</code>, <code>"markdown"</code>, <code>"python"</code> 等)。请参阅 <a href="https://prettier.io/docs/en/options.html#parser" target="_blank">Prettier 解析器选项</a>。</li>
+                        <li><code>options</code> (object, 可选): <a href="https://prettier.io/docs/en/options.html" target="_blank">Prettier 选项</a>对象。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/prettier/format \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "const x=1;function test(){return x;}",
+    "parser": "babel",
+    "options": { "semi": true, "singleQuote": true }
+  }'</code></pre>
+                    <h4>示例响应</h4>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "formatted": "const x = 1;\nfunction test() {\n  return x;\n}\n"
+  },
+  "metadata": {
+    "processing_time": 0.15,
+    "library_version": "prettier@x.y.z"
+  }
+}</code></pre>
+                </div>
+
+                <div id="eslint" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /eslint/analyze</h3>
+                    <p>使用 ESLint 分析 JavaScript 或 TypeScript 代码以查找错误和代码质量问题。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>code</code> (string, <strong>必需</strong>): 要分析的代码字符串。</li>
+                        <li><code>config</code> (object, 可选): <a href="https://eslint.org/docs/latest/use/configure/configuration-files#configuration-objects" target="_blank">ESLint 配置对象</a>。如果未提供，则使用默认配置。</li>
+                        <li><code>filePath</code> (string, 可选): 用于 ESLint 的虚拟文件路径，以帮助解析配置和插件。</li>
+                    </ul>
+                     <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/eslint/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "var x = 1; console.log(x)",
+    "config": { "rules": { "no-console": "warn", "no-unused-vars": "error" } }
+  }'</code></pre>
+                    <h4>示例响应</h4>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "results": [
+      {
+        "filePath": "&lt;text&gt;",
+        "messages": [
+          {
+            "ruleId": "no-console",
+            "severity": 1,
+            "message": "Unexpected console statement.",
+            "line": 1,
+            "column": 13
+          }
+        ],
+        "errorCount": 0,
+        "warningCount": 1,
+        "fixableErrorCount": 0,
+        "fixableWarningCount": 0
+      }
+    ],
+    "errorCount": 0,
+    "warningCount": 1
+  },
+  "metadata": {
+    "processing_time": 0.2,
+    "library_version": "eslint@x.y.z"
+  }
+}</code></pre>
+                </div>
+
+                <div id="pygments" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /pygments/highlight</h3>
+                    <p>使用 Pygments 为各种语言的代码添加语法高亮。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>code</code> (string, <strong>必需</strong>): 要高亮的代码字符串。</li>
+                        <li><code>lexer</code> (string, <strong>必需</strong>): 要使用的 Pygments 词法分析器 (例如, <code>"python"</code>, <code>"javascript"</code>, <code>"html"</code>)。请参阅 <a href="https://pygments.org/docs/lexers/" target="_blank">Pygments 词法分析器列表</a>。</li>
+                        <li><code>formatter</code> (string, 可选, 默认: <code>"html"</code>): 要使用的 Pygments 格式化程序 (例如, <code>"html"</code>, <code>"rtf"</code>)。</li>
+                        <li><code>options</code> (object, 可选): 特定于格式化程序的选项。对于 HTML 格式化程序，可以包括 <code>"noclasses"</code>, <code>"cssclass"</code>, <code>"linenos"</code>。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/pygments/highlight \
+  -H "Content-Type: application/json" \
+  -d '{
+    "code": "def hello():\n  print(\"Hello, World!\")",
+    "lexer": "python",
+    "options": { "cssclass": "syntax", "linenos": "table" }
+  }'</code></pre>
+                    <h4>示例响应</h4>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "highlighted": "&lt;div class=\"syntax\"&gt;&lt;table&gt;&lt;tr&gt;&lt;td&gt;...&lt;/td&gt;&lt;td&gt;...&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/div&gt;" // 实际的 HTML 输出会更长
+  },
+  "metadata": {
+    "processing_time": 0.1,
+    "library_version": "Pygments@x.y.z"
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Data Processing Endpoints -->
+            <section id="data-processing" class="docs-section">
+                <h2>数据处理</h2>
+
+                <div id="csv-parser" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /csv-parser/parse</h3>
+                    <p>将 CSV 格式的字符串转换为 JSON 对象数组或数组的数组。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>csv</code> (string, <strong>必需</strong>): 要解析的 CSV 字符串。</li>
+                        <li><code>options</code> (object, 可选): <a href="https://csv.js.org/parse/options/" target="_blank">csv-parse 选项</a>对象 (例如, <code>"delimiter"</code>, <code>"columns"</code>, <code>"skip_empty_lines"</code>)。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/csv-parser/parse \
+  -H "Content-Type: application/json" \
+  -d '{
+    "csv": "name,age\nAlice,30\nBob,24",
+    "options": { "columns": true, "skip_empty_lines": true }
+  }'</code></pre>
+                    <h4>示例响应</h4>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "json": [
+      { "name": "Alice", "age": "30" },
+      { "name": "Bob", "age": "24" }
+    ]
+  },
+  "metadata": {
+    "processing_time": 0.02,
+    "library_version": "csv-parse@x.y.z"
+  }
+}</code></pre>
+                </div>
+
+                <div id="ajv" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /ajv/validate</h3>
+                    <p>使用 Ajv 根据 JSON 模式验证 JSON 数据。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>schema</code> (object, <strong>必需</strong>): JSON 模式对象。</li>
+                        <li><code>data</code> (any, <strong>必需</strong>): 要根据模式验证的 JSON 数据。</li>
+                        <li><code>options</code> (object, 可选): <a href="https://ajv.js.org/options.html" target="_blank">Ajv 选项</a>。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/ajv/validate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "age": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["name", "age"]
+    },
+    "data": { "name": "Alice", "age": 30 }
+  }'</code></pre>
+                    <h4>示例响应 (有效)</h4>
+                    <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "valid": true,
+    "errors": null
+  },
+  "metadata": {
+    "processing_time": 0.01,
+    "library_version": "ajv@x.y.z"
+  }
+}</code></pre>
+                    <h4>示例响应 (无效)</h4>
+                    <pre><code class="language-json">{
+  "success": true, // 请求成功，但验证失败
+  "data": {
+    "valid": false,
+    "errors": [
+      {
+        "instancePath": "/age",
+        "schemaPath": "#/properties/age/minimum",
+        "keyword": "minimum",
+        "params": { "limit": 0 },
+        "message": "must be &gt;= 0"
+      }
+    ]
+  },
+  "metadata": {
+    "processing_time": 0.01,
+    "library_version": "ajv@x.y.z"
+  }
+}</code></pre>
+                </div>
+            </section>
+
+            <!-- Media Generation Endpoints -->
+            <section id="media-generation" class="docs-section">
+                <h2>媒体生成</h2>
+
+                <div id="qrcode" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /python-qrcode/generate-qrcode</h3>
+                    <p>使用 Python qrcode 库生成二维码图像。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>data</code> (string, <strong>必需</strong>): 要编码到二维码中的数据。</li>
+                        <li><code>version</code> (integer, 可选): 控制二维码大小的整数，从 1 到 40。</li>
+                        <li><code>error_correction</code> (string, 可选, 默认: <code>"M"</code>): 错误纠正级别。可以是 <code>"L"</code>, <code>"M"</code>, <code>"Q"</code>, <code>"H"</code>。</li>
+                        <li><code>box_size</code> (integer, 可选, 默认: <code>10</code>): 每个“盒子”的像素大小。</li>
+                        <li><code>border</code> (integer, 可选, 默认: <code>4</code>): 边框的厚度（盒子数）。</li>
+                        <li><code>fill_color</code> (string, 可选, 默认: <code>"black"</code>): 填充颜色。</li>
+                        <li><code>back_color</code> (string, 可选, 默认: <code>"white"</code>): 背景颜色。</li>
+                        <li><code>image_format</code> (string, 可选, 默认: <code>"png"</code>): 输出图像格式 (例如, <code>"png"</code>, <code>"jpeg"</code>)。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/python-qrcode/generate-qrcode \
+  -H "Content-Type: application/json" \
+  -d '{
+    "data": "https://allbeapi.com",
+    "box_size": 10,
+    "border": 2,
+    "image_format": "png"
+  }' \
+  --output qrcode.png</code></pre>
+                    <div class="response-note">
+                        <p><strong>注意：</strong> 此端点直接返回图像文件 (例如, <code>image/png</code>)。SDK 会将其作为 Blob (浏览器) 或字节 (Python) 处理。</p>
+                    </div>
+                </div>
+
+                <div id="mermaid-cli" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /mermaid-cli/render</h3>
+                    <p>使用 Mermaid CLI 将 Mermaid 图表定义渲染为 SVG 或 PNG 图像。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>definition</code> (string, <strong>必需</strong>): Mermaid 图表定义字符串。</li>
+                        <li><code>format</code> (string, 可选, 默认: <code>"svg"</code>): 输出格式。可以是 <code>"svg"</code> 或 <code>"png"</code>。</li>
+                        <li><code>theme</code> (string, 可选, 默认: <code>"default"</code>): Mermaid 主题 (例如, <code>"forest"</code>, <code>"dark"</code>, <code>"neutral"</code>)。</li>
+                        <li><code>width</code> (integer, 可选): 输出图像的宽度（像素）。</li>
+                        <li><code>height</code> (integer, 可选): 输出图像的高度（像素）。</li>
+                        <li><code>backgroundColor</code> (string, 可选): 背景颜色 (例如, <code>"transparent"</code>, <code>"#FFFFFF"</code>)。</li>
+                        <li><code>puppeteerConfig</code> (object, 可选): <a href="https://pptr.dev/api/puppeteer.launchoptions" target="_blank">Puppeteer 启动选项</a>。</li>
+                    </ul>
+                    <h4>示例请求 (cURL)</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/mermaid-cli/render \
+  -H "Content-Type: application/json" \
+  -d '{
+    "definition": "graph TD; A--&gt;B; B--&gt;C;",
+    "format": "svg",
+    "theme": "forest"
+  }' \
+  --output diagram.svg</code></pre>
+                    <div class="response-note">
+                        <p><strong>注意：</strong> 此端点根据请求的 <code>format</code> 返回图像文件 (<code>image/svg+xml</code> 或 <code>image/png</code>)。SDK 会将其作为文本 (SVG) 或 Blob/字节 (PNG) 处理。</p>
+                    </div>
+                </div>
+
+                <div id="pdfkit" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /pdfkit/create</h3>
+                    <p>使用 PDFKit 从文本或 HTML 内容生成 PDF 文档。</p>
+                    <h4>参数</h4>
+                    <ul class="params-list">
+                        <li><code>content</code> (string, <strong>必需</strong>): 要包含在 PDF 中的主要内容。可以是纯文本或简单的 HTML (支持基本标签)。</li>
+                        <li><code>type</code> (string, 可选, 默认: <code>"text"</code>): 内容类型。可以是 <code>"text"</code> 或 <code>"html"</code>。</li>
+                        <li><code>options</code> (object, 可选): <a href="http://pdfkit.org/docs/getting_started.html#document_structure" target="_blank">PDFKit 文档选项</a> (例如, <code>"size"</code>, <code>"margins"</code>, <code>"layout"</code>)。</li>
+                        <li><code>operations</code> (array, 可选): 一个操作数组，用于向 PDF 添加更复杂的内容 (例如, 图像、表格)。每个操作都是一个对象，包含 <code>action</code> (例如, <code>"addText"</code>, <code>"addImage"</code>) 和特定于操作的参数。</li>
+                    </ul>
+                    <h4>示例请求 (cURL) - 简单文本</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/pdfkit/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "你好，这是一个 PDF 文档！\n这是第二行。",
+    "options": { "size": "A4", "margins": { "top": 50, "bottom": 50, "left": 72, "right": 72 } }
+  }' \
+  --output document.pdf</code></pre>
+                     <h4>示例请求 (cURL) - 带操作</h4>
+                    <pre><code class="language-bash">curl -X POST https://res.allbeapi.top/pdfkit/create \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "文档标题\n", 
+    "type": "text",
+    "options": { "size": "LETTER" },
+    "operations": [
+        { "action": "setFont", "params": ["Helvetica-Bold", 20] },
+        { "action": "addText", "params": ["主要内容部分", { "align": "center" }] },
+        { "action": "moveDown" },
+        { "action": "setFont", "params": ["Helvetica", 12] },
+        { "action": "addText", "params": ["这是一些常规文本，包含一个列表：\n- 项目 1\n- 项目 2"] }
+    ]
+  }' \
+  --output document_ops.pdf</code></pre>
+                    <div class="response-note">
+                        <p><strong>注意：</strong> 此端点返回 PDF 文件 (<code>application/pdf</code>)。SDK 会将其作为 Blob (浏览器) 或字节 (Python) 处理。</p>
+                    </div>
+                </div>
+
+                <div id="pillow" class="api-endpoint">
+                    <h3><span class="method-badge method-post">POST</span> /pillow/{action}</h3>
+                    <p>使用 Pillow (PIL Fork) 执行各种图像处理操作。常见的操作包括 <code>resize</code>, <code>rotate</code>, <code>convert</code> (格式), <code>filter</code> (例如, BLUR, SHARPEN), <code>thumbnail</code>。</p>
+                    <p>请求应为 <code>multipart/form-data</code>，包含一个名为 <code>image</code> 的图像文件和 JSON 格式的 <code>options</code> 字段。</p>
+                    <h4>通用参数</h4>
+                     <ul class="params-list">
+                        <li><code>image</code> (file, <strong>必需</strong>): 要处理的图像文件。</li>
+                        <li><code>options</code> (JSON string, 可选): 包含特定于操作的参数的 JSON 字符串。</li>
+                    </ul>
+                    <h4>示例: 调整大小 (<code>/pillow/resize</code>)</h4>
+                    <p><code>options</code> JSON: <code>{ "width": 100, "height": 100, "resample": "LANCZOS" }</code> (resample 可选)</p>
+                    <h4>示例: 转换格式 (<code>/pillow/convert</code>)</h4>
+                    <p><code>options</code> JSON: <code>{ "format": "JPEG", "quality": 85 }</code> (quality 特定于 JPEG)</p>
+                    <h4>示例请求 (cURL - 调整大小)</h4>
+                    <pre><code class="language-bash"># 注意：cURL 发送 multipart/form-data 可能比较复杂。
+# 以下是一个概念性示例，实际使用中建议使用 SDK 或编程语言的 HTTP 客户端。
+
+curl -X POST https://res.allbeapi.top/pillow/resize \
+  -F "image=@/path/to/your/image.png" \
+  -F "options={\"width\":200,\"height\":150,\"output_format\":\"jpeg\"}" \
+  --output resized_image.jpg</code></pre>
+                    <div class="response-note">
+                        <p><strong>注意：</strong> 此端点返回处理后的图像文件。输出格式可以由 <code>options</code> 中的 <code>output_format</code> 指定，否则将尝试保留原始格式或默认为 PNG/JPEG。</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="error-codes" class="docs-section">
+                <h2>错误代码</h2>
+                <p>API 可能会返回以下常见错误代码：</p>
+                <table class="error-codes-table">
+                    <thead>
+                        <tr>
+                            <th>代码</th>
+                            <th>描述</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>BAD_REQUEST</code></td>
+                            <td>请求格式错误或缺少必需参数。</td>
+                        </tr>
+                        <tr>
+                            <td><code>VALIDATION_ERROR</code></td>
+                            <td>输入数据未能通过验证（例如，无效的 Markdown，不正确的 JSON 模式）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>UNAUTHORIZED</code></td>
+                            <td>缺少或无效的 API 密钥（如果需要）。</td>
+                        </tr>
+                        <tr>
+                            <td><code>FORBIDDEN</code></td>
+                            <td>API 密钥无权访问此资源。</td>
+                        </tr>
+                        <tr>
+                            <td><code>NOT_FOUND</code></td>
+                            <td>请求的端点或资源不存在。</td>
+                        </tr>
+                        <tr>
+                            <td><code>INTERNAL_SERVER_ERROR</code></td>
+                            <td>服务器端发生意外错误。</td>
+                        </tr>
+                        <tr>
+                            <td><code>SERVICE_UNAVAILABLE</code></td>
+                            <td>底层服务暂时不可用或超时。</td>
+                        </tr>
+                        <tr>
+                            <td><code>LIBRARY_ERROR</code></td>
+                            <td>集成的第三方库在处理过程中引发错误。</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p>错误响应通常包含一个 <code>message</code> 字段，提供有关错误的更多详细信息，有时还包含一个 <code>details</code> 对象，其中包含特定于错误的上下文。</p>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; <span id="currentYear"></span> AllBeAPI 项目。根据 MIT 许可证授权。</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/docs.js"></script>
+    <script>
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+        hljs.highlightAll();
+    </script>
+</body>
+</html>

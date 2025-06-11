@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - AllBeAPI</title>
+    <meta name="description" content="Complete documentation for AllBeAPI - SDK guides, API references, and examples.">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    
+    <!-- Syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+</head>
+<body>
+    <!-- Language Switch -->
+    <div class="language-switch">
+        <div class="container">
+            <a href="../index.html">← Back to Home</a> | 
+            <a href="index.html" class="active">English</a> | 
+            <a href="index_zh.html">中文</a>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="../index.html" class="navbar-brand">AllBeAPI</a>
+                <ul class="navbar-nav">
+                    <li><a href="index.html" class="active">Documentation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="api.html">API Reference</a></li>
+                    <li><a href="sdk.html">SDK Guide</a></li>
+                    <li><a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a></li>
+                </ul>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button class="theme-toggle" aria-label="Toggle theme">🌙</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="display: grid; grid-template-columns: 250px 1fr; gap: 2rem; margin-top: 2rem;">
+        <!-- Documentation Navigation -->
+        <aside class="doc-nav">
+            <h3 class="doc-nav-title">Documentation</h3>
+            <ul class="doc-nav-list">
+                <li class="doc-nav-item">
+                    <a href="index.html" class="doc-nav-link active">Overview</a>
+                </li>
+                <li class="doc-nav-item">
+                    <a href="getting-started.html" class="doc-nav-link">Getting Started</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="getting-started.html#installation" class="doc-nav-link">Installation</a></li>
+                        <li><a href="getting-started.html#quickstart" class="doc-nav-link">Quick Start</a></li>
+                        <li><a href="getting-started.html#examples" class="doc-nav-link">Examples</a></li>
+                    </ul>
+                </li>
+                <li class="doc-nav-item">
+                    <a href="api.html" class="doc-nav-link">API Reference</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="api.html#marked" class="doc-nav-link">Markdown (Marked)</a></li>
+                        <li><a href="api.html#beautifulsoup" class="doc-nav-link">HTML Parsing</a></li>
+                        <li><a href="api.html#prettier" class="doc-nav-link">Code Formatting</a></li>
+                        <li><a href="api.html#qrcode" class="doc-nav-link">QR Code</a></li>
+                        <li><a href="api.html#all-apis" class="doc-nav-link">All APIs</a></li>
+                    </ul>
+                </li>
+                <li class="doc-nav-item">
+                    <a href="sdk.html" class="doc-nav-link">SDK Guide</a>
+                    <ul class="doc-nav-sublist">
+                        <li><a href="sdk.html#javascript" class="doc-nav-link">JavaScript SDK</a></li>
+                        <li><a href="sdk.html#python" class="doc-nav-link">Python SDK</a></li>
+                        <li><a href="sdk.html#rest" class="doc-nav-link">REST API</a></li>
+                    </ul>
+                </li>
+                <li class="doc-nav-item">
+                    <a href="contributing.html" class="doc-nav-link">Contributing</a>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Documentation Content -->
+        <main class="doc-content">
+            <h1>AllBeAPI Documentation</h1>
+            <p class="lead">Welcome to the comprehensive documentation for AllBeAPI - your lightweight universal SDK for integrating popular third-party libraries.</p>
+
+            <div class="alert alert-info">
+                <strong>New to AllBeAPI?</strong> Start with our <a href="getting-started.html">Getting Started Guide</a> for a quick introduction.
+            </div>
+
+            <section id="overview">
+                <h2>What is AllBeAPI?</h2>
+                <p>AllBeAPI is a lightweight, universal SDK that provides a unified interface to access a wide range of commonly used third-party libraries. Instead of learning and managing multiple individual libraries, AllBeAPI offers:</p>
+                
+                <ul>
+                    <li><strong>Unified Interface:</strong> Consistent API across all integrated libraries</li>
+                    <li><strong>Multiple SDKs:</strong> Support for JavaScript, Python, and direct REST API calls</li>
+                    <li><strong>13+ Integrations:</strong> Popular libraries for common development tasks</li>
+                    <li><strong>Easy to Use:</strong> Simple installation and minimal configuration</li>
+                </ul>
+            </section>
+
+            <section id="architecture">
+                <h2>Architecture</h2>
+                <p>AllBeAPI follows a microservices architecture where each integrated library runs as a separate service:</p>
+                
+                <div class="code-example">
+                    <pre class="code-block" data-language="text">┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   JavaScript    │    │     Python      │    │    REST API     │
+│      SDK        │    │      SDK        │    │     Client      │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         └───────────────────────┼───────────────────────┘
+                                 │
+                    ┌─────────────────┐
+                    │   AllBeAPI      │
+                    │   Gateway       │
+                    └─────────────────┘
+                                 │
+         ┌───────────────────────┼───────────────────────┐
+         │                       │                       │
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Marked    │    │ BeautifulSoup│    │  Prettier   │    │     ...     │
+│  Service    │    │   Service   │    │   Service   │    │   Services  │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘</pre>
+                </div>
+            </section>
+
+            <section id="supported-libraries">
+                <h2>Supported Libraries</h2>
+                <p>AllBeAPI currently integrates the following popular libraries:</p>
+
+                <div class="grid grid-2">
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <div class="api-card-title">
+                                <h3>Text Processing</h3>
+                                <span class="api-badge">4 APIs</span>
+                            </div>
+                        </div>
+                        <div class="api-card-body">
+                            <ul class="api-endpoints">
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Marked.js - Markdown to HTML</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Prettier - Code formatting</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Pygments - Syntax highlighting</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Diff - Text comparison</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <div class="api-card-title">
+                                <h3>Data Processing</h3>
+                                <span class="api-badge">4 APIs</span>
+                            </div>
+                        </div>
+                        <div class="api-card-body">
+                            <ul class="api-endpoints">
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">BeautifulSoup - HTML parsing</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">CSV Parser - CSV to JSON</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Ajv - JSON validation</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">ESLint - Code linting</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <div class="api-card-title">
+                                <h3>Media Generation</h3>
+                                <span class="api-badge">3 APIs</span>
+                            </div>
+                        </div>
+                        <div class="api-card-body">
+                            <ul class="api-endpoints">
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">QR Code - Image generation</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Mermaid - Diagram creation</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">PDFKit - PDF generation</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="api-card">
+                        <div class="api-card-header">
+                            <div class="api-card-title">
+                                <h3>Security & Utils</h3>
+                                <span class="api-badge">2 APIs</span>
+                            </div>
+                        </div>
+                        <div class="api-card-body">
+                            <ul class="api-endpoints">
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Sanitize HTML - XSS protection</span>
+                                </li>
+                                <li>
+                                    <span class="method-badge method-post">POST</span>
+                                    <span class="endpoint-path">Pillow - Image processing</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="quick-example">
+                <h2>Quick Example</h2>
+                <p>Here's a simple example showing how to use AllBeAPI with the JavaScript SDK:</p>
+
+                <div class="code-example">
+                    <div class="code-tabs">
+                        <button class="code-tab active">JavaScript</button>
+                        <button class="code-tab">Python</button>
+                    </div>
+                    <div class="code-content">
+                        <pre class="code-block" data-language="javascript">// Initialize the AllBeAPI client
+const api = new AllBeApi();
+
+// Convert Markdown to HTML
+const markdown = "# Hello World\nThis is **bold** text.";
+const htmlResult = await api.marked.render(markdown);
+console.log(htmlResult);
+
+// Generate a QR code
+const qrBlob = await api.pythonQrcode.generateQrcode("https://allbeapi.com");
+const imageUrl = URL.createObjectURL(qrBlob);
+
+// Display the QR code
+const img = document.createElement('img');
+img.src = imageUrl;
+document.body.appendChild(img);</pre>
+
+                        <pre class="code-block" data-language="python" style="display: none;">from allbeapi import AllBeApi
+
+# Initialize the AllBeAPI client
+api = AllBeApi()
+
+# Convert Markdown to HTML
+markdown = "# Hello World\nThis is **bold** text."
+html_result = api.marked.render(markdown)
+print(html_result)
+
+# Generate a QR code
+qr_bytes = api.python_qrcode.generate_qrcode("https://allbeapi.com")
+with open("qrcode.png", "wb") as f:
+    f.write(qr_bytes)</pre>
+                    </div>
+                </div>
+            </section>
+
+            <section id="next-steps">
+                <h2>Next Steps</h2>
+                <div class="grid grid-3">
+                    <div class="card">
+                        <h3>🚀 Getting Started</h3>
+                        <p>Learn how to install and configure AllBeAPI in your project.</p>
+                        <a href="getting-started.html" class="btn btn-primary">Get Started</a>
+                    </div>
+                    <div class="card">
+                        <h3>📚 API Reference</h3>
+                        <p>Explore the complete API documentation with examples.</p>
+                        <a href="api.html" class="btn btn-outline">API Docs</a>
+                    </div>
+                    <div class="card">
+                        <h3>💻 SDK Guide</h3>
+                        <p>Learn how to use the JavaScript and Python SDKs.</p>
+                        <a href="sdk.html" class="btn btn-outline">SDK Guide</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; <span id="currentYear"></span> AllBeAPI Project. Licensed under the MIT License.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="../assets/js/main.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+        hljs.highlightAll();
+    </script>
+</body>
+</html>

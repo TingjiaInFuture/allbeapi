@@ -1,0 +1,279 @@
+<!-- Quick Start Section -->
+<section id="usage" class="section quickstart-section">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Quick Start</h2>
+            <p class="section-subtitle">
+                Get up and running in minutes with our easy-to-use SDKs
+            </p>
+        </div>
+        
+        <div class="quickstart-tabs">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="install">📦 Installation</button>
+                <button class="tab-btn" data-tab="javascript">🟨 JavaScript</button>
+                <button class="tab-btn" data-tab="python">🐍 Python</button>
+                <button class="tab-btn" data-tab="api">🌐 REST API</button>
+            </div>
+            
+            <div class="tab-content">
+                <!-- Installation Tab -->
+                <div class="tab-pane active" data-tab="install">
+                    <div class="install-grid">
+                        <div class="install-option">
+                            <h3>📦 NPM Package</h3>
+                            <div class="code-block">
+                                <pre><code># Install via npm
+npm install allbeapi
+
+# Or via yarn
+yarn add allbeapi</code></pre>
+                            </div>
+                            <p>Perfect for Node.js applications and build tools.</p>
+                        </div>
+                        
+                        <div class="install-option">
+                            <h3>🐍 Python Package</h3>
+                            <div class="code-block">
+                                <pre><code># Install via pip
+pip install allbeapi
+
+# Or from source
+git clone https://github.com/TingjiaInFuture/allbeapi.git
+cd allbeapi
+pip install -e .</code></pre>
+                            </div>
+                            <p>Great for Python applications and scripts.</p>
+                        </div>
+                        
+                        <div class="install-option">
+                            <h3>📁 Direct Download</h3>
+                            <div class="download-links">
+                                <a href="SDK/JavaScript/allbeapi.js" class="btn btn-outline" download>
+                                    📄 JavaScript SDK
+                                </a>
+                                <a href="SDK/Python/allbeapi.py" class="btn btn-outline" download>
+                                    🐍 Python SDK
+                                </a>
+                            </div>
+                            <p>Download and include directly in your project.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- JavaScript Tab -->
+                <div class="tab-pane" data-tab="javascript">
+                    <div class="quickstart-demo">
+                        <div class="demo-steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Include the SDK</h4>
+                                    <div class="code-block">
+                                        <pre><code>&lt;script src="SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;
+// Or if installed via npm:
+// import { AllBeApi } from 'allbeapi';</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Initialize the client</h4>
+                                    <div class="code-block">
+                                        <pre><code>const api = new AllBeApi({
+    baseUrl: 'https://res.allbeapi.top', // Optional custom endpoint
+    timeout: 10000 // Optional timeout setting
+});</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Start using the APIs</h4>
+                                    <div class="code-block">
+                                        <pre><code>// Convert Markdown to HTML
+const html = await api.marked.render("# Hello World");
+
+// Generate QR Code
+const qrBlob = await api.pythonQrcode
+    .generateQrcode("https://allbeapi.com");
+
+// Format JavaScript code
+const formatted = await api.prettier.format(
+    "const x=1;", { parser: "babel" }
+);
+
+// Validate JSON
+const isValid = await api.ajv.validate(schema, data);</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="demo-result">
+                            <h4>Live Example</h4>
+                            <div class="live-demo">
+                                <button id="demo-btn" class="btn btn-primary">Try Markdown Conversion</button>
+                                <div id="demo-result" class="demo-output"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Python Tab -->
+                <div class="tab-pane" data-tab="python">
+                    <div class="quickstart-demo">
+                        <div class="demo-steps">
+                            <div class="step">
+                                <div class="step-number">1</div>
+                                <div class="step-content">
+                                    <h4>Import the SDK</h4>
+                                    <div class="code-block">
+                                        <pre><code>from allbeapi import AllBeApi
+# Or if using the direct file:
+# import sys
+# sys.path.append('SDK/Python')
+# from allbeapi import AllBeApi</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">2</div>
+                                <div class="step-content">
+                                    <h4>Initialize the client</h4>
+                                    <div class="code-block">
+                                        <pre><code>api = AllBeApi(
+    base_url='https://res.allbeapi.top',  # Optional
+    timeout=10  # Optional timeout in seconds
+)</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="step">
+                                <div class="step-number">3</div>
+                                <div class="step-content">
+                                    <h4>Use the APIs</h4>
+                                    <div class="code-block">
+                                        <pre><code># Convert Markdown to HTML
+html = api.marked.render("# Hello World")
+
+# Generate QR Code
+qr_bytes = api.python_qrcode.generate_qrcode("https://allbeapi.com")
+with open("qr.png", "wb") as f:
+    f.write(qr_bytes)
+
+# Format Python code
+formatted = api.prettier.format("x=1", parser="python")
+
+# Process images
+processed = api.pillow.resize_image(image_bytes, width=300, height=200)</code></pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="demo-result">
+                            <h4>Complete Example</h4>
+                            <div class="code-block">
+                                <pre><code>#!/usr/bin/env python3
+from allbeapi import AllBeApi
+
+def main():
+    api = AllBeApi()
+    
+    # Convert markdown blog post
+    markdown_content = """
+    # My Blog Post
+    This is **important** content with [links](https://example.com).
+    
+    ## Code Example
+    ```python
+    print("Hello, World!")
+    ```
+    """
+    
+    html = api.marked.render(markdown_content)
+    print("Generated HTML:", html)
+    
+    # Create QR code for sharing
+    qr_bytes = api.python_qrcode.generate_qrcode("https://myblog.com/post")
+    with open("share_qr.png", "wb") as f:
+        f.write(qr_bytes)
+    print("QR code saved!")
+
+if __name__ == "__main__":
+    main()</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- REST API Tab -->
+                <div class="tab-pane" data-tab="api">
+                    <div class="api-documentation">
+                        <div class="api-info">
+                            <h4>Base URL</h4>
+                            <div class="code-block">
+                                <pre><code>https://res.allbeapi.top</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="api-examples">
+                            <h4>Common API Calls</h4>
+                            
+                            <div class="api-example">
+                                <h5>Convert Markdown to HTML</h5>
+                                <div class="code-block">
+                                    <pre><code>curl -X POST https://res.allbeapi.top/marked/render \
+  -H "Content-Type: application/json" \
+  -d '{"markdown": "# Hello **World**"}'</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="api-example">
+                                <h5>Generate QR Code</h5>
+                                <div class="code-block">
+                                    <pre><code>curl -X POST https://res.allbeapi.top/python-qrcode/generate-qrcode \
+  -H "Content-Type: application/json" \
+  -d '{"data": "https://allbeapi.com"}' \
+  --output qrcode.png</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="api-example">
+                                <h5>Format Code with Prettier</h5>
+                                <div class="code-block">
+                                    <pre><code>curl -X POST https://res.allbeapi.top/prettier/format \
+  -H "Content-Type: application/json" \
+  -d '{"code": "const x=1;function test(){return x;}", "parser": "babel"}'</code></pre>
+                                </div>
+                            </div>
+                            
+                            <div class="api-example">
+                                <h5>Validate JSON Schema</h5>
+                                <div class="code-block">
+                                    <pre><code>curl -X POST https://res.allbeapi.top/ajv/validate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "schema": {"type": "object", "properties": {"name": {"type": "string"}}},
+    "data": {"name": "John"}
+  }'</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="api-cta">
+                            <a href="docs/api.html" class="btn btn-primary">Complete API Reference</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
