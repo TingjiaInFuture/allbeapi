@@ -80,7 +80,7 @@ class AllBeApi {
             path.includes('/mermaid-cli/generate-diagram') ||
             path.includes('/pillow/process')) {
             return response.blob(); // Expected to be image/*
-        } else if (path.includes('/pdfkit/generate')) {
+        } else if (path.includes('/pdfkit/generate-pdf')) {
             return response.blob(); // Expected to be application/pdf
         } else if (contentType && contentType.includes('application/json')) {
             return response.json();
@@ -341,7 +341,7 @@ class PDFKitAPI { // Changed from PdfkitAPI to PDFKitAPI for consistency
      * @returns {Promise<Blob>} - The PDF document as a Blob.
      */
     async generate(content, options = {}) {
-        return this.client._request('POST', '/pdfkit/generate', null, { content, ...options });
+        return this.client._request('POST', '/pdfkit/generate-pdf', null, { content, ...options });
     }
 }
 

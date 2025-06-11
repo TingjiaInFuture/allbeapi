@@ -90,25 +90,27 @@
             <section id="javascript">
                 <h2>JavaScript SDK</h2>
                 <p>AllBeAPI JavaScript SDK 使得在您的 Web 项目中集成 AllBeAPI 服务变得简单。它提供了一种便捷的方式来与各种 API 端点进行交互。</p>
-                
-                <h3>安装</h3>
-                <p>您可以通过 npm 安装 JavaScript SDK，或者直接在您的 HTML 文件中引入它。</p>
+                  <h3>安装</h3>
+                <p>直接下载 JavaScript SDK 文件并在您的项目中使用：</p>
                 <div class="code-example">
-                    <pre class="code-block" data-language="bash"># 通过 npm 安装 (推荐)
-npm install allbeapi 
-# 或者在 HTML 中引入
-&lt;script src="https://your-cdn-path/allbeapi.js"&gt;&lt;/script&gt;</pre>
-                </div>
+                    <pre class="code-block" data-language="bash"># 下载 JavaScript SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js
 
-                <h3>初始化</h3>
+# 或使用 wget
+wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js
+
+# 也可以直接在 HTML 中通过 CDN 引入
+&lt;script src="https://cdn.jsdelivr.net/gh/TingjiaInFuture/allbeapi/SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;</pre>
+                </div>                <h3>初始化</h3>
                 <p>在您的 JavaScript 代码中初始化客户端：</p>
                 <div class="code-example">
-                    <pre class="code-block" data-language="javascript">// 如果使用 npm
-import AllBeApi from 'allbeapi';
-const api = new AllBeApi({ base_url: 'http://localhost:3000' }); // 根据您的网关地址配置
+                    <pre class="code-block" data-language="javascript">// 如果下载了文件到本地 (Node.js)
+const AllBeApi = require('./allbeapi.js');
 
-// 如果直接引入
-const api = new AllBeApi({ base_url: 'http://localhost:3000' });</pre>
+// 或者在浏览器中通过 CDN/本地文件引入后
+// const api = new AllBeApi();
+
+const api = new AllBeApi({ base_url: 'http://localhost:3000' }); // 根据您的网关地址配置</pre>
                 </div>
 
                 <h3>使用示例</h3>
@@ -134,12 +136,14 @@ convertMarkdown();</pre>
 
             <section id="python">
                 <h2>Python SDK</h2>
-                <p>Python SDK 为 Python 开发者提供了一个与 AllBeAPI 服务交互的便捷方式。</p>
-
-                <h3>安装</h3>
-                <p>使用 pip 安装 Python SDK：</p>
+                <p>Python SDK 为 Python 开发者提供了一个与 AllBeAPI 服务交互的便捷方式。</p>                <h3>安装</h3>
+                <p>直接下载 Python SDK 文件并在您的项目中使用：</p>
                 <div class="code-example">
-                    <pre class="code-block" data-language="bash">pip install allbeapi</pre>
+                    <pre class="code-block" data-language="bash"># 下载 Python SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py
+
+# 或使用 wget
+wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py</pre>
                 </div>
 
                 <h3>初始化</h3>

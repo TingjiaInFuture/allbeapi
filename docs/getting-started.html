@@ -298,50 +298,61 @@ curl -X POST https://res.allbeapi.top/prettier/format \
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="install-card">
+                          <div class="install-card">
                             <div class="install-header">
                                 <div class="install-icon">📦</div>
-                                <h3>npm Package</h3>
+                                <h3>JavaScript SDK</h3>
                             </div>
                             <div class="install-body">
-                                <p>Install via npm for modern JavaScript projects:</p>
-                                <pre><code class="language-bash">npm install allbeapi</code></pre>
-                                <pre><code class="language-javascript">import { AllBeApi } from 'allbeapi';</code></pre>
+                                <p>Download and include in your JavaScript projects:</p>
+                                <pre><code class="language-bash"># Download JavaScript SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js
+
+# Or use wget
+wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js</code></pre>
+                                <pre><code class="language-javascript">// Include in your project
+const { AllBeApi } = require('./allbeapi.js');</code></pre>
                                 <div class="install-pros">
-                                    <strong>Pros:</strong> Version control, TypeScript support, tree shaking
+                                    <strong>Pros:</strong> Simple setup, no package manager required
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="install-card">
+                          <div class="install-card">
                             <div class="install-header">
                                 <div class="install-icon">🐍</div>
-                                <h3>Python Package</h3>
+                                <h3>Python SDK</h3>
                             </div>
                             <div class="install-body">
-                                <p>Install via pip for Python projects:</p>
-                                <pre><code class="language-bash">pip install allbeapi</code></pre>
+                                <p>Download and include in your Python projects:</p>
+                                <pre><code class="language-bash"># Download Python SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py
+
+# Or use wget
+wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py</code></pre>
                                 <pre><code class="language-python">from allbeapi import AllBeApi</code></pre>
                                 <div class="install-pros">
-                                    <strong>Pros:</strong> Easy dependency management, virtual environment support
+                                    <strong>Pros:</strong> Simple setup, no package manager required
                                 </div>
                             </div>
                         </div>
-                        
-                        <div class="install-card">
+                          <div class="install-card">
                             <div class="install-header">
                                 <div class="install-icon">📁</div>
                                 <h3>Direct Download</h3>
                             </div>
                             <div class="install-body">
-                                <p>Download SDK files directly:</p>
+                                <p>Download SDK files directly for maximum control:</p>
+                                <pre><code class="language-bash"># Download JavaScript SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js
+
+# Download Python SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py</code></pre>
                                 <div class="download-links">
                                     <a href="../SDK/JavaScript/allbeapi.js" class="btn btn-outline btn-sm" download>JavaScript SDK</a>
                                     <a href="../SDK/Python/allbeapi.py" class="btn btn-outline btn-sm" download>Python SDK</a>
                                 </div>
                                 <div class="install-pros">
-                                    <strong>Pros:</strong> No external dependencies, full control
+                                    <strong>Pros:</strong> No external dependencies, full control, works offline
                                 </div>
                             </div>
                         </div>

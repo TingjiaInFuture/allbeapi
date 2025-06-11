@@ -111,42 +111,43 @@
                 <!-- Installation -->
                 <section id="installation" class="docs-section">
                     <h2>Installation</h2>
-                    
-                    <div class="installation-options">
+                      <div class="installation-options">
                         <div class="install-option">
-                            <h3>NPM (Recommended for JavaScript)</h3>
-                            <pre><code class="language-bash"># Install via npm
-npm install allbeapi
+                            <h3>JavaScript SDK Download</h3>
+                            <pre><code class="language-bash"># Download JavaScript SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js
 
-# Install via yarn
-yarn add allbeapi</code></pre>
-                        </div>
-                        
-                        <div class="install-option">
-                            <h3>Direct Download (JavaScript)</h3>
+# Or use wget
+wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js</code></pre>
+                            <p>Include in your HTML or Node.js project:</p>
                             <pre><code class="language-html">&lt;!-- Include in your HTML --&gt;
-&lt;script src="https://cdn.allbeapi.com/js/allbeapi.min.js"&gt;&lt;/script&gt;
+&lt;script src="./allbeapi.js"&gt;&lt;/script&gt;
 
-&lt;!-- Or download and host locally --&gt;
-&lt;script src="path/to/allbeapi.js"&gt;&lt;/script&gt;</code></pre>
+&lt;!-- Or in Node.js --&gt;
+&lt;script&gt;const AllBeApi = require('./allbeapi.js');&lt;/script&gt;</code></pre>
                         </div>
                         
                         <div class="install-option">
-                            <h3>PIP (Recommended for Python)</h3>
-                            <pre><code class="language-bash"># Install via pip
-pip install allbeapi
-
-# Install specific version
-pip install allbeapi==1.0.0</code></pre>
-                        </div>
-                        
-                        <div class="install-option">
-                            <h3>Direct Download (Python)</h3>
-                            <pre><code class="language-bash"># Download the Python SDK
+                            <h3>Python SDK Download</h3>
+                            <pre><code class="language-bash"># Download Python SDK
 curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py
 
-# Or clone the repository
-git clone https://github.com/TingjiaInFuture/allbeapi.git</code></pre>
+# Or use wget
+wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py</code></pre>
+                        </div>
+                        
+                        <div class="install-option">
+                            <h3>CDN (Browser)</h3>
+                            <pre><code class="language-html">&lt;!-- Include via CDN --&gt;
+&lt;script src="https://cdn.jsdelivr.net/gh/TingjiaInFuture/allbeapi/SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;</code></pre>
+                        </div>
+                        
+                        <div class="install-option">
+                            <h3>Direct Download Links</h3>
+                            <div class="download-links">
+                                <a href="../SDK/JavaScript/allbeapi.js" class="btn btn-outline btn-sm" download>📄 JavaScript SDK</a>
+                                <a href="../SDK/Python/allbeapi.py" class="btn btn-outline btn-sm" download>🐍 Python SDK</a>
+                            </div>
                         </div>
                     </div>
                 </section>

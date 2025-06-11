@@ -250,7 +250,7 @@ class PDFKitAPI:
     def generate(self, content, **kwargs):
         """Generates a PDF document using PDFKit. Returns PDF bytes."""
         payload = {'content': content, **kwargs}
-        return self.client._request('POST', '/pdfkit/generate', json_data=payload)
+        return self.client._request('POST', '/pdfkit/generate-pdf', json_data=payload)
 
 class PillowAPI:
     def __init__(self, client):

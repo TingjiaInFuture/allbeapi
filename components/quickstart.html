@@ -19,29 +19,26 @@
             <div class="tab-content">
                 <!-- Installation Tab -->
                 <div class="tab-pane active" data-tab="install">
-                    <div class="install-grid">
-                        <div class="install-option">
-                            <h3>📦 NPM Package</h3>
+                    <div class="install-grid">                        <div class="install-option">
+                            <h3>📦 JavaScript SDK</h3>
                             <div class="code-block">
-                                <pre><code># Install via npm
-npm install allbeapi
+                                <pre><code># Download JavaScript SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js
 
-# Or via yarn
-yarn add allbeapi</code></pre>
+# Or use wget
+wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js</code></pre>
                             </div>
-                            <p>Perfect for Node.js applications and build tools.</p>
+                            <p>Perfect for Node.js applications and web projects.</p>
                         </div>
                         
                         <div class="install-option">
-                            <h3>🐍 Python Package</h3>
+                            <h3>🐍 Python SDK</h3>
                             <div class="code-block">
-                                <pre><code># Install via pip
-pip install allbeapi
+                                <pre><code># Download Python SDK
+curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py
 
-# Or from source
-git clone https://github.com/TingjiaInFuture/allbeapi.git
-cd allbeapi
-pip install -e .</code></pre>
+# Or use wget
+wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py</code></pre>
                             </div>
                             <p>Great for Python applications and scripts.</p>
                         </div>
@@ -67,12 +64,13 @@ pip install -e .</code></pre>
                         <div class="demo-steps">
                             <div class="step">
                                 <div class="step-number">1</div>
-                                <div class="step-content">
-                                    <h4>Include the SDK</h4>
+                                <div class="step-content">                                    <h4>Include the SDK</h4>
                                     <div class="code-block">
-                                        <pre><code>&lt;script src="SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;
-// Or if installed via npm:
-// import { AllBeApi } from 'allbeapi';</code></pre>
+                                        <pre><code>&lt;script src="./allbeapi.js"&gt;&lt;/script&gt;
+// Or via CDN:
+// &lt;script src="https://cdn.jsdelivr.net/gh/TingjiaInFuture/allbeapi/SDK/JavaScript/allbeapi.js"&gt;&lt;/script&gt;
+// Or if using Node.js:
+// const AllBeApi = require('./allbeapi.js');</code></pre>
                                     </div>
                                 </div>
                             </div>
