@@ -94,7 +94,14 @@ wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/
                                     <h4>Start using the APIs</h4>
                                     <div class="code-block">
                                         <pre><code>// Convert Markdown to HTML
-const html = await api.marked.render("# Hello World");
+const markdownText = "# Hello World";
+api.marked.render(markdownText).then(html => {
+  console.log(html);
+  // Assuming you have an element with id="markdown-output"
+  // document.getElementById("markdown-output").innerHTML = html;
+}).catch(error => {
+  console.error("Error converting Markdown:", error);
+});
 
 // Generate QR Code
 const qrBlob = await api.pythonQrcode
@@ -198,20 +205,32 @@ def main():
     
     html = api.marked.render(markdown_content)
     print("Generated HTML:", html)
-    
-    # Create QR code for sharing
-    qr_bytes = api.python_qrcode.generate_qrcode("https://myblog.com/post")
-    with open("share_qr.png", "wb") as f:
-        f.write(qr_bytes)
-    print("QR code saved!")
 
+    # Example: Generate a QR code and save it
+    qr_data = "https://allbeapi.com"
+    try:
+        qr_bytes = api.python_qrcode.generate_qrcode(qr_data)
+        with open("my_qr_code.png", "wb") as f:
+            f.write(qr_bytes)
+        print(f"QR code for '{qr_data}' saved to my_qr_code.png")
+    except Exception as e:
+        print(f"Error generating QR code: {e}")
+
+    # Example: Format a snippet of Python code
+    code_to_format = "def  my_func( x,y ) :\\n  return x  +  y"
+    try:
+        formatted_code = api.prettier.format(code_to_format, parser="python")
+        print(f"Formatted code:\\n{formatted_code}")
+    except Exception as e:
+        print(f"Error formatting code: {e}")
+        
 if __name__ == "__main__":
     main()</code></pre>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- REST API Tab -->
                 <div class="tab-pane" data-tab="api">
                     <div class="api-documentation">

@@ -107,52 +107,75 @@ class BeautifulSoupAPI {
     /**
      * 解析HTML内容 (Parses HTML content)
      * @param {string} html - The HTML content to parse.
+     * @param {string} [parser='html.parser'] - The parser to use.
      * @returns {Promise<object>}
      */
-    async parse(html) {
-        return this.client._request('POST', '/beautifulsoup/parse', null, { html });
+    async parse(html, parser = 'html.parser') {
+        return this.client._request('POST', '/beautifulsoup/parse', null, { html, parser });
     }
     /**
      * 提取特定元素 (Extracts specific elements from HTML)
      * @param {string} html - The HTML content.
      * @param {string} selector - CSS selector to extract elements.
-     * @param {object} [options] - Additional options for extraction.
+     * @param {string} [attribute=null] - Specific attribute to extract from elements.
+     * @param {string} [parser='html.parser'] - The parser to use.
      * @returns {Promise<object>}
      */
-    async extract(html, selector, options = {}) {
-        return this.client._request('POST', '/beautifulsoup/extract', null, { html, selector, ...options });
+    async extract(html, selector, attribute = null, parser = 'html.parser') {
+        const payload = { html, selector, parser };
+        if (attribute) {
+            payload.attribute = attribute;
+        }
+        return this.client._request('POST', '/beautifulsoup/extract', null, payload);
     }
     /**
      * 提取所有链接 (Extracts all links from HTML)
      * @param {string} html - The HTML content.
+     * @param {string} [base_url=null] - Base URL to resolve relative links.
+     * @param {string} [parser='html.parser'] - The parser to use.
      * @returns {Promise<object>}
      */
-    async links(html) {
-        return this.client._request('POST', '/beautifulsoup/links', null, { html });
+    async links(html, base_url = null, parser = 'html.parser') {
+        const payload = { html, parser };
+        if (base_url) {
+            payload.base_url = base_url;
+        }
+        return this.client._request('POST', '/beautifulsoup/links', null, payload);
     }
     /**
      * 提取所有图片 (Extracts all images from HTML)
      * @param {string} html - The HTML content.
+     * @param {string} [base_url=null] - Base URL to resolve relative image paths.
+     * @param {string} [parser='html.parser'] - The parser to use.
      * @returns {Promise<object>}
      */
-    async images(html) {
-        return this.client._request('POST', '/beautifulsoup/images', null, { html });
+    async images(html, base_url = null, parser = 'html.parser') {
+        const payload = { html, parser };
+        if (base_url) {
+            payload.base_url = base_url;
+        }
+        return this.client._request('POST', '/beautifulsoup/images', null, payload);
     }
     /**
      * 清理HTML内容 (Cleans HTML content)
      * @param {string} html - The HTML content to clean.
+     * @param {string[]} [remove_tags=[]] - List of tags to remove.
+     * @param {string[]} [keep_only=[]] - List of tags to keep, removing others.
+     * @param {boolean} [remove_comments=false] - Whether to remove comments.
+     * @param {string} [parser='html.parser'] - The parser to use.
      * @returns {Promise<object>}
      */
-    async clean(html) {
-        return this.client._request('POST', '/beautifulsoup/clean', null, { html });
+    async clean(html, remove_tags = [], keep_only = [], remove_comments = false, parser = 'html.parser') {
+        return this.client._request('POST', '/beautifulsoup/clean', null, { html, remove_tags, keep_only, remove_comments, parser });
     }
     /**
      * 获取网页并解析 (Fetches a webpage and parses its content)
      * @param {string} url - The URL of the webpage to fetch and parse.
+     * @param {string} [parser='html.parser'] - The parser to use.
      * @returns {Promise<object>}
      */
-    async fetch(url) {
-        return this.client._request('POST', '/beautifulsoup/fetch', null, { url });
+    async fetch(url, parser = 'html.parser') {
+        return this.client._request('POST', '/beautifulsoup/fetch', null, { url, parser });
     }
     /**
      * 健康检查 (Health check for BeautifulSoup API)
@@ -193,6 +216,7 @@ class PrettierAPI {
      * @returns {Promise<object>}
      */
     async batch(files, parser, options = {}) { // Assuming structure based on typical batch operations
+        // files should be an array of objects, e.g., [{ code: '...', language: 'javascript' (or parser: 'babel'), options: {} }]
         return this.client._request('POST', '/prettier/batch', null, { files, parser, options });
     }
     /**
@@ -234,8 +258,8 @@ class PygmentsAPI {
      * @param {object} [options] - Additional Pygments options (e.g., formatter, style).
      * @returns {Promise<object>}
      */
-    async highlight(code, language, options = {}) {
-        return this.client._request('POST', '/pygments/highlight', null, { code, language, ...options });
+    async highlight(code, language, style = 'default', formatter = 'html', options = {}) {
+        return this.client._request('POST', '/pygments/highlight', null, { code, language, style, formatter, ...options });
     }
 }
 
@@ -260,8 +284,8 @@ class SanitizeHtmlAPI {
      * @param {object} [options] - Sanitization options.
      * @returns {Promise<object>}
      */
-    async sanitize(html, options = {}) {
-        return this.client._request('POST', '/sanitize-html/sanitize-html', null, { html, options });
+    async sanitize(html_content, options = {}) {
+        return this.client._request('POST', '/sanitize-html/sanitize-html', null, { html_content, options });
     }
 }
 
@@ -287,8 +311,8 @@ class ESLintAPI {
      * @param {object} [options] - Additional ESLint options (e.g., parser, plugins).
      * @returns {Promise<object>}
      */
-    async lint(code, rules = {}, options = {}) {
-        return this.client._request('POST', '/eslint/lint', null, { code, rules, ...options });
+    async lint(code, language, fix = false, eslintOptions = {}) {
+        return this.client._request('POST', '/eslint/lint', null, { code, language, fix, ...eslintOptions });
     }
 }
 
@@ -315,7 +339,7 @@ class CsvParserAPI {
      * @returns {Promise<object>}
      */
     async parse(csvData, options = {}) {
-        return this.client._request('POST', '/csv-parser/parse', null, { csv_data: csvData, ...options });
+        return this.client._request('POST', '/csv-parser/parse', null, { csv_data: csvData, options: options });
     }
 }
 
@@ -327,8 +351,8 @@ class MermaidCliAPI {
      * @param {object} [options] - Options like theme, outputFormat (though API likely returns image).
      * @returns {Promise<Blob>} - The diagram image as a Blob.
      */
-    async generateDiagram(mermaidDefinition, options = {}) {
-        return this.client._request('POST', '/mermaid-cli/generate-diagram', null, { mermaid: mermaidDefinition, ...options });
+    async generateDiagram(definition, format = 'svg', options = {}) {
+        return this.client._request('POST', '/mermaid-cli/generate-diagram', null, { definition, format, ...options });
     }
 }
 
@@ -336,12 +360,12 @@ class PDFKitAPI { // Changed from PdfkitAPI to PDFKitAPI for consistency
     constructor(client) { this.client = client; }
     /**
      * 生成PDF文档 (Generates a PDF document using PDFKit)
-     * @param {string} content - The HTML content or text for the PDF.
-     * @param {object} [options] - PDF generation options (e.g., title, layout, metadata).
+     * @param {string} text_content - The text content for the PDF.
+     * @param {object} [options] - PDF generation options.
      * @returns {Promise<Blob>} - The PDF document as a Blob.
      */
-    async generate(content, options = {}) {
-        return this.client._request('POST', '/pdfkit/generate-pdf', null, { content, ...options });
+    async generate(text_content, options = {}) {
+        return this.client._request('POST', '/pdfkit/generate-pdf', null, { text_content, ...options });
     }
 }
 
@@ -349,13 +373,17 @@ class PillowAPI {
     constructor(client) { this.client = client; }
     /**
      * 处理和编辑图像 (Processes and edits images using Pillow)
-     * @param {string} imageUrl - URL of the image to process, or base64 encoded image.
-     * @param {string} operation - The operation to perform (e.g., 'resize', 'rotate', 'filter').
-     * @param {object} [options] - Operation-specific parameters (e.g., width, height, angle, filter_name).
+     * @param {File} file - The image file to process.
+     * @param {string[]} operations - Array of operation strings (e.g., ["resize:200,200", "grayscale"]).
+     * @param {string} [output_format='PNG'] - The desired output format (e.g., 'PNG', 'JPEG').
      * @returns {Promise<Blob>} - The processed image as a Blob.
      */
-    async process(imageUrl, operation, options = {}) {
-        return this.client._request('POST', '/pillow/process-image', null, { image_url: imageUrl, operation, ...options });
+    async process(file, operations, output_format = 'PNG') {
+        const formData = new FormData();
+        formData.append('file', file);
+        operations.forEach(op => formData.append('operations', op));
+        formData.append('output_format', output_format);
+        return this.client._request('POST', '/pillow/process-image', null, formData);
     }
 }
 

@@ -192,7 +192,7 @@ class SanitizeHtmlAPI:
 
     def sanitize(self, html_content, options=None):
         """Sanitizes HTML content to prevent XSS attacks."""
-        payload = {'html': html_content}
+        payload = {'html_content': html_content} # Changed 'html' to 'html_content'
         if options: payload['options'] = options
         return self.client._request('POST', '/sanitize-html/sanitize-html', json_data=payload)
 
@@ -209,80 +209,93 @@ class ESLintAPI:
     def __init__(self, client):
         self.client = client
 
-    def lint(self, code, rules=None, **kwargs):
+    def lint(self, code, language='javascript', fix=False, **kwargs):
         """Lints JavaScript/TypeScript code using ESLint."""
-        payload = {'code': code, **kwargs}
-        if rules: payload['rules'] = rules
+        payload = {'code': code, 'language': language, 'fix': fix, **kwargs}
+        # Removed redundant 'rules' parameter, pass rules directly in kwargs if needed by API
         return self.client._request('POST', '/eslint/lint', json_data=payload)
 
 class DiffAPI:
     def __init__(self, client):
         self.client = client
 
-    def compare(self, text1, text2, **kwargs):
+    def compare(self, text1, text2, type='lines', outputFormat='json', **kwargs):
         """Compares two texts and returns the differences."""
-        payload = {'text1': text1, 'text2': text2, **kwargs}
+        payload = {'text1': text1, 'text2': text2, 'type': type, 'outputFormat': outputFormat, **kwargs}
         return self.client._request('POST', '/diff/compare', json_data=payload)
 
 class CsvParserAPI:
     def __init__(self, client):
         self.client = client
 
-    def parse(self, csv_data, **kwargs):
+    def parse(self, csv_data, options=None, **kwargs):
         """Parses CSV data into JSON."""
-        # The API expects 'csv_data' as the key for the CSV content
-        payload = {'csv_data': csv_data, **kwargs}
+        payload = {'csv_data': csv_data}
+        if options is not None:  # Ensure options is only added if provided
+            payload['options'] = options
+        payload.update(kwargs) # Merge any additional kwargs
         return self.client._request('POST', '/csv-parser/parse', json_data=payload)
 
 class MermaidCliAPI:
     def __init__(self, client):
         self.client = client
 
-    def generate_diagram(self, mermaid_definition, **kwargs):
+    def generate_diagram(self, definition, format='svg', **kwargs):
         """Generates a diagram from Mermaid text definition. Returns image bytes."""
-        payload = {'definition': mermaid_definition, **kwargs}
-        return self.client._request('POST', '/mermaid-cli/generate-diagram', json_data=payload)
+        payload = {'definition': definition, 'format': format, **kwargs}
+        # Initial request to generate the diagram and get the file path
+        json_response = self.client._request('POST', '/mermaid-cli/generate-diagram', json_data=payload)
+        
+        if isinstance(json_response, dict) and 'filePath' in json_response:
+            file_path = json_response['filePath']
+            # Second request to fetch the actual diagram content
+            # The _request method should handle returning bytes based on content type
+            return self.client._request('GET', file_path) 
+        else:
+            # Handle cases where the expected filePath is not in the response
+            raise Exception(f"Failed to retrieve diagram file path from MermaidCliAPI: {json_response}")
 
 class PDFKitAPI:
     def __init__(self, client):
         self.client = client
 
-    def generate(self, content, **kwargs):
+    def generate(self, text_content, **kwargs):
         """Generates a PDF document using PDFKit. Returns PDF bytes."""
-        payload = {'text_content': content, **kwargs}
-        return self.client._request('POST', '/pdfkit/generate-pdf', json_data=payload)
+        payload = {'text_content': text_content, **kwargs}
+        # Initial request to generate the PDF and get the file path
+        json_response = self.client._request('POST', '/pdfkit/generate-pdf', json_data=payload)
+
+        if isinstance(json_response, dict) and 'filePath' in json_response:
+            file_path = json_response['filePath']
+            # Second request to fetch the actual PDF content
+            # The _request method should handle returning bytes based on content type
+            return self.client._request('GET', file_path)
+        else:
+            # Handle cases where the expected filePath is not in the response
+            raise Exception(f"Failed to retrieve PDF file path from PDFKitAPI: {json_response}")
 
 class PillowAPI:
     def __init__(self, client):
         self.client = client
 
-    def process(self, image_url_or_data, operation, files=None, **kwargs):
+    def process(self, file_to_upload, operations, output_format='PNG', **kwargs):
         """
         Processes and edits images using Pillow. Returns image bytes.
-        Can accept image_url (string) or image_data (bytes) via files argument.
+        :param file_to_upload: Bytes of the image file.
+        :param operations: List of operation strings (e.g., ["resize:200,200", "grayscale"]).
+        :param output_format: Desired output format (e.g., 'PNG', 'JPEG').
         """
-        payload = {'operation': operation, **kwargs}
+        if not isinstance(file_to_upload, bytes):
+            raise ValueError("file_to_upload must be bytes.")
         
-        # The API documentation implies image_url is a primary way, but for local files or direct data,
-        # sending as multipart/form-data might be necessary if the API supports it.
-        # The current API spec in api-index.json for /pillow/process-image is POST, implying JSON body.
-        # If it needs to handle file uploads, the server-side and this SDK client would need adjustment.
-        # For now, assuming image_url is part of the JSON payload as per typical API design for URLs.
-        # If `image_url_or_data` is bytes, it should be sent via `files` and `payload` should not contain `image_url`.
-        
-        if isinstance(image_url_or_data, str):
-            payload['image_url'] = image_url_or_data
-            return self.client._request('POST', '/pillow/process-image', json_data=payload)
-        elif isinstance(image_url_or_data, bytes) and files:
-            # This branch assumes the API can take 'operation' and other kwargs as form fields
-            # alongside the file. This is a common pattern but not explicitly in api-index.json.
-            # `files` should be in the format {'image_file_name': image_data_bytes}
-            # `data` (form fields) would be `payload`
-            return self.client._request('POST', '/pillow/process-image', data=payload, files=files)
-        elif isinstance(image_url_or_data, bytes) and not files:
-             raise ValueError("image_data (bytes) provided to PillowAPI.process without `files` argument. Please provide files={'image': image_data_bytes}")
-        else:
-            raise ValueError("Invalid image_url_or_data type. Must be str (URL) or bytes (with files argument).")
+        files = {'file': ('image_file', file_to_upload)} # filename can be generic
+        data = {
+            'operations': json.dumps(operations), # operations should be a JSON string of a list
+            'output_format': output_format,
+            **kwargs
+        }
+        # For Pillow, the API expects multipart/form-data
+        return self.client._request('POST', '/pillow/process-image', data=data, files=files)
 
 if __name__ == '__main__':
     # Example Usage (Illustrative - requires running AllBeApi services)

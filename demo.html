@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AllBeAPI 演示</title>
+    <script src="SDK/JavaScript/allbeapi.js"></script>
+</head>
+<body>
+    <h1>AllBeAPI 演示</h1>
+    <textarea id="markdown" placeholder="输入 markdown..." rows="5" cols="50"># 你好 AllBeAPI
+这真是 **太棒了**！</textarea>
+    <br>
+    <button onclick="convert()">转换为 HTML</button>
+    <h3>结果：</h3>
+    <div id="result" style="border: 1px solid #ccc; padding: 10px; min-height: 50px;"></div>
+
+    <script>
+        const api = new AllBeApi();
+        
+        async function convert() {
+            const markdownInput = document.getElementById('markdown').value;
+            const resultDiv = document.getElementById('result');
+            try {
+                const response = await api.marked.render(markdownInput);
+                resultDiv.innerHTML = response; // Changed from response.html
+            } catch (error) {
+                resultDiv.innerText = '错误： ' + error.message;
+                console.error('错误：', error);
+            }
+        }
+    </script>
+</body>
+</html>
