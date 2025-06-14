@@ -280,11 +280,12 @@ class SanitizeHtmlAPI {
     constructor(client) { this.client = client; }
     /**
      * 清理HTML内容，防止XSS攻击 (Sanitizes HTML content to prevent XSS attacks)
-     * @param {string} html - The HTML content to sanitize.
+     * @param {string} html_content - The HTML content to sanitize.
      * @param {object} [options] - Sanitization options.
      * @returns {Promise<object>}
      */
     async sanitize(html_content, options = {}) {
+        // API endpoint is /sanitize-html/sanitize-html and expects 'html_content'
         return this.client._request('POST', '/sanitize-html/sanitize-html', null, { html_content, options });
     }
 }
@@ -307,12 +308,14 @@ class ESLintAPI {
     /**
      * 对JavaScript/TypeScript代码进行静态分析 (Lints JavaScript/TypeScript code using ESLint)
      * @param {string} code - The code to lint.
-     * @param {object} [rules] - ESLint rules configuration.
-     * @param {object} [options] - Additional ESLint options (e.g., parser, plugins).
+     * @param {string} language - 'javascript' or 'typescript'.
+     * @param {boolean} [fix=false] - Whether to attempt to fix linting issues.
+     * @param {object} [eslintOptions] - Additional ESLint options (currently not directly used by API, but kept for future).
      * @returns {Promise<object>}
      */
     async lint(code, language, fix = false, eslintOptions = {}) {
-        return this.client._request('POST', '/eslint/lint', null, { code, language, fix, ...eslintOptions });
+        // API endpoint is /eslint/lint and expects 'code', 'language', 'fix'
+        return this.client._request('POST', '/eslint/lint', null, { code, language, fix });
     }
 }
 
@@ -347,25 +350,39 @@ class MermaidCliAPI {
     constructor(client) { this.client = client; }
     /**
      * 从文本定义生成图表 (Generates a diagram from Mermaid text definition)
-     * @param {string} mermaidDefinition - The Mermaid diagram definition.
-     * @param {object} [options] - Options like theme, outputFormat (though API likely returns image).
+     * @param {string} definition - The Mermaid diagram definition.
+     * @param {string} [format='svg'] - Output format ('svg' or 'png').
+     * @param {object} [options] - Additional options (currently not directly used by API, but kept for future).
      * @returns {Promise<Blob>} - The diagram image as a Blob.
      */
     async generateDiagram(definition, format = 'svg', options = {}) {
-        return this.client._request('POST', '/mermaid-cli/generate-diagram', null, { definition, format, ...options });
+        // API returns a JSON with filePath, then the file is served from that path.
+        const response = await this.client._request('POST', '/mermaid-cli/generate-diagram', null, { definition, format, ...options });
+        if (response && response.filePath) {
+            // The _request method should handle fetching the blob directly if the path is absolute
+            // or if it's a relative path from the base URL.
+            // Assuming filePath is relative to the base API URL.
+            return this.client._request('GET', response.filePath);
+        }
+        throw new Error('Failed to retrieve diagram file path from MermaidCliAPI');
     }
 }
 
-class PDFKitAPI { // Changed from PdfkitAPI to PDFKitAPI for consistency
+class PDFKitAPI { 
     constructor(client) { this.client = client; }
     /**
      * 生成PDF文档 (Generates a PDF document using PDFKit)
      * @param {string} text_content - The text content for the PDF.
-     * @param {object} [options] - PDF generation options.
+     * @param {object} [options] - PDF generation options (currently not directly used by API, but kept for future).
      * @returns {Promise<Blob>} - The PDF document as a Blob.
      */
     async generate(text_content, options = {}) {
-        return this.client._request('POST', '/pdfkit/generate-pdf', null, { text_content, ...options });
+        // API returns a JSON with filePath, then the file is served from that path.
+        const response = await this.client._request('POST', '/pdfkit/generate-pdf', null, { text_content, ...options });
+        if (response && response.filePath) {
+            return this.client._request('GET', response.filePath);
+        }
+        throw new Error('Failed to retrieve PDF file path from PDFKitAPI');
     }
 }
 
@@ -381,8 +398,10 @@ class PillowAPI {
     async process(file, operations, output_format = 'PNG') {
         const formData = new FormData();
         formData.append('file', file);
+        // API expects 'operations' as multiple form fields.
         operations.forEach(op => formData.append('operations', op));
         formData.append('output_format', output_format);
+        // API directly returns the processed image blob.
         return this.client._request('POST', '/pillow/process-image', null, formData);
     }
 }

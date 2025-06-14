@@ -100,30 +100,57 @@ class BeautifulSoupAPI:
     def __init__(self, client):
         self.client = client
 
-    def parse(self, html_content):
+    def parse(self, html, parser=None): # Changed html_content to html, added parser
         """Parses HTML content."""
-        return self.client._request('POST', '/beautifulsoup/parse', json_data={'html': html_content})
+        payload = {'html': html}
+        if parser:
+            payload['parser'] = parser
+        return self.client._request('POST', '/beautifulsoup/parse', json_data=payload)
 
-    def extract(self, html_content, selector, **kwargs):
+    def extract(self, html, selector, **kwargs): # Changed html_content to html
         """Extracts specific elements from HTML."""
-        payload = {'html': html_content, 'selector': selector, **kwargs}
+        payload = {'html': html, 'selector': selector, **kwargs}
         return self.client._request('POST', '/beautifulsoup/extract', json_data=payload)
 
-    def links(self, html_content):
+    def links(self, html, base_url=None, parser=None): # Changed html_content to html, added base_url and parser
         """Extracts all links from HTML."""
-        return self.client._request('POST', '/beautifulsoup/links', json_data={'html': html_content})
+        payload = {'html': html}
+        if base_url:
+            payload['base_url'] = base_url
+        if parser:
+            payload['parser'] = parser
+        return self.client._request('POST', '/beautifulsoup/links', json_data=payload)
 
-    def images(self, html_content):
+    def images(self, html, base_url=None, parser=None): # Changed html_content to html, added base_url and parser
         """Extracts all images from HTML."""
-        return self.client._request('POST', '/beautifulsoup/images', json_data={'html': html_content})
+        payload = {'html': html}
+        if base_url:
+            payload['base_url'] = base_url
+        if parser:
+            payload['parser'] = parser
+        return self.client._request('POST', '/beautifulsoup/images', json_data=payload)
 
-    def clean(self, html_content):
+    def clean(self, html, remove_tags=None, keep_only=None, remove_comments=None, parser=None): # Changed html_content to html, added other params
         """Cleans HTML content."""
-        return self.client._request('POST', '/beautifulsoup/clean', json_data={'html': html_content})
+        payload = {'html': html}
+        if remove_tags is not None:
+            payload['remove_tags'] = remove_tags
+        if keep_only is not None:
+            payload['keep_only'] = keep_only
+        if remove_comments is not None:
+            payload['remove_comments'] = remove_comments
+        if parser:
+            payload['parser'] = parser
+        return self.client._request('POST', '/beautifulsoup/clean', json_data=payload)
 
-    def fetch(self, url_to_fetch):
+    def fetch(self, url, selector=None, parser=None): # Changed url_to_fetch to url, added selector and parser
         """Fetches a webpage and parses its content."""
-        return self.client._request('POST', '/beautifulsoup/fetch', json_data={'url': url_to_fetch})
+        payload = {'url': url}
+        if selector:
+            payload['selector'] = selector
+        if parser:
+            payload['parser'] = parser
+        return self.client._request('POST', '/beautifulsoup/fetch', json_data=payload)
 
     def health(self):
         """Health check for BeautifulSoup API."""
@@ -288,14 +315,20 @@ class PillowAPI:
         if not isinstance(file_to_upload, bytes):
             raise ValueError("file_to_upload must be bytes.")
         
-        files = {'file': ('image_file', file_to_upload)} # filename can be generic
-        data = {
-            'operations': json.dumps(operations), # operations should be a JSON string of a list
-            'output_format': output_format,
-            **kwargs
-        }
-        # For Pillow, the API expects multipart/form-data
-        return self.client._request('POST', '/pillow/process-image', data=data, files=files)
+        files = {'file': ('image_file', file_to_upload)} 
+        
+        # API expects 'operations' as multiple form fields, not a single JSON string.
+        # And other kwargs also as form fields.
+        form_data = [('output_format', output_format)]
+        for op in operations:
+            form_data.append(('operations', op))
+        
+        for key, value in kwargs.items():
+            form_data.append((key, str(value))) # Ensure all values are strings for form data
+
+        # The _request method should handle 'data' being a list of tuples for multipart/form-data
+        # when 'files' is also present. 'requests' library supports this.
+        return self.client._request('POST', '/pillow/process-image', data=form_data, files=files)
 
 if __name__ == '__main__':
     # Example Usage (Illustrative - requires running AllBeApi services)
