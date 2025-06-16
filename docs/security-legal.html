@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security & Legal Policies - AllBeAPI</title>
+    <meta name="description" content="Comprehensive security practices, data protection policies, and legal guidelines for AllBeAPI services.">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../assets/css/main.css">
+    <link rel="stylesheet" href="../assets/css/components.css">
+    <link rel="stylesheet" href="../assets/css/docs.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <a href="../index.html" class="navbar-brand">
+                    <span class="brand-icon">🚀</span>
+                    AllBeAPI
+                </a>
+                <ul class="navbar-nav">
+                    <li><a href="index.html">Documentation</a></li>
+                    <li><a href="getting-started.html">Getting Started</a></li>
+                    <li><a href="api.html">API Reference</a></li>
+                    <li><a href="security-legal.html" class="active">Security & Legal</a></li>
+                    <li><a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank">GitHub</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="docs-layout">
+        <!-- Sidebar -->
+        <aside class="docs-sidebar">
+            <div class="sidebar-content">
+                <h3 class="sidebar-title">Security & Legal</h3>
+                <nav class="sidebar-nav">
+                    <ul class="sidebar-nav-list">
+                        <li><a href="#overview" class="sidebar-nav-link">Overview</a></li>
+                        <li><a href="#data-protection" class="sidebar-nav-link">Data Protection</a></li>
+                        <li><a href="#security-practices" class="sidebar-nav-link">Security Practices</a></li>
+                        <li><a href="#ai-ethics" class="sidebar-nav-link">AI Ethics</a></li>
+                        <li><a href="#web-scraping" class="sidebar-nav-link">Web Scraping Guidelines</a></li>
+                        <li><a href="#compliance" class="sidebar-nav-link">Compliance</a></li>
+                        <li><a href="#terms-of-service" class="sidebar-nav-link">Terms of Service</a></li>
+                        <li><a href="#privacy-policy" class="sidebar-nav-link">Privacy Policy</a></li>
+                        <li><a href="#liability" class="sidebar-nav-link">Liability & Disclaimers</a></li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="docs-main">
+            <div class="docs-content">
+                <!-- Header -->
+                <header class="docs-header">
+                    <h1>Security & Legal Framework</h1>
+                    <p class="docs-lead">
+                        Comprehensive security practices, data protection policies, and legal guidelines 
+                        governing the use of AllBeAPI services, including upcoming AI-enhanced features.
+                    </p>
+                    
+                    <div class="alert alert-info">
+                        <strong>Important:</strong> This document addresses security and legal gaps identified 
+                        in our platform evolution. All users must comply with these guidelines.
+                    </div>
+                </header>
+
+                <!-- Overview -->
+                <section id="overview" class="docs-section">
+                    <h2>Overview</h2>
+                    <p>
+                        As AllBeAPI evolves into an AI-enhanced platform, we are committed to maintaining the highest 
+                        standards of security, privacy, and legal compliance. This document outlines our policies 
+                        and your responsibilities when using our services.
+                    </p>
+                    
+                    <div class="policy-highlights">
+                        <div class="policy-card">
+                            <h3>🔒 Security First</h3>
+                            <p>End-to-end encryption, zero data retention, and enterprise-grade security practices.</p>
+                        </div>
+                        <div class="policy-card">
+                            <h3>⚖️ Legal Compliance</h3>
+                            <p>GDPR, CCPA compliant with clear usage guidelines and liability protection.</p>
+                        </div>
+                        <div class="policy-card">
+                            <h3>🤖 Ethical AI</h3>
+                            <p>Responsible AI development with bias mitigation and transparent processes.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Data Protection -->
+                <section id="data-protection" class="docs-section">
+                    <h2>Data Protection Policies</h2>
+                    
+                    <h3>Data Handling Principles</h3>
+                    <ul>
+                        <li><strong>Zero Retention Policy:</strong> We do not store, log, or retain any user-submitted content processed through our APIs</li>
+                        <li><strong>Temporary Processing:</strong> Data is held in memory only during active processing and immediately discarded</li>
+                        <li><strong>No Tracking:</strong> We do not track, profile, or analyze user behavior or content patterns</li>
+                        <li><strong>Regional Processing:</strong> Data is processed in the same geographic region when possible</li>
+                    </ul>
+                    
+                    <h3>Data Types and Handling</h3>
+                    <div class="data-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Data Type</th>
+                                    <th>Processing Location</th>
+                                    <th>Retention Period</th>
+                                    <th>Security Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Text Content</td>
+                                    <td>Server Memory</td>
+                                    <td>0 seconds (immediate)</td>
+                                    <td>TLS 1.3 Encrypted</td>
+                                </tr>
+                                <tr>
+                                    <td>Images/Files</td>
+                                    <td>Temporary Processing</td>
+                                    <td>0 seconds (immediate)</td>
+                                    <td>TLS 1.3 + Server-side encryption</td>
+                                </tr>
+                                <tr>
+                                    <td>API Keys/Tokens</td>
+                                    <td>Secure Headers Only</td>
+                                    <td>Session duration</td>
+                                    <td>Encrypted in transit</td>
+                                </tr>
+                                <tr>
+                                    <td>Usage Metadata</td>
+                                    <td>Aggregated Metrics</td>
+                                    <td>30 days (anonymized)</td>
+                                    <td>Encrypted at rest</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Security Practices -->
+                <section id="security-practices" class="docs-section">
+                    <h2>Security Practices</h2>
+                    
+                    <h3>Infrastructure Security</h3>
+                    <ul>
+                        <li><strong>Transport Layer Security:</strong> All communications encrypted with TLS 1.3</li>
+                        <li><strong>API Authentication:</strong> Bearer token authentication with rate limiting</li>
+                        <li><strong>Network Security:</strong> DDoS protection, firewall rules, and intrusion detection</li>
+                        <li><strong>Container Security:</strong> Hardened Docker containers with minimal attack surface</li>
+                    </ul>
+                    
+                    <h3>Application Security</h3>
+                    <ul>
+                        <li><strong>Input Validation:</strong> Comprehensive sanitization of all user inputs</li>
+                        <li><strong>Output Encoding:</strong> Proper encoding to prevent injection attacks</li>
+                        <li><strong>Resource Limits:</strong> Memory and CPU limits to prevent abuse</li>
+                        <li><strong>Error Handling:</strong> Secure error messages that don't leak system information</li>
+                    </ul>
+                    
+                    <h3>Monitoring and Incident Response</h3>
+                    <ul>
+                        <li><strong>24/7 Monitoring:</strong> Continuous system health and security monitoring</li>
+                        <li><strong>Incident Response:</strong> Defined procedures for security incident handling</li>
+                        <li><strong>Regular Audits:</strong> Monthly security audits and vulnerability assessments</li>
+                        <li><strong>Update Management:</strong> Automated security updates for all dependencies</li>
+                    </ul>
+                </section>
+
+                <!-- AI Ethics -->
+                <section id="ai-ethics" class="docs-section">
+                    <h2>AI Ethics and Responsible Use</h2>
+                    
+                    <h3>Bias Mitigation</h3>
+                    <p>Our AI services implement multiple layers of bias detection and mitigation:</p>
+                    <ul>
+                        <li><strong>Training Data Diversity:</strong> Use of diverse, representative datasets</li>
+                        <li><strong>Algorithmic Fairness:</strong> Regular testing for discriminatory outcomes</li>
+                        <li><strong>Human Oversight:</strong> Human review of AI model decisions and outputs</li>
+                        <li><strong>Continuous Monitoring:</strong> Ongoing bias detection in production systems</li>
+                    </ul>
+                    
+                    <h3>Transparency and Explainability</h3>
+                    <ul>
+                        <li><strong>Model Documentation:</strong> Clear documentation of AI model capabilities and limitations</li>
+                        <li><strong>Decision Transparency:</strong> Explanations provided for AI-driven decisions when possible</li>
+                        <li><strong>Confidence Scores:</strong> AI outputs include confidence/certainty metrics</li>
+                        <li><strong>Feedback Mechanisms:</strong> Users can report AI accuracy issues</li>
+                    </ul>
+                    
+                    <h3>User Control and Consent</h3>
+                    <ul>
+                        <li><strong>Explicit Consent:</strong> Clear consent required for AI processing of personal data</li>
+                        <li><strong>Opt-out Options:</strong> Users can choose non-AI alternatives where available</li>
+                        <li><strong>Processing Preferences:</strong> Granular control over AI feature usage</li>
+                        <li><strong>Data Subject Rights:</strong> Full compliance with data subject access and deletion rights</li>
+                    </ul>
+                </section>
+
+                <!-- Web Scraping Guidelines -->
+                <section id="web-scraping" class="docs-section">
+                    <h2>Web Scraping Guidelines and Legal Compliance</h2>
+                    
+                    <div class="alert alert-warning">
+                        <strong>Important:</strong> Users are solely responsible for ensuring their use of web scraping 
+                        features complies with applicable laws, website terms of service, and robots.txt files.
+                    </div>
+                    
+                    <h3>Responsible Scraping Practices</h3>
+                    <ul>
+                        <li><strong>Robots.txt Compliance:</strong> Always check and respect robots.txt files</li>
+                        <li><strong>Rate Limiting:</strong> Implement reasonable delays between requests</li>
+                        <li><strong>Terms of Service:</strong> Review and comply with target website terms of service</li>
+                        <li><strong>Public Data Only:</strong> Only scrape publicly accessible information</li>
+                        <li><strong>No Authentication Bypass:</strong> Do not attempt to bypass login or authentication systems</li>
+                    </ul>
+                    
+                    <h3>Prohibited Uses</h3>
+                    <p>The following activities are strictly prohibited:</p>
+                    <ul>
+                        <li>Scraping personal data without consent</li>
+                        <li>Bypassing technical protection measures</li>
+                        <li>Overloading target servers with excessive requests</li>
+                        <li>Scraping copyrighted content for redistribution</li>
+                        <li>Collecting data for illegal or harmful purposes</li>
+                        <li>Ignoring cease and desist requests</li>
+                    </ul>
+                    
+                    <h3>Legal Disclaimer</h3>
+                    <p>
+                        AllBeAPI provides web scraping tools as utilities only. We do not guarantee the legality 
+                        of any specific scraping activity. Users must:
+                    </p>
+                    <ul>
+                        <li>Conduct their own legal analysis for each scraping project</li>
+                        <li>Obtain appropriate legal counsel when necessary</li>
+                        <li>Assume full liability for their scraping activities</li>
+                        <li>Indemnify AllBeAPI against any legal claims arising from their use</li>
+                    </ul>
+                </section>
+
+                <!-- Compliance -->
+                <section id="compliance" class="docs-section">
+                    <h2>Regulatory Compliance</h2>
+                    
+                    <h3>GDPR Compliance (EU)</h3>
+                    <ul>
+                        <li><strong>Lawful Basis:</strong> Processing based on legitimate interest or consent</li>
+                        <li><strong>Data Minimization:</strong> Only process data necessary for the requested service</li>
+                        <li><strong>Right to Erasure:</strong> Immediate data deletion upon processing completion</li>
+                        <li><strong>Data Portability:</strong> Users can export their processed results</li>
+                        <li><strong>Privacy by Design:</strong> Built-in privacy protections in all features</li>
+                    </ul>
+                    
+                    <h3>CCPA Compliance (California)</h3>
+                    <ul>
+                        <li><strong>Transparency:</strong> Clear disclosure of data collection and use</li>
+                        <li><strong>No Sale of Data:</strong> We do not sell user data to third parties</li>
+                        <li><strong>Deletion Rights:</strong> Users can request deletion of their data</li>
+                        <li><strong>Non-Discrimination:</strong> No discrimination for exercising privacy rights</li>
+                    </ul>
+                    
+                    <h3>Industry Standards</h3>
+                    <ul>
+                        <li><strong>SOC 2 Type II:</strong> Compliance roadmap for enterprise features</li>
+                        <li><strong>ISO 27001:</strong> Information security management system standards</li>
+                        <li><strong>OWASP Top 10:</strong> Protection against common web vulnerabilities</li>
+                        <li><strong>PCI DSS:</strong> Payment card security (when applicable)</li>
+                    </ul>
+                </section>
+
+                <!-- Terms of Service -->
+                <section id="terms-of-service" class="docs-section">
+                    <h2>Terms of Service</h2>
+                    
+                    <h3>Acceptable Use Policy</h3>
+                    <p>Users of AllBeAPI services agree to:</p>
+                    <ul>
+                        <li>Use services only for lawful purposes</li>
+                        <li>Respect intellectual property rights</li>
+                        <li>Not attempt to reverse engineer or exploit services</li>
+                        <li>Comply with all applicable laws and regulations</li>
+                        <li>Report security vulnerabilities responsibly</li>
+                    </ul>
+                    
+                    <h3>Service Availability</h3>
+                    <ul>
+                        <li><strong>Best Effort:</strong> We strive for 99.9% uptime but do not guarantee availability</li>
+                        <li><strong>Maintenance Windows:</strong> Scheduled maintenance with advance notice</li>
+                        <li><strong>Rate Limits:</strong> Fair usage policies to ensure service quality</li>
+                        <li><strong>Feature Changes:</strong> Services may be modified with reasonable notice</li>
+                    </ul>
+                    
+                    <h3>User Responsibilities</h3>
+                    <ul>
+                        <li>Secure storage of API keys and authentication credentials</li>
+                        <li>Monitoring and controlling usage to stay within limits</li>
+                        <li>Immediate notification of suspected security breaches</li>
+                        <li>Compliance with third-party terms when applicable</li>
+                    </ul>
+                </section>
+
+                <!-- Privacy Policy -->
+                <section id="privacy-policy" class="docs-section">
+                    <h2>Privacy Policy</h2>
+                    
+                    <h3>Information We Collect</h3>
+                    <ul>
+                        <li><strong>Technical Information:</strong> IP addresses, user agents, request timestamps (anonymized)</li>
+                        <li><strong>Usage Metrics:</strong> API call counts, error rates, performance metrics (aggregated)</li>
+                        <li><strong>Account Information:</strong> API keys, usage quotas, billing information</li>
+                        <li><strong>Content Data:</strong> Temporarily processed during API calls (immediately deleted)</li>
+                    </ul>
+                    
+                    <h3>How We Use Information</h3>
+                    <ul>
+                        <li>Provide and improve our services</li>
+                        <li>Monitor system performance and security</li>
+                        <li>Enforce terms of service and prevent abuse</li>
+                        <li>Communicate service updates and security alerts</li>
+                    </ul>
+                    
+                    <h3>Information Sharing</h3>
+                    <p>We do not sell, rent, or share personal information except:</p>
+                    <ul>
+                        <li>When required by law or legal process</li>
+                        <li>To protect our rights or safety</li>
+                        <li>With user consent for specific purposes</li>
+                        <li>In aggregated, anonymized form for research</li>
+                    </ul>
+                </section>
+
+                <!-- Liability -->
+                <section id="liability" class="docs-section">
+                    <h2>Liability and Disclaimers</h2>
+                    
+                    <h3>Service Disclaimers</h3>
+                    <p>AllBeAPI services are provided "as is" without warranties of any kind:</p>
+                    <ul>
+                        <li><strong>No Warranty:</strong> We disclaim all express and implied warranties</li>
+                        <li><strong>Accuracy:</strong> AI and automated services may produce errors or inaccuracies</li>
+                        <li><strong>Availability:</strong> Services may be interrupted or discontinued</li>
+                        <li><strong>Third-Party Services:</strong> We are not responsible for third-party integrations</li>
+                    </ul>
+                    
+                    <h3>Limitation of Liability</h3>
+                    <ul>
+                        <li><strong>Direct Damages:</strong> Liability limited to fees paid in the preceding 12 months</li>
+                        <li><strong>Indirect Damages:</strong> No liability for consequential, incidental, or punitive damages</li>
+                        <li><strong>Business Losses:</strong> No liability for lost profits, data, or business opportunities</li>
+                        <li><strong>Force Majeure:</strong> No liability for circumstances beyond our reasonable control</li>
+                    </ul>
+                    
+                    <h3>Indemnification</h3>
+                    <p>Users agree to indemnify AllBeAPI against claims arising from:</p>
+                    <ul>
+                        <li>Violation of terms of service or applicable laws</li>
+                        <li>Misuse of API services or violation of third-party rights</li>
+                        <li>Content submitted through our services</li>
+                        <li>Web scraping activities using our tools</li>
+                    </ul>
+                </section>
+
+                <!-- Contact -->
+                <section class="docs-section">
+                    <div class="contact-card">
+                        <h3>Security and Legal Contacts</h3>
+                        <div class="contact-grid">
+                            <div class="contact-item">
+                                <h4>Security Issues</h4>
+                                <p>Report security vulnerabilities responsibly</p>
+                                <a href="mailto:security@allbeapi.com" class="btn btn-outline">security@allbeapi.com</a>
+                            </div>
+                            <div class="contact-item">
+                                <h4>Legal Inquiries</h4>
+                                <p>Legal questions and compliance matters</p>
+                                <a href="mailto:legal@allbeapi.com" class="btn btn-outline">legal@allbeapi.com</a>
+                            </div>
+                            <div class="contact-item">
+                                <h4>Privacy Concerns</h4>
+                                <p>Data protection and privacy questions</p>
+                                <a href="mailto:privacy@allbeapi.com" class="btn btn-outline">privacy@allbeapi.com</a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/components.js"></script>
+</body>
+</html>
