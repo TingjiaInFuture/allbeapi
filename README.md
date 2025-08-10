@@ -1,214 +1,191 @@
-# AllBeAPI - AI-Enhanced Universal SDK
+# AllBeAPI - Minimal Utility Function Set
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![AI-Enhanced](https://img.shields.io/badge/AI-Enhanced-brightgreen.svg)](https://github.com/TingjiaInFuture/allbeapi)
-[![Market Research](https://img.shields.io/badge/Market-Validated-blue.svg)](docs/ai-roadmap.html)
+[![Rapid Development](https://img.shields.io/badge/Rapid-Development-brightgreen.svg)](https://github.com/TingjiaInFuture/allbeapi)
+[![Multi-Language](https://img.shields.io/badge/Python%20%7C%20JavaScript-supported-blue.svg)](https://github.com/TingjiaInFuture/allbeapi)
 
-AllBeAPI is evolving from a versatile backend-as-a-service platform into a next-generation AI-enhanced API ecosystem. Starting with 13+ traditional library integrations, we're expanding to include cutting-edge AI capabilities for image processing, natural language understanding, document intelligence, smart code analysis, and intelligent web scraping.
+AllBeAPI is a cloud-based utility function set for rapid development. Call ready-to-use tools like Markdown-to-HTML, QR code generation, and image format conversion — all without installing extra libraries. Works in Python and JavaScript out of the box.
 
-## 🚀 Evolution Roadmap
+## ✨ Key Features
 
-### Current State (13+ Traditional APIs)
-*   **Text Processing**: Markdown conversion, HTML parsing, code formatting
-*   **Data Validation**: JSON schema validation, CSV parsing, text comparison  
-*   **Media Generation**: QR codes, diagrams, PDFs, image manipulation
-*   **Developer Tools**: Code linting, syntax highlighting, HTML sanitization
+AllBeAPI helps developers complete prototypes and experiments in minimal time by providing:
 
-### AI-Enhanced Future (20+ Advanced APIs)
-*   **🤖 AI Image Processing** (Q3 2025): Object recognition, face detection, smart enhancement, background removal
-*   **🧠 Natural Language Processing** (Q4 2025): Sentiment analysis, text similarity, entity recognition, summarization
-*   **📄 Document Intelligence** (Q4 2025): Smart format conversion, HTML-to-image, multi-document merging
-*   **🔍 Smart Code Analysis** (Q1 2026): AI-powered vulnerability detection, intelligent refactoring suggestions
-*   **🕷️ Intelligent Web Scraping** (Q1 2026): Adaptive extraction, anti-scraping evasion, real-time monitoring
+* **No Heavy Dependencies**: Access powerful utilities without installing and managing multiple libraries
+* **Unified API Calls**: Consistent interface across all functions - learn once, use everywhere  
+* **Multi-Language Support**: Official SDKs for Python and JavaScript with identical functionality
+* **Instant Integration**: Copy one file, start coding immediately
+* **Rapid Prototyping**: Focus on your logic, not library setup and configuration
 
-## ✨ Features
+### Current Utility Functions (13+ Tools)
+* **Text Processing**: Markdown-to-HTML conversion, syntax highlighting, code formatting
+* **Data Handling**: JSON schema validation, CSV parsing, text comparison  
+* **Content Generation**: QR codes, diagrams, PDFs, image processing
+* **Developer Tools**: Code linting, HTML sanitization, format conversion
 
-### Current Platform Capabilities
-*   **Comprehensive API Suite**: Access 13+ traditional development tools through a unified platform
-*   **Easy Integration**: Official SDKs for JavaScript and Python for quick setup
-*   **RESTful Access**: Direct HTTP access to all services for flexibility
-*   **Open Source**: Community-driven and open for contributions
-*   **Scalable Microservices**: Each functionality is a distinct service
+## 🏗️ Architecture
 
-### AI-Enhanced Features (Coming Soon)
-*   **Computer Vision**: Advanced image analysis with object and face detection
-*   **Natural Language Understanding**: Intelligent text processing and analysis
-*   **Document Intelligence**: Smart format conversion and processing
-*   **Code Intelligence**: AI-powered development assistance and security analysis
-*   **Intelligent Automation**: Adaptive web scraping and data extraction
-
-## 📊 Market-Validated Growth Strategy
-
-Based on comprehensive market research, AllBeAPI is strategically positioned to capture significant opportunities:
-
-*   **AI Image Processing Market**: 21% CAGR growth, projected $94.2B market by 2034
-*   **Enterprise Document Automation**: High demand for intelligent format conversion
-*   **AI Development Tools**: Growing need for AI-enhanced code analysis and security
-*   **Training Data Collection**: 65%+ of organizations need intelligent scraping for AI models
-
-##  архитектура
-
-AllBeAPI operates on a microservice architecture. Client applications can interact with these services either through the dedicated SDKs (JavaScript/Python) which abstract the API calls, or by making direct HTTP requests to the respective service endpoints.
+AllBeAPI operates on a simple microservice architecture. Client applications can interact with these services either through the dedicated SDKs (JavaScript/Python) or by making direct HTTP requests to the respective service endpoints.
 
 ```
-Client Applications
+Your Application
 │
 ├─── SDKs (JavaScript, Python) ─────┐
-│                                    │
-└─── Direct HTTP/REST API Calls ───┐ │
-                                   │ │
-                                   ▼ ▼
-                            AllBeAPI Gateway
-                         (https://res.allbeapi.top)
+│                                   │
+└─── Direct HTTP/REST API Calls ───┐│
+                                   ▼▼
+                          AllBeAPI Gateway
+                       (https://res.allbeapi.top)
                                    │
           ┌────────────────────────┼────────────────────────┐
-          │                        │                        │
-          ▼                        ▼                        ▼
+          │                       │                        │
+          ▼                       ▼                        ▼
 ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐    ┌─────────────┐
-│  Marked Service │    │   Pillow Service│    │  Prettier Service│    │   ... (Other│
-│ (Markdown Proc.)│    │ (Image Proc.)   │    │ (Code Format)   │    │   Services) │
+│ Markdown Service│    │  Image Service  │    │ Code Formatting │    │   ... (13+  │
+│ (HTML Rendering)│    │ (QR, Resize)    │    │ (Prettier, Lint)│    │  Services)  │
 └─────────────────┘    └─────────────────┘    └─────────────────┘    └─────────────┘
 ```
 
 ## 🛠️ Available Services
 
-AllBeAPI provides the following services:
+AllBeAPI provides these ready-to-use utility functions:
 
-*   **Marked**: Converts Markdown text to HTML.
-*   **BeautifulSoup**: Parses and extracts data from HTML/XML.
-*   **Prettier**: Formats code for various languages (JavaScript, TypeScript, HTML, CSS, JSON, PHP, XML, Java, SQL).
-*   **Pygments**: Provides syntax highlighting for a wide range of languages.
-*   **PythonQRCode**: Generates QR codes from text or data.
-*   **SanitizeHtml**: Cleans and sanitizes HTML input to prevent XSS attacks.
-*   **Ajv**: Validates JSON data against JSON schemas.
-*   **ESLint**: Lints JavaScript and TypeScript code to find and fix problems.
-*   **Diff**: Compares text and highlights differences.
-*   **CsvParser**: Parses CSV data.
-*   **MermaidCli**: Generates diagrams and flowcharts from text using Mermaid syntax.
-*   **PDFKit**: Creates and manipulates PDF documents.
-*   **Pillow**: Performs various image processing tasks (resize, filters, format conversion, etc.).
+*   **Marked**: Converts Markdown text to HTML
+*   **BeautifulSoup**: Parses and extracts data from HTML/XML
+*   **Prettier**: Formats code for various languages (JavaScript, TypeScript, HTML, CSS, JSON, PHP, XML, Java, SQL)
+*   **Pygments**: Provides syntax highlighting for 500+ programming languages
+*   **PythonQRCode**: Generates QR codes from text or URLs
+*   **SanitizeHtml**: Cleans and sanitizes HTML input to prevent XSS attacks
+*   **Ajv**: Validates JSON data against JSON schemas
+*   **ESLint**: Lints JavaScript and TypeScript code to find and fix problems
+*   **Diff**: Compares text and highlights differences
+*   **CsvParser**: Parses CSV data into structured format
+*   **MermaidCli**: Generates diagrams and flowcharts from text using Mermaid syntax
+*   **PDFKit**: Creates PDF documents from text and data
+*   **Pillow**: Performs image processing tasks (resize, filters, format conversion)
 
-## 🚀 Getting Started
+## 🚀 Quick Start
 
-You can interact with AllBeAPI services using our SDKs or by making direct HTTP requests. The base URL for all API services is `https://res.allbeapi.top`.
+Get started with AllBeAPI in under 60 seconds. All you need is to download one SDK file - no package managers, no dependency hell.
 
-### SDKs
-
-#### JavaScript SDK
+### JavaScript SDK
 
 **Installation:**
-
-Download the SDK file:
 ```bash
+# Download the SDK
 curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js
-# Or use wget
-wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/JavaScript/allbeapi.js
-```
 
-Or include it via CDN:
-```html
-<script src="https://cdn.jsdelivr.net/gh/TingjiaInFuture/allbeapi@3/SDK/JavaScript/allbeapi.js"></script>
+# Or use in browser via CDN
+# <script src="https://cdn.jsdelivr.net/gh/TingjiaInFuture/allbeapi@3/SDK/JavaScript/allbeapi.js"></script>
 ```
 
 **Usage:**
 ```javascript
-// If using Node.js:
-// const AllBeApi = require('./allbeapi.js'); // Assuming the SDK file is in the same directory
-
-// In the browser (after including the script tag):
 const api = new AllBeApi();
 
-async function exampleUsage() {
-    try {
-        // Convert Markdown to HTML
-        const markdownText = "# Hello AllBeAPI\nThis is **awesome**!";
-        const htmlResult = await api.marked.render(markdownText);
-        console.log('HTML Output:', htmlResult);
+// Convert Markdown to HTML
+const html = await api.marked.render("# Hello AllBeAPI\nThis is **awesome**!");
+console.log(html);
 
-        // Generate a QR code
-        const qrBlob = await api.pythonQrcode.generateQrcode("https://allbeapi.top");
-        // You can then use this blob to display the QR code, e.g., by creating an object URL
-        const qrImageUrl = URL.createObjectURL(qrBlob);
-        console.log('QR Code Image URL:', qrImageUrl);
-        // Example: <img src="qrImageUrl" alt="QR Code">
-
-    } catch (error) {
-        console.error("API Error:", error);
-    }
-}
-
-exampleUsage();
+// Generate a QR code
+const qrBlob = await api.pythonQrcode.generateQrcode("https://allbeapi.top");
+const qrImageUrl = URL.createObjectURL(qrBlob);
+// Now use qrImageUrl in an <img> tag
 ```
 
-#### Python SDK
+### Python SDK
 
 **Installation:**
-
-Download the SDK file:
 ```bash
+# Download the SDK  
 curl -O https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py
-# Or use wget
-wget https://raw.githubusercontent.com/TingjiaInFuture/allbeapi/main/SDK/Python/allbeapi.py
 ```
 
 **Usage:**
 ```python
-# Ensure allbeapi.py is in your Python path or the same directory
 from allbeapi import AllBeApi
 
 api = AllBeApi()
 
-def example_usage():
-    try:
-        # Convert Markdown to HTML
-        markdown_text = "# Hello AllBeAPI\nThis is **awesome**!"
-        html_result = api.marked.render(markdown_text)
-        print(f"HTML Output: {html_result}")
+# Convert Markdown to HTML
+html = api.marked.render("# Hello AllBeAPI\nThis is **awesome**!")
+print(html)
 
-        # Generate a QR code
-        # The Python SDK's generate_qrcode returns bytes of the image
-        qr_image_bytes = api.python_qrcode.generate_qrcode(data="https://allbeapi.top", image_format="png")
-        
-        # You can save these bytes to a file
-        with open("qrcode.png", "wb") as f:
-            f.write(qr_image_bytes)
-        print("QR Code saved to qrcode.png")
-
-    except Exception as e:
-        print(f"API Error: {e}")
-
-if __name__ == '__main__':
-    example_usage()
+# Generate a QR code and save to file
+qr_bytes = api.python_qrcode.generate_qrcode("https://allbeapi.top")
+with open("qrcode.png", "wb") as f:
+    f.write(qr_bytes)
 ```
 
-### Direct API Calls
+## 💡 Examples
 
-You can also make direct HTTP requests to the API endpoints. For example, to convert Markdown using `curl`:
+### Practical Use Cases
+
+**Rapid Prototyping Blog Engine:**
+```python
+# Python: Convert user content and generate preview
+api = AllBeApi()
+html = api.marked.render(user_markdown)
+preview_pdf = api.pdfkit.generate(html)
+```
+
+**Quick Image Processing:**
+```javascript
+// JavaScript: Process uploaded images without installing PIL/Pillow
+const processedImg = await api.pillow.process(imageBytes, ["resize:300,300", "convert:JPEG"]);
+```
+
+**Instant Code Formatting:**
+```python
+# Python: Format code without installing prettier locally
+formatted = api.prettier.format(messy_js_code, "babel")
+```
+
+**Data Validation Pipeline:**
+```javascript
+// JavaScript: Validate and parse data in one go
+const isValid = await api.ajv.validate(schema, data);
+const parsed = await api.csvParser.parse(csvString);
+```
+
+### Direct API Access
+
+For maximum flexibility, make direct HTTP requests:
 
 ```bash
+# Convert Markdown to HTML
 curl -X POST https://res.allbeapi.top/marked/render \
      -H "Content-Type: application/json" \
-     -d '{ "markdown": "# Hello via cURL" }'
+     -d '{"markdown": "# Hello via cURL"}'
+
+# Generate QR code
+curl -X POST https://res.allbeapi.top/python-qrcode/generate-qrcode \
+     -H "Content-Type: application/json" \
+     -d '{"data": "https://example.com"}' \
+     --output qrcode.png
+
+# Format JavaScript code
+curl -X POST https://res.allbeapi.top/prettier/format \
+     -H "Content-Type: application/json" \
+     -d '{"code": "const x=1;", "parser": "babel"}'
 ```
 
 ## 📚 Documentation
 
-*   **General Documentation**: [docs/index.html](docs/index.html)
-*   **API Reference**: [docs/api.html](docs/api.html) (Details all endpoints, parameters, and response formats)
-*   **SDK Guide**: [docs/sdk.html](docs/sdk.html)
-*   **Getting Started Guide**: [docs/getting-started.html](docs/getting-started.html)
+*   **API Reference**: [docs/api.html](docs/api.html) - Complete endpoint documentation  
+*   **SDK Guide**: [docs/sdk.html](docs/sdk.html) - Detailed SDK usage examples
+*   **Getting Started**: [docs/getting-started.html](docs/getting-started.html) - Step-by-step tutorials
 
 ## 🤝 Contributing
 
-Contributions are welcome! Whether it's bug reports, feature requests, or code contributions, please feel free to:
+We welcome contributions to expand our utility function set! Whether it's adding new integrations, improving documentation, or fixing bugs:
 
-1.  Fork the repository.
-2.  Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a Pull Request.
+1.  Fork the repository
+2.  Create your feature branch (`git checkout -b feature/NewUtility`)
+3.  Commit your changes (`git commit -m 'Add NewUtility integration'`)
+4.  Push to the branch (`git push origin feature/NewUtility`)
+5.  Open a Pull Request
 
-We value community contributions and look forward to your input!
+Help us build the most comprehensive lightweight utility platform for developers!
 
 ## 📜 License
 
@@ -216,4 +193,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-For issues, feature requests, or questions, please open an issue on the GitHub repository.
+For questions, feature requests, or issues, please open an issue on GitHub.
