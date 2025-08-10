@@ -1,9 +1,9 @@
 /**
- * AllBeAPI JavaScript SDK
+ * AllBeAPI JavaScript SDK - Minimal Utility Function Set
  * Base URL: https://res.allbeapi.top
  *
- * This SDK provides a convenient way to interact with the AllBeAPI services.
- * It includes a main client class `AllBeApi` and specific classes for each API service.
+ * Rapid development toolkit for prototyping and experimentation.
+ * Access ready-to-use functions without installing heavy dependencies.
  */
 
 class AllBeApi {

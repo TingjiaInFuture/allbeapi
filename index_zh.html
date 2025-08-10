@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AllBeAPI - 轻量级通用 SDK</title>
-    <meta name="description" content="轻量级通用 SDK，通过一致的 API 集成常用的第三方库。简化您的开发工作流程。">
-    <meta name="keywords" content="SDK, API, 轻量级, 通用, 开发, 集成, 第三方库">
+    <title>AllBeAPI - 极简工具函数集</title>
+    <meta name="description" content="云端极简工具函数集，助力快速原型开发。无需安装依赖，即可使用 Markdown 转换、二维码生成、图像处理等功能。支持 Python 和 JavaScript。">
+    <meta name="keywords" content="SDK, API, 极简工具, 快速开发, 原型设计, Markdown, 二维码, 图像处理, Python, JavaScript, 无依赖">
     <meta name="author" content="AllBeAPI 团队">
     
     <!-- Open Graph -->
-    <meta property="og:title" content="AllBeAPI - 轻量级通用 SDK">
-    <meta property="og:description" content="通过我们的统一接口轻松集成流行库">
+    <meta property="og:title" content="AllBeAPI - 极简工具函数集">
+    <meta property="og:description" content="云端极简工具函数集，助力快速原型开发。无需依赖，即可使用 Markdown、二维码、图像处理等功能。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://allbeapi.com">
     
@@ -54,10 +54,10 @@
     <section class="hero">
         <div class="container">
             <div class="hero-content">
-                <h1>AI 赋能的下一代 API 平台</h1>
-                <p>AllBeAPI 从基础库集成发展为 AI 增强服务平台。在传统实用工具的基础上，提供图像处理、自然语言理解、智能文档转换和智能数据提取等前沿 AI 功能。</p>
+                <h1>极简工具函数集，助力快速开发</h1>
+                <p>AllBeAPI 是专为快速原型设计和实验而打造的云端工具函数集。提供 Markdown 转换、二维码生成、图像处理等开箱即用的功能 — 无需安装繁重依赖。支持 Python 和 JavaScript，60 秒内即可上手。</p>
                 <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                    <a href="#features" class="btn btn-primary btn-lg">探索 AI 功能</a>
+                    <a href="#features" class="btn btn-primary btn-lg">查看功能</a>
                     <a href="https://github.com/TingjiaInFuture/allbeapi" target="_blank" class="btn btn-outline btn-lg">查看 GitHub</a>
                     <a href="docs/index_zh.html" class="btn btn-secondary btn-lg">查看文档</a>
                 </div>
@@ -68,16 +68,16 @@
         <div class="container">
             <div class="stats-grid">
                 <div class="stat-card">
-                    <span class="stat-number">20+</span>
-                    <span class="stat-label">当前与计划 API</span>
+                    <span class="stat-number">13+</span>
+                    <span class="stat-label">工具函数</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-number">AI</span>
-                    <span class="stat-label">增强服务</span>
+                    <span class="stat-number">0</span>
+                    <span class="stat-label">依赖要求</span>
                 </div>
                 <div class="stat-card">
-                    <span class="stat-number">REST</span>
-                    <span class="stat-label">API 架构</span>
+                    <span class="stat-number">60秒</span>
+                    <span class="stat-label">上手时间</span>
                 </div>
                 <div class="stat-card">
                     <span class="stat-number">MIT</span>
@@ -90,13 +90,15 @@
     <!-- About Section -->
     <section id="about" class="section section-alt">
         <div class="container">
-            <h2 class="text-center">关于 AllBeAPI</h2>
+            <h2 class="text-center">专为快速原型设计打造</h2>
             <div class="grid grid-2" style="align-items: center; gap: 3rem;">
                 <div>
-                    <p>一个<strong>轻量级的通用 SDK</strong>，通过一致的 API 集成了常用的第三方库。为各种功能提供单一访问点来简化开发，减少了学习和管理多个独立库及其依赖项的需求。</p>
+                    <p>AllBeAPI 是一个<strong>极简工具函数集</strong>，帮助开发者在最短时间内完成原型和实验。无需安装配置多个库，只需下载一个 SDK 文件即可开始编码。</p>
                     <div class="alert alert-info">
-                        <strong>💡 专业提示：</strong> 使用 AllBeAPI，您可以在不更改应用程序代码的情况下为相同功能切换不同的库。
+                        <strong>🚀 完美适用于：</strong> MVP、原型、实验、教育项目和快速功能测试，无需处理依赖管理的负担。
                     </div>
+                    <p><strong>核心优势：</strong> 无包管理、统一 API 调用、多语言支持、即时集成。</p>
+                    <p><strong>应用场景：</strong> 内容转换、数据验证、图像处理、文档生成、代码格式化。</p>
                 </div>
                 <div>
                     <div class="code-example">
@@ -105,21 +107,23 @@
                             <button class="code-tab">Python</button>
                         </div>
                         <div class="code-content">
-                            <pre class="code-block" data-language="javascript">const api = new AllBeApi();
+                            <pre class="code-block" data-language="javascript">// 下载 SDK，然后：
+const api = new AllBeApi();
 
 // 将 Markdown 转换为 HTML
 const html = await api.marked.render("# 你好世界");
 
 // 生成二维码
 const qrBlob = await api.pythonQrcode.generateQrcode("https://allbeapi.com");</pre>
-                            <pre class="code-block" data-language="python" style="display: none;">from allbeapi import AllBeApi
+                            <pre class="code-block" data-language="python" style="display: none;"># 下载 SDK，然后：
+from allbeapi import AllBeApi
 
 api = AllBeApi()
 
 # 将 Markdown 转换为 HTML
 html = api.marked.render("# 你好世界")
 
-# 生成二维码
+# 生成二维码  
 qr_bytes = api.python_qrcode.generate_qrcode("https://allbeapi.com")</pre>
                         </div>
                     </div>
@@ -131,7 +135,7 @@ qr_bytes = api.python_qrcode.generate_qrcode("https://allbeapi.com")</pre>
         <div class="container">
             <h2 class="text-center">开箱即用的强大功能</h2>
             <p class="text-center" style="font-size: 1.1rem; margin-bottom: 3rem; color: var(--text-secondary);">
-                通过单一、一致的 API 集成 13+ 个流行库
+                13+ 强大工具，统一 API 接口 - 无需安装，无需配置
             </p>
             <div class="features-grid">
                 <div class="feature-card">
@@ -208,7 +212,7 @@ qr_bytes = api.python_qrcode.generate_qrcode("https://allbeapi.com")</pre>
         <div class="container">
             <h2 class="text-center">易于使用的 SDK</h2>
             <p class="text-center" style="font-size: 1.1rem; margin-bottom: 3rem; color: var(--text-secondary);">
-                我们提供流行语言的 SDK，助您快速上手
+                提供主流语言 SDK，60 秒内即可上手
             </p>
             
             <div class="code-example">
@@ -304,9 +308,9 @@ curl -X POST https://res.allbeapi.top/prettier/format \
             <h2 class="text-center">贡献力量</h2>
             <div class="grid grid-2" style="align-items: center; gap: 3rem;">
                 <div>
-                    <p>AllBeAPI 是一个开源项目。我们欢迎社区的贡献！无论是添加新的库集成、改进文档还是修复错误，我们都感谢您的帮助。</p>
+                    <p>AllBeAPI 是一个开源项目。我们欢迎社区贡献！无论是添加新的工具集成、改进文档还是修复错误，我们都感谢您的帮助。</p>
                     <div class="alert alert-success">
-                        <strong>🎉 加入我们的社区！</strong> 帮助我们构建最全面的开发者通用 SDK。
+                        <strong>🎉 加入我们的社区！</strong> 帮助我们构建最全面的轻量级工具平台。
                     </div>
                 </div>
                 <div class="text-center">
