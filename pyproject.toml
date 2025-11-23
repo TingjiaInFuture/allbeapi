@@ -8,6 +8,8 @@ version = "0.1.0"
 description = "Turn any Python library into an MCP Server"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
 authors = [
   { name = "Tingjia Zhang", email = "tingjiainfuture@gmail.com" },
 ]
