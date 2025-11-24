@@ -1,4 +1,4 @@
-<img width="1408" height="768" alt="logo" src="https://github.com/user-attachments/assets/53acb165-db41-4d5b-8b52-9b08144d349d" />
+<img width="1361" height="192" alt="logo" src="https://github.com/user-attachments/assets/2a8a71b8-c141-49a2-b8ef-d9f84b92261b" />
 
 > **Turn any Python library into an LLM Tool in seconds.**
 
