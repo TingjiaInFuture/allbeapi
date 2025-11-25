@@ -13,6 +13,10 @@ import json
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union, Tuple, get_type_hints, get_origin, get_args
+try:
+    import docstring_parser
+except ImportError:
+    docstring_parser = None
 from types import ModuleType
 from dataclasses import dataclass, asdict, is_dataclass, fields
 from collections import defaultdict
@@ -983,29 +987,80 @@ class APIAnalyzer:
         except:
             return None
         
+        # 解析文档字符串
+        doc_string = inspect.getdoc(obj)
+        parsed_doc = None
+        param_docs = {}
+        if doc_string and docstring_parser:
+            try:
+                parsed_doc = docstring_parser.parse(doc_string)
+                for p in parsed_doc.params:
+                    param_docs[p.arg_name] = p
+            except:
+                pass
+
         parameters = []
         raw_param_annotations = []  # 记录原始注解
+        existing_param_names = set()
         
         for pname, param in sig.parameters.items():
             if pname in ('self', 'cls'):
                 continue
             
-            # 跳过 *args 和 **kwargs 类型的参数
-            if param.kind in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD):
-                continue
-            
             # 记录原始注解
             raw_param_annotations.append(param.annotation)
             
+            # 处理 **kwargs
+            if param.kind == inspect.Parameter.VAR_KEYWORD:
+                # 从文档中提取额外的参数
+                if parsed_doc:
+                    for doc_p in parsed_doc.params:
+                        if doc_p.arg_name not in existing_param_names and doc_p.arg_name not in ('self', 'cls', 'args', 'kwargs'):
+                            # 这是一个只在文档中存在的参数（通过 kwargs 传递）
+                            param_info = self._create_param_from_doc(doc_p, name)
+                            parameters.append(param_info)
+                continue
+
+            # 跳过 *args
+            if param.kind == inspect.Parameter.VAR_POSITIONAL:
+                continue
+            
+            existing_param_names.add(pname)
+
             has_default = param.default != inspect.Parameter.empty
             default_value = None
             if has_default:
                 default_value = self._serialize_default(param.default)
             
+            # 获取文档信息
+            doc_param = param_docs.get(pname)
+            description = doc_param.description if doc_param else None
+            
+            # 解析类型：优先使用签名中的注解，如果是 Any 或空，尝试使用文档中的类型
+            schema = TypeParser.parse_annotation(param.annotation)
+            if (not schema or schema == {}) and doc_param and doc_param.type_name:
+                schema = TypeParser._parse_string_annotation(doc_param.type_name)
+            
+            # 如果还是没有类型，默认为 string (为了更好的兼容性)
+            if not schema:
+                schema = {"type": "string"}
+            
+            # 添加描述
+            if description:
+                schema["description"] = description
+                
+            # 尝试从描述中提取枚举值
+            if description and "enum" not in schema:
+                enums = self._extract_enums_from_description(description)
+                if enums:
+                    schema["enum"] = enums
+                    if "type" not in schema or schema.get("type") == "object":
+                        schema["type"] = "string"
+
             param_info = {
                 "name": pname,
-                "required": not has_default,
-                "schema": TypeParser.parse_annotation(param.annotation),
+                "required": not has_default and (not doc_param or not doc_param.is_optional),
+                "schema": schema,
                 "in": self._classify_param(pname, name)
             }
             
@@ -1031,7 +1086,7 @@ class APIAnalyzer:
             class_name=class_name,
             qualname=qualname,
             signature=f"{name}{sig}",
-            doc=inspect.getdoc(obj),
+            doc=doc_string,
             parameters=parameters,
             return_type=return_type,
             is_async=inspect.iscoroutinefunction(obj),
@@ -1040,6 +1095,51 @@ class APIAnalyzer:
             raw_param_annotations=raw_param_annotations,
             raw_return_annotation=raw_return_annotation
         )
+
+    def _extract_enums_from_description(self, description: str) -> Optional[List[str]]:
+        """从描述中提取枚举值"""
+        if not description:
+            return None
+            
+        # 模式 1: One of: 'a', 'b', 'c'
+        match = re.search(r'One of:? (.*)', description, re.IGNORECASE)
+        if match:
+            values_str = match.group(1)
+            # 尝试提取引号中的内容
+            values = re.findall(r"['\"]([^'\"]+)['\"]", values_str)
+            if values:
+                return values
+            # 尝试逗号分隔
+            return [v.strip() for v in values_str.split(',') if v.strip()]
+            
+        # 模式 2: {'a', 'b', 'c'}
+        match = re.search(r'\{([^}]+)\}', description)
+        if match:
+            values_str = match.group(1)
+            values = re.findall(r"['\"]([^'\"]+)['\"]", values_str)
+            if values:
+                return values
+        
+        return None
+
+    def _create_param_from_doc(self, doc_param: Any, func_name: str) -> Dict[str, Any]:
+        """从文档参数创建参数信息"""
+        schema = TypeParser._parse_string_annotation(doc_param.type_name) if doc_param.type_name else {"type": "string"}
+        
+        if doc_param.description:
+            schema["description"] = doc_param.description
+            enums = self._extract_enums_from_description(doc_param.description)
+            if enums:
+                schema["enum"] = enums
+                if "type" not in schema or schema.get("type") == "object":
+                    schema["type"] = "string"
+        
+        return {
+            "name": doc_param.arg_name,
+            "required": not doc_param.is_optional,
+            "schema": schema,
+            "in": self._classify_param(doc_param.arg_name, func_name)
+        }
     
     def _serialize_default(self, value: Any) -> Any:
         """安全序列化默认值"""
