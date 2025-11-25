@@ -255,10 +255,19 @@ class TypeParser:
     def parse_annotation(annotation: Any) -> Dict[str, Any]:
         """将Python类型注解转换为OpenAPI Schema"""
         if annotation is None or annotation == inspect.Parameter.empty:
-            return {"type": "string"}
+            # 策略二：无法确定的类型映射为 {} (Any)
+            return {}
         
         if isinstance(annotation, str):
             return TypeParser._parse_string_annotation(annotation)
+        
+        # 策略三：基于抽象基类 (ABC) 的检测
+        try:
+            import os
+            if isinstance(annotation, type) and issubclass(annotation, os.PathLike):
+                return {"type": "string"}
+        except (ImportError, TypeError):
+            pass
         
         origin = get_origin(annotation)
         args = get_args(annotation)
@@ -278,7 +287,7 @@ class TypeParser:
             return TypeParser._parse_dataclass(annotation)
         
         if origin in (list, List):
-            items = TypeParser.parse_annotation(args[0]) if args else {"type": "string"}
+            items = TypeParser.parse_annotation(args[0]) if args else {}
             return {"type": "array", "items": items}
         
         if origin in (dict, Dict):
@@ -289,16 +298,33 @@ class TypeParser:
             return {"type": "array", "items": {"type": "string"}}
         
         if origin in (set, Set):
-            items = TypeParser.parse_annotation(args[0]) if args else {"type": "string"}
+            items = TypeParser.parse_annotation(args[0]) if args else {}
             return {"type": "array", "uniqueItems": True, "items": items}
         
+        # 策略一：实现“联合类型拆包” (Union Unwrapping)
         if origin is Union:
-            if len(args) == 2 and type(None) in args:
-                non_none = args[0] if args[1] is type(None) else args[1]
-                schema = TypeParser.parse_annotation(non_none)
-                schema["nullable"] = True
+            schemas = []
+            has_none = False
+            for arg in args:
+                if arg is type(None):
+                    has_none = True
+                    continue
+                schemas.append(TypeParser.parse_annotation(arg))
+            
+            if not schemas:
+                return {}
+                
+            if len(schemas) == 1:
+                schema = schemas[0]
+                if has_none:
+                    schema["nullable"] = True
                 return schema
-            return {"oneOf": [TypeParser.parse_annotation(arg) for arg in args if arg is not type(None)]}
+            
+            # 使用 anyOf 允许匹配任意一个子类型
+            result = {"anyOf": schemas}
+            if has_none:
+                result["nullable"] = True
+            return result
         
         try:
             from typing import Literal
@@ -310,7 +336,9 @@ class TypeParser:
         if annotation is Any:
             return {}
         
-        return {"type": "object"}
+        # 策略二：修正“Any”类型的映射语义
+        # 将无法确定的类型映射为 Empty Schema ({})，而不是 "object"
+        return {}
     
     @staticmethod
     def _parse_dataclass(dc: type) -> Dict[str, Any]:
@@ -362,7 +390,8 @@ class TypeParser:
             schema["nullable"] = True
             return schema
         
-        return {"type": "object"}
+        # 策略二：无法解析的字符串注解回退到 {} (Any)
+        return {}
 
 
 class APIAnalyzer:
