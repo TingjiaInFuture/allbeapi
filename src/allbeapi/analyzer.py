@@ -677,25 +677,66 @@ class APIAnalyzer:
                 pass
     
     def _scan_class(self, cls: type, module: ModuleType):
-        """扫描类"""
-        for name, method in inspect.getmembers(cls, predicate=inspect.isfunction):
-            if self._should_include(name, method, module, is_method=True):
-                info = self._extract_function(name, method, module, class_name=cls.__name__)
-                if info:
-                    # 新逻辑：分析返回类型
-                    self._analyze_return_type(info, method)
+        """扫描类 - 仅保留静态方法和类方法(工厂方法)，过滤实例方法"""
+        # 策略：只提取不需要实例就能调用的方法（工厂方法、静态工具）
+        # 实例方法应通过 call-object-method 调用，不作为顶级 Tool 生成
+        
+        for name, member in inspect.getmembers(cls):
+            if name.startswith('_'):
+                continue
+            
+            # 必须是可调用的
+            if not callable(member):
+                continue
+                
+            should_extract = False
+            
+            # Case 1: 类方法 (@classmethod)
+            # inspect.ismethod() 对类方法返回 True，且 __self__ 绑定到类
+            if inspect.ismethod(member) and member.__self__ is cls:
+                should_extract = True
+                
+            # Case 2: 函数 (可能是实例方法或静态方法)
+            elif inspect.isfunction(member):
+                try:
+                    sig = inspect.signature(member)
+                    params = list(sig.parameters.keys())
                     
-                    # 检查是否适合作为 API
-                    if self._is_suitable_for_api(info, method):
-                        self.functions.append(info)
-                        if info.returns_object:
-                            self.object_returning_functions.append(info)
-                    elif self.skip_non_serializable:
-                        reason = self._get_unsuitability_reason(info, method)
-                        self.skipped_functions.append({
-                            'qualname': info.qualname,
-                            'reason': reason
-                        })
+                    # 签名自省过滤
+                    if not params:
+                        # 无参数函数 -> 静态方法 -> 保留
+                        should_extract = True
+                    elif params[0] == 'self':
+                        # 第一个参数是 self -> 实例方法 -> 过滤
+                        should_extract = False
+                    elif params[0] == 'cls':
+                        # 第一个参数是 cls -> 类方法 (未被 @classmethod 装饰的情况) -> 保留
+                        should_extract = True
+                    else:
+                        # 其他情况 -> 静态方法 -> 保留
+                        should_extract = True
+                except (ValueError, TypeError):
+                    # 无法获取签名 -> 保守跳过
+                    should_extract = False
+            
+            if should_extract:
+                if self._should_include(name, member, module, is_method=True):
+                    info = self._extract_function(name, member, module, class_name=cls.__name__)
+                    if info:
+                        # 分析返回类型
+                        self._analyze_return_type(info, member)
+                        
+                        # 检查是否适合作为 API
+                        if self._is_suitable_for_api(info, member):
+                            self.functions.append(info)
+                            if info.returns_object:
+                                self.object_returning_functions.append(info)
+                        elif self.skip_non_serializable:
+                            reason = self._get_unsuitability_reason(info, member)
+                            self.skipped_functions.append({
+                                'qualname': info.qualname,
+                                'reason': reason
+                            })
     
     def _should_include(self, name: str, obj: Any, module: ModuleType = None, is_method: bool = False) -> bool:
         """判断是否包含 - 通用智能版"""
