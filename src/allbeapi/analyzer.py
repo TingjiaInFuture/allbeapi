@@ -1039,9 +1039,14 @@ class APIAnalyzer:
 
         # Handle string annotations
         if isinstance(annotation, str):
+            # Handle Python 3.10+ style unions (A | B)
+            if '|' in annotation:
+                parts = [p.strip() for p in annotation.split('|')]
+                return any(self._is_safe_input_type(p) for p in parts)
+
             ann_lower = annotation.lower()
             # 基本类型
-            if ann_lower in ('int', 'float', 'str', 'bool', 'bytes', 'none', 'any'):
+            if ann_lower in ('int', 'float', 'str', 'bool', 'bytes', 'none', 'any', 'filepath', 'path'):
                 return True
             # 容器类型
             if ann_lower in ('list', 'dict', 'set', 'tuple', 'sequence', 'iterable', 'mapping'):
