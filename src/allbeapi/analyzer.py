@@ -12,7 +12,7 @@ import re
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set, Union, Tuple, get_type_hints, get_origin, get_args
+from typing import Any, Dict, List, Optional, Set, Union, Tuple, get_type_hints, get_origin, get_args, Sequence, Iterable, Mapping
 try:
     import docstring_parser
 except ImportError:
@@ -415,7 +415,8 @@ class APIAnalyzer:
                  enable_quality_filter: bool = True,
                  min_quality_score: float = 60.0,
                  enable_deduplication: bool = True,
-                 quality_mode: str = 'balanced'):
+                 quality_mode: str = 'balanced',
+                 enable_input_complexity_filter: bool = True):
         self.library_name = library_name
         self.max_depth = max_depth
         self.skip_non_serializable = skip_non_serializable
@@ -429,6 +430,7 @@ class APIAnalyzer:
         self.min_quality_score = min_quality_score
         self.enable_deduplication = enable_deduplication
         self.quality_mode = quality_mode
+        self.enable_input_complexity_filter = enable_input_complexity_filter
         
         # 应用质量模式预设
         self._apply_quality_mode()
@@ -952,6 +954,11 @@ class APIAnalyzer:
     
     def _is_suitable_for_api(self, func_info: FunctionInfo, func_obj: Any) -> bool:
         """检查函数是否适合作为 API"""
+        # 1. 输入复杂度过滤
+        if self.enable_input_complexity_filter:
+            if not self._check_input_complexity(func_obj):
+                return False
+
         if not self.skip_non_serializable:
             return True
         
@@ -992,6 +999,161 @@ class APIAnalyzer:
             else:
                 # 如果没有状态管理，且无法确定返回类型，保守起见拒绝
                 return False
+        
+        return True
+    
+    def _check_input_complexity(self, func_obj: Any) -> bool:
+        """输入复杂度过滤器：只允许接受基本类型或容器类型的函数"""
+        try:
+            sig = inspect.signature(func_obj)
+            for name, param in sig.parameters.items():
+                # 忽略 self, cls
+                if name in ('self', 'cls'):
+                    continue
+                
+                # 只检查必填参数 (没有默认值)
+                if param.default != inspect.Parameter.empty:
+                    continue
+                
+                # 检查类型注解
+                annotation = param.annotation
+                
+                # 如果没有注解，视为 Any (Safe)，除非我们想非常严格
+                # 但为了兼容性，我们假设无注解是安全的（或者无法判断）
+                if annotation == inspect.Parameter.empty:
+                    continue
+
+                if not self._is_safe_input_type(annotation):
+                    return False
+            
+            return True
+        except:
+            # 如果无法获取签名，保守起见保留（或者丢弃？）
+            # 通常无法获取签名的函数可能不是 Python 函数
+            return True
+
+    def _is_safe_input_type(self, annotation: Any) -> bool:
+        """检查类型是否是安全的（基本类型或容器）"""
+        if annotation is None or annotation == inspect.Parameter.empty:
+            return True
+
+        # Handle string annotations
+        if isinstance(annotation, str):
+            ann_lower = annotation.lower()
+            # 基本类型
+            if ann_lower in ('int', 'float', 'str', 'bool', 'bytes', 'none', 'any'):
+                return True
+            # 容器类型
+            if ann_lower in ('list', 'dict', 'set', 'tuple', 'sequence', 'iterable', 'mapping'):
+                return True
+            # 泛型容器
+            if '[' in annotation:
+                base = annotation.split('[')[0].lower()
+                if base in ('list', 'dict', 'union', 'optional', 'set', 'tuple', 'sequence', 'iterable', 'mapping'):
+                    return True
+            return False
+
+        # Handle typing objects
+        origin = get_origin(annotation)
+        args = get_args(annotation)
+
+        # 基本类型
+        if annotation in (int, float, str, bool, list, dict, set, tuple, bytes, type(None)):
+            return True
+        
+        if annotation is Any:
+            return True
+
+        # 容器类型
+        if origin in (list, dict, set, tuple, List, Dict, Set, Tuple, Sequence, Iterable, Mapping):
+            return True
+        
+        # Union (只要有一个是安全的，就认为是安全的，因为调用者可以选择安全的那个)
+        if origin is Union:
+            return any(self._is_safe_input_type(arg) for arg in args)
+            
+        # PathLike (视为字符串)
+        try:
+            import os
+            if isinstance(annotation, type) and issubclass(annotation, os.PathLike):
+                return True
+        except:
+            pass
+
+        return False
+    
+    def _suitable_for_api_via_signature(self, func_info: FunctionInfo, func_obj: Any) -> bool:
+        """通过签名检查函数是否适合作为 API"""
+        try:
+            sig = inspect.signature(func_obj)
+            for param_name, param in sig.parameters.items():
+                if param_name in ('self', 'cls'):
+                    continue
+                
+                # 检查参数类型是否可序列化
+                if not self._is_type_serializable(param.annotation):
+                    return False
+                
+                # 检查默认值是否可序列化
+                if param.default != inspect.Parameter.empty:
+                    if not self._is_value_serializable(param.default):
+                        return False
+        except:
+            return False
+        
+        # 2. 如果启用状态管理，返回对象的函数也接受
+        if self.enable_state_management and func_info.returns_object:
+            return True
+        
+        # 3. 检查返回类型注解
+        if func_info.return_type is not None:
+            if not self._is_type_serializable(func_info.return_type):
+                # 如果没有启用状态管理，则拒绝
+                if not self.enable_state_management:
+                    return False
+        
+        return True
+    
+    def _suitable_for_api_via_ast(self, func_info: FunctionInfo, func_obj: Any) -> bool:
+        """通过AST分析检查函数是否适合作为 API"""
+        # 1. AST分析：检查返回值类型
+        try:
+            inferred_type = self._infer_return_type_from_ast(func_obj)
+            if inferred_type:
+                # 简单的启发式判断：如果返回的是看起来像类名的东西
+                if inferred_type[0].isupper() and inferred_type not in ('None', 'True', 'False'):
+                    # 检查是否是基本类型
+                    if inferred_type not in ('int', 'float', 'str', 'bool', 'list', 'dict', 'set', 'tuple'):
+                        return False
+        except:
+            return False
+        
+        return True
+    
+    def _is_suitable_for_api(self, func_info: FunctionInfo, func_obj: Any) -> bool:
+        """检查函数是否适合作为 API"""
+        # 1. 输入复杂度过滤
+        if self.enable_input_complexity_filter:
+            if not self._check_input_complexity(func_obj):
+                return False
+
+        if not self.skip_non_serializable:
+            return True
+        
+        # 尝试通过签名判断
+        if self._suitable_for_api_via_signature(func_info, func_obj):
+            return True
+        
+        # 尝试通过AST分析判断
+        if self.enable_state_management and func_info.returns_object:
+            # 返回对象的函数，允许作为API
+            return True
+        
+        if func_info.return_type is not None:
+            if not self._is_type_serializable(func_info.return_type):
+                # 如果没有启用状态管理，则拒绝
+                if not self.enable_state_management:
+                    return False
         
         return True
     
@@ -1625,6 +1787,9 @@ def main():
     parser.add_argument('--no-dedup', action='store_true',
                        help='禁用去重功能')
     
+    parser.add_argument('--no-input-complexity-filter', action='store_true',
+                       help='禁用输入复杂度过滤器（允许接受复杂对象的函数）')
+
     parser.add_argument('--stats', action='store_true', help='显示详细统计信息')
     
     args = parser.parse_args()
@@ -1643,6 +1808,7 @@ def main():
         'enable_quality_filter': not args.no_quality_filter,
         'enable_deduplication': not args.no_dedup,
         'quality_mode': args.quality_mode,
+        'enable_input_complexity_filter': not args.no_input_complexity_filter,
     }
     
     if args.min_score is not None:
