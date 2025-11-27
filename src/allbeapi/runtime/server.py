@@ -203,13 +203,20 @@ class MCPServer:
         if not hasattr(obj, method_name):
             raise ValueError(f"Method '{method_name}' not found on object")
         
-        method = getattr(obj, method_name)
+        # 获取属性或方法
+        attr = getattr(obj, method_name)
         
-        loop = asyncio.get_running_loop()
-        if asyncio.iscoroutinefunction(method):
-            result = await method(*args, **kwargs)
+        # 判断是否可调用（是方法还是属性？）
+        if callable(attr):
+            # 如果是方法，则执行调用
+            loop = asyncio.get_running_loop()
+            if asyncio.iscoroutinefunction(attr):
+                result = await attr(*args, **kwargs)
+            else:
+                result = await loop.run_in_executor(None, lambda: attr(*args, **kwargs))
         else:
-            result = await loop.run_in_executor(None, lambda: method(*args, **kwargs))
+            # 如果是属性（如 .columns, .shape, .index），直接返回其值
+            result = attr
         
         try:
             serialized = self._serialize_result(result)
