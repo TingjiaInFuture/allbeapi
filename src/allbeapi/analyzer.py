@@ -1111,9 +1111,9 @@ class APIAnalyzer:
             if (not schema or schema == {}) and doc_param and doc_param.type_name:
                 schema = TypeParser._parse_string_annotation(doc_param.type_name)
             
-            # 如果还是没有类型，默认为 string (为了更好的兼容性)
+            # 如果不确定类型，就不指定 type，允许任何类型（Any）
             if not schema:
-                schema = {"type": "string"}
+                schema = {}
             
             # 添加描述
             if description:
