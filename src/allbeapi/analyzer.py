@@ -1344,14 +1344,23 @@ class APIAnalyzer:
             
             existing_param_names.add(pname)
 
+            # Get doc info first for optional check
+            doc_param = param_docs.get(pname)
+            description = doc_param.description if doc_param else None
+            
+            # Check if parameter is optional (from default value, is_optional flag, or description)
             has_default = param.default != inspect.Parameter.empty
             default_value = None
             if has_default:
                 default_value = self._serialize_default(param.default)
             
-            # Get doc info
-            doc_param = param_docs.get(pname)
-            description = doc_param.description if doc_param else None
+            # Check if description indicates optional (e.g., "(optional) ..." or contains "optional")
+            is_optional_from_desc = description and (
+                description.strip().lower().startswith('(optional)') or
+                'optional' in description.lower()
+            )
+            # Determine if parameter is optional: has default OR is_optional flag OR description says optional
+            is_optional = has_default or (doc_param and doc_param.is_optional) or is_optional_from_desc
             
             # Parse type: Prioritize annotation in signature, if Any or empty, try to use type in docstring
             schema = TypeParser.parse_annotation(param.annotation)
@@ -1376,7 +1385,7 @@ class APIAnalyzer:
 
             param_info = {
                 "name": pname,
-                "required": not has_default and (not doc_param or not doc_param.is_optional),
+                "required": not is_optional,
                 "schema": schema,
                 "in": self._classify_param(pname, name)
             }
@@ -1443,17 +1452,30 @@ class APIAnalyzer:
         """Create parameter info from docstring parameter"""
         schema = TypeParser._parse_string_annotation(doc_param.type_name) if doc_param.type_name else {"type": "string"}
         
-        if doc_param.description:
-            schema["description"] = doc_param.description
-            enums = self._extract_enums_from_description(doc_param.description)
+        description = doc_param.description
+        if description:
+            schema["description"] = description
+            enums = self._extract_enums_from_description(description)
             if enums:
                 schema["enum"] = enums
                 if "type" not in schema or schema.get("type") == "object":
                     schema["type"] = "string"
         
+        # Check if parameter is optional:
+        # 1. from is_optional flag
+        # 2. description starts with "(optional)"
+        # 3. parameter name contains 'kwargs' or 'args' (variadic params are always optional)
+        # 4. description contains "optional" (case insensitive)
+        is_optional_from_desc = description and (
+            description.strip().lower().startswith('(optional)') or
+            'optional' in description.lower()
+        )
+        is_variadic = 'kwargs' in doc_param.arg_name.lower() or doc_param.arg_name == 'args'
+        is_optional = doc_param.is_optional or is_optional_from_desc or is_variadic
+        
         return {
             "name": doc_param.arg_name,
-            "required": not doc_param.is_optional,
+            "required": not is_optional,
             "schema": schema,
             "in": self._classify_param(doc_param.arg_name, func_name)
         }

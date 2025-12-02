@@ -167,12 +167,22 @@ class MCPServer:
         meta = self.function_map[tool_name]
         func = self._get_function(tool_name)
         
+        # Filter out empty string arguments - convert to None or remove
+        # This is necessary because some libraries (e.g., requests) don't accept empty strings
+        # for optional parameters like files, headers, cookies, etc.
+        filtered_arguments = {}
+        for key, value in arguments.items():
+            if value == "" or value is None:
+                # Skip empty strings and None values for optional parameters
+                continue
+            filtered_arguments[key] = value
+        
         # Call function
         if meta["is_async"]:
-            result = await func(**arguments)
+            result = await func(**filtered_arguments)
         else:
             loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(None, lambda: func(**arguments))
+            result = await loop.run_in_executor(None, lambda: func(**filtered_arguments))
         
         # Handle return value
         if meta["returns_object"]:
