@@ -12,6 +12,7 @@ v3.0 - StreamableHTTP Transport
 
 import json
 import sys
+import importlib.util
 from typing import Any, Dict, List, Optional
 from pathlib import Path
 

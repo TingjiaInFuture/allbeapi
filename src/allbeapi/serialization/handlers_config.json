@@ -1,0 +1,339 @@
+{
+  "version": "1.0",
+  "description": "Library-specific serialization handlers configuration",
+  
+  "handlers": {
+    "requests.models.Response": {
+      "handler_name": "http_response",
+      "description": "Handle HTTP response objects (requests, httpx, etc.)",
+      "result_type": "direct",
+      
+      "config_namespace": "requests",
+      "config_defaults": {
+        "response_max_text_length": 10000,
+        "include_headers": true,
+        "include_cookies": false
+      },
+      
+      "base_fields": {
+        "_type": {
+          "type": "computed",
+          "expression": "type_full_name"
+        },
+        "status_code": {
+          "type": "attribute",
+          "attr": "status_code",
+          "default": null
+        },
+        "url": {
+          "type": "attribute",
+          "attr": "url",
+          "transform": "str",
+          "default": ""
+        },
+        "ok": {
+          "type": "attribute",
+          "attr": "ok",
+          "default": null
+        },
+        "reason": {
+          "type": "attribute",
+          "attr": "reason",
+          "default": null
+        },
+        "encoding": {
+          "type": "attribute",
+          "attr": "encoding",
+          "default": null
+        }
+      },
+      
+      "content_extraction": {
+        "priority": ["json", "text", "binary"],
+        "strategies": {
+          "json": {
+            "method": "json",
+            "callable": true,
+            "on_success": {
+              "content": "@result",
+              "content_type": "json"
+            }
+          },
+          "text": {
+            "attribute": "text",
+            "max_length_config": "response_max_text_length",
+            "on_truncate": {
+              "text_truncated": true,
+              "text_full_length": "@original_length"
+            },
+            "on_success": {
+              "content": "@result",
+              "content_type": "text"
+            }
+          },
+          "binary": {
+            "attribute": "content",
+            "decode_with": "encoding",
+            "fallback_encoding": "utf-8",
+            "max_length_config": "response_max_text_length",
+            "on_decode_success": {
+              "content": "@result",
+              "content_type": "text"
+            },
+            "on_decode_failure": {
+              "transform": "base64_encode",
+              "content": "@result",
+              "content_type": "binary",
+              "content_encoding": "base64"
+            }
+          }
+        }
+      },
+      
+      "conditional_fields": [
+        {
+          "condition": {
+            "config_key": "include_headers",
+            "value": true
+          },
+          "field": "headers",
+          "type": "attribute",
+          "attr": "headers",
+          "transform": "dict"
+        },
+        {
+          "condition": {
+            "config_key": "include_cookies",
+            "value": true
+          },
+          "field": "cookies",
+          "type": "attribute",
+          "attr": "cookies",
+          "transform": "dict"
+        }
+      ],
+      
+      "metadata": {
+        "size_bytes": {
+          "type": "computed",
+          "expression": "json_size"
+        },
+        "handler": "http_response"
+      }
+    },
+    
+    "httpx.Response": {
+      "extends": "requests.models.Response",
+      "handler_name": "http_response"
+    },
+    
+    "PIL.Image.Image": {
+      "handler_name": "pil_image",
+      "description": "Handle PIL Image object -> Resource",
+      "result_type": "resource",
+      
+      "config_namespace": "PIL",
+      "config_defaults": {
+        "thumbnail_size": [200, 200],
+        "image_format": "PNG"
+      },
+      
+      "requires_imports": ["io", "uuid"],
+      
+      "resource_generation": {
+        "id_prefix": "img_",
+        "id_length": 12
+      },
+      
+      "base_fields": {
+        "uri": {
+          "type": "computed",
+          "expression": "resource_uri"
+        },
+        "content_type": {
+          "type": "computed",
+          "expression": "image_content_type"
+        },
+        "width": {
+          "type": "attribute",
+          "attr": "width"
+        },
+        "height": {
+          "type": "attribute",
+          "attr": "height"
+        },
+        "mode": {
+          "type": "attribute",
+          "attr": "mode"
+        },
+        "format": {
+          "type": "attribute",
+          "attr": "format"
+        },
+        "thumbnail_base64": {
+          "type": "literal",
+          "value": null
+        }
+      },
+      
+      "processing": {
+        "type": "image_thumbnail",
+        "size_config": "thumbnail_size",
+        "format_config": "image_format"
+      },
+      
+      "metadata": {
+        "resource_id": {
+          "type": "computed",
+          "expression": "resource_id"
+        },
+        "original_size": {
+          "type": "computed",
+          "expression": "image_original_size"
+        },
+        "thumbnail_size": {
+          "type": "config",
+          "key": "thumbnail_size"
+        },
+        "handler": "pil_image"
+      }
+    },
+    
+    "pandas.core.frame.DataFrame": {
+      "handler_name": "pandas_dataframe",
+      "description": "Handle pandas DataFrame (Enhanced)",
+      "result_type": "direct",
+      
+      "config_namespace": "pandas",
+      "config_defaults": {
+        "max_rows_direct": 100,
+        "max_cols_direct": 20,
+        "float_precision": 2
+      },
+      
+      "size_check": {
+        "enabled": true,
+        "dimensions": {
+          "rows": {
+            "getter": "shape[0]",
+            "max_config": "max_rows_direct"
+          },
+          "cols": {
+            "getter": "shape[1]",
+            "max_config": "max_cols_direct"
+          }
+        },
+        "on_exceed": "return_none"
+      },
+      
+      "preprocessing": {
+        "type": "dataframe_columns",
+        "handle_multiindex": true
+      },
+      
+      "base_fields": {
+        "_type": {
+          "type": "literal",
+          "value": "pandas.DataFrame"
+        },
+        "columns": {
+          "type": "computed",
+          "expression": "dataframe_columns"
+        },
+        "dtypes": {
+          "type": "computed",
+          "expression": "dataframe_dtypes"
+        },
+        "shape": {
+          "type": "computed",
+          "expression": "dataframe_shape"
+        },
+        "data": {
+          "type": "computed",
+          "expression": "dataframe_records",
+          "float_precision_config": "float_precision"
+        },
+        "index_name": {
+          "type": "attribute",
+          "attr": "index.name"
+        }
+      },
+      
+      "metadata": {
+        "handler": "pandas_dataframe"
+      }
+    },
+    
+    "numpy.ndarray": {
+      "handler_name": "numpy_array",
+      "description": "Handle numpy array (Enhanced)",
+      "result_type": "direct",
+      
+      "config_namespace": "numpy",
+      "config_defaults": {
+        "max_elements_direct": 1000,
+        "float_precision": 4
+      },
+      
+      "requires_imports": ["numpy"],
+      
+      "size_check": {
+        "enabled": true,
+        "element_count": {
+          "getter": "size",
+          "max_config": "max_elements_direct"
+        },
+        "on_exceed": "return_none"
+      },
+      
+      "base_fields": {
+        "_type": {
+          "type": "literal",
+          "value": "numpy.ndarray"
+        },
+        "shape": {
+          "type": "attribute",
+          "attr": "shape"
+        },
+        "dtype": {
+          "type": "attribute",
+          "attr": "dtype",
+          "transform": "str"
+        },
+        "data": {
+          "type": "computed",
+          "expression": "numpy_tolist",
+          "float_precision_config": "float_precision"
+        },
+        "size": {
+          "type": "attribute",
+          "attr": "size"
+        }
+      },
+      
+      "metadata": {
+        "handler": "numpy_array"
+      }
+    }
+  },
+  
+  "transforms": {
+    "str": "Convert value to string using str()",
+    "dict": "Convert value to dict using dict()",
+    "base64_encode": "Encode bytes to base64 string"
+  },
+  
+  "computed_expressions": {
+    "type_full_name": "f'{type(obj).__module__}.{type(obj).__name__}'",
+    "json_size": "len(json.dumps(data).encode('utf-8'))",
+    "resource_uri": "f'mcp://resources/{resource_id}'",
+    "resource_id": "Generated resource ID",
+    "image_content_type": "f'image/{image_format.lower()}'",
+    "image_original_size": "(obj.width, obj.height)",
+    "dataframe_columns": "obj.columns.tolist()",
+    "dataframe_dtypes": "Dict of column -> dtype string",
+    "dataframe_shape": "[num_rows, num_cols]",
+    "dataframe_records": "obj.to_dict(orient='records') with float precision",
+    "numpy_tolist": "obj.tolist() with float rounding if needed"
+  }
+}

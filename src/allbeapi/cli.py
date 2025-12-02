@@ -2,8 +2,6 @@ import typer
 import sys
 import os
 import subprocess
-import asyncio
-import json
 import importlib
 from pathlib import Path
 from typing import Optional
