@@ -50,11 +50,37 @@ class QualityMetrics:
     def has_good_documentation(func_info: FunctionInfo) -> Tuple[bool, float]:
         """Documentation Quality Assessment"""
         if not func_info.doc:
+            # If function name is standard/simple, give some credit even without doc
+            if func_info.name in ('make', 'create', 'run', 'build', 'generate'):
+                return True, 0.5
+            
+            # If function name is very descriptive, give a small bonus instead of 0
+            if len(func_info.name) > 10 or '_' in func_info.name:
+                return False, 0.2
             return False, 0.0
         
         doc_len = len(func_info.doc.strip())
         
-        # Scoring criteria
+        # Try to use docstring_parser for structural analysis
+        if docstring_parser:
+            try:
+                parsed = docstring_parser.parse(func_info.doc)
+                has_desc = bool(parsed.short_description or parsed.long_description)
+                has_params = len(parsed.params) > 0
+                has_returns = bool(parsed.returns)
+                
+                # If structured info is present, give high score regardless of length
+                if has_desc and (has_params or has_returns):
+                    return True, 1.0
+                if has_desc:
+                    # If description is present, check if it's a "standard" function
+                    if func_info.name in ('make', 'create', 'run', 'build', 'generate'):
+                        return True, 0.9
+                    return True, 0.8
+            except:
+                pass
+        
+        # Scoring criteria (Fallback to length)
         if doc_len > 200:  # Detailed documentation
             return True, 1.0
         elif doc_len > 100:  # Medium documentation
@@ -62,7 +88,11 @@ class QualityMetrics:
         elif doc_len > 30:  # Short documentation
             return True, 0.4
         else:
-            return False, 0.1
+            # Very short documentation
+            # If function name is standard/simple, short doc is acceptable
+            if func_info.name in ('make', 'create', 'run', 'build', 'generate'):
+                return True, 0.6
+            return False, 0.2
     
     @staticmethod
     def has_reasonable_params(func_info: FunctionInfo) -> Tuple[bool, float]:
@@ -84,6 +114,26 @@ class QualityMetrics:
     @staticmethod
     def has_type_annotations(func_info: FunctionInfo) -> Tuple[bool, float]:
         """Type Annotation Completeness Assessment - Improved Version"""
+        # Check docstring for type information
+        doc_has_types = False
+        if docstring_parser and func_info.doc:
+            try:
+                parsed = docstring_parser.parse(func_info.doc)
+                # Check if any parameter has type info in docstring
+                if any(p.type_name for p in parsed.params):
+                    doc_has_types = True
+                # Check if return has type info
+                if parsed.returns and parsed.returns.type_name:
+                    doc_has_types = True
+            except:
+                pass
+
+        # Check for default values (implicit type hints)
+        has_defaults = False
+        if func_info.parameters:
+            # If any parameter is not required, it implies a default value exists
+            has_defaults = any(not p.get('required', True) for p in func_info.parameters)
+
         # Use raw annotation info for judgment
         if hasattr(func_info, 'raw_param_annotations') and func_info.raw_param_annotations:
             total_params = len(func_info.raw_param_annotations)
@@ -92,7 +142,13 @@ class QualityMetrics:
                 has_return = (hasattr(func_info, 'raw_return_annotation') and 
                              func_info.raw_return_annotation is not None and 
                              func_info.raw_return_annotation != inspect.Signature.empty)
-                return has_return, 1.0 if has_return else 0.5
+                
+                if has_return:
+                    return True, 1.0
+                elif doc_has_types:
+                    return True, 0.8
+                else:
+                    return True, 0.5
             
             # Calculate real annotation coverage
             annotated_params = sum(
@@ -110,7 +166,10 @@ class QualityMetrics:
                 return True, 1.0
             elif param_coverage >= 0.5 and has_return:
                 return True, 0.8
-            elif param_coverage >= 0.5 or has_return:
+            elif (param_coverage >= 0.5 or has_return) or doc_has_types:
+                return True, 0.7
+            elif has_defaults:
+                # If no explicit annotations but has defaults, give some credit
                 return True, 0.6
             else:
                 # Give base score even without annotations (avoid complete 0)
@@ -120,7 +179,12 @@ class QualityMetrics:
         total_params = len(func_info.parameters)
         if total_params == 0:
             has_return = func_info.return_type is not None
-            return has_return, 1.0 if has_return else 0.5
+            if has_return:
+                return True, 1.0
+            elif doc_has_types:
+                return True, 0.8
+            else:
+                return True, 0.5
         
         # Calculate annotation coverage
         annotated_params = sum(
@@ -134,7 +198,9 @@ class QualityMetrics:
         # Comprehensive score - Relaxed requirements
         if param_coverage >= 0.8 and has_return:
             return True, 1.0
-        elif param_coverage >= 0.5 or has_return:
+        elif (param_coverage >= 0.5 or has_return) or doc_has_types:
+            return True, 0.7
+        elif has_defaults:
             return True, 0.6
         else:
             # Give base score even without annotations
@@ -496,10 +562,17 @@ class APIAnalyzer:
             if score >= self.min_quality_score:
                 scored_functions.append((func, score))
         
-        # Fallback mechanism: if no functions found and mode is not permissive, try lowering threshold
-        if not scored_functions and self.min_quality_score > 60:
+        # Fallback mechanism: if too few functions found and mode is not permissive, try lowering threshold
+        # If we found very few high-quality functions, we should include medium-quality ones too
+        if len(scored_functions) < 5 and self.min_quality_score > 60:
+            existing_qualnames = {f.qualname for f, s in scored_functions}
+            
             for func in self.functions:
+                if func.qualname in existing_qualnames:
+                    continue
+                    
                 score = self.function_scores[func.qualname]
+                # Lower threshold to 60 to include more functions
                 if score >= 60:
                     scored_functions.append((func, score))
 
