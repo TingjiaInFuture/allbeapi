@@ -1,6 +1,6 @@
 """
 MCP Server Runtime
-包含 MCP Server 的核心运行时逻辑，供生成的服务器脚本调用。
+Contains core runtime logic for MCP Server, called by generated server scripts.
 """
 
 import asyncio
@@ -17,14 +17,14 @@ from mcp.server.lowlevel import Server
 from mcp.server.stdio import stdio_server
 import mcp.types as types
 
-# 配置日志
+# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# 尝试导入 StreamableHTTP 支持
+# Try to import StreamableHTTP support
 try:
     from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
     from starlette.applications import Starlette
@@ -41,7 +41,7 @@ except ImportError:
     class Scope: pass
     class Send: pass
 
-# 导入智能序列化引擎
+# Import intelligent serialization engine
 try:
     from allbeapi.serialization.engine import SmartSerializer, SerializationConfig
     SERIALIZATION_ENGINE_AVAILABLE = True
@@ -52,7 +52,7 @@ except ImportError:
 
 
 class MCPServer:
-    """通用 MCP Server 基类"""
+    """Generic MCP Server Base Class"""
     
     def __init__(self, title: str, tools: List[Dict], function_map: Dict, library_name: str):
         self.title = title
@@ -62,13 +62,13 @@ class MCPServer:
         
         self.server = Server(title.lower().replace(" ", "-"))
         
-        # 缓存
+        # Cache
         self._func_cache = {}
         self._object_store = {}
         
-        # 初始化智能序列化器
+        # Initialize intelligent serializer
         if SERIALIZATION_ENGINE_AVAILABLE:
-            # 尝试加载配置文件
+            # Try to load configuration file
             config_file = Path(f"{library_name}_serialization_config.json")
             if config_file.exists():
                 config = SerializationConfig.from_file(str(config_file))
@@ -86,7 +86,7 @@ class MCPServer:
         self._setup_handlers()
     
     def _preload_functions(self):
-        """预加载所有函数到缓存中"""
+        """Preload all functions into cache"""
         for tool_name in self.function_map.keys():
             if tool_name == "call-object-method":
                 continue
@@ -96,7 +96,7 @@ class MCPServer:
                 logger.warning(f"Failed to preload {tool_name}: {e}")
   
     def _setup_handlers(self):
-        """设置 MCP 处理器"""
+        """Setup MCP handlers"""
         
         @self.server.list_tools()
         async def list_tools() -> list[types.Tool]:
@@ -157,7 +157,7 @@ class MCPServer:
                 )]
     
     async def _execute_tool(self, tool_name: str, arguments: dict) -> dict:
-        """执行工具调用"""
+        """Execute tool call"""
         if tool_name == "call-object-method":
             return await self._call_stored_method(arguments)
 
@@ -167,14 +167,14 @@ class MCPServer:
         meta = self.function_map[tool_name]
         func = self._get_function(tool_name)
         
-        # 调用函数
+        # Call function
         if meta["is_async"]:
             result = await func(**arguments)
         else:
             loop = asyncio.get_event_loop()
             result = await loop.run_in_executor(None, lambda: func(**arguments))
         
-        # 处理返回值
+        # Handle return value
         if meta["returns_object"]:
             if not self._is_json_serializable(result):
                 obj_info = self._store_object(result)
@@ -190,7 +190,7 @@ class MCPServer:
         return {"success": True, "data": serialized}
 
     async def _call_stored_method(self, arguments: dict) -> dict:
-        """调用已存储对象的方法"""
+        """Call method on stored object"""
         object_id = arguments.get("object_id")
         method_name = arguments.get("method")
         args = arguments.get("args", [])
@@ -199,23 +199,24 @@ class MCPServer:
         if object_id not in self._object_store:
             raise ValueError(f"Object {object_id} not found")
         
+        
         obj = self._object_store[object_id]
         if not hasattr(obj, method_name):
             raise ValueError(f"Method '{method_name}' not found on object")
         
-        # 获取属性或方法
+        # Get attribute or method
         attr = getattr(obj, method_name)
         
-        # 判断是否可调用（是方法还是属性？）
+        # Check if callable (method or property?)
         if callable(attr):
-            # 如果是方法，则执行调用
+            # If method, execute call
             loop = asyncio.get_running_loop()
             if asyncio.iscoroutinefunction(attr):
                 result = await attr(*args, **kwargs)
             else:
                 result = await loop.run_in_executor(None, lambda: attr(*args, **kwargs))
         else:
-            # 如果是属性（如 .columns, .shape, .index），直接返回其值
+            # If property (e.g. .columns, .shape, .index), return its value directly
             result = attr
         
         try:
@@ -235,7 +236,7 @@ class MCPServer:
         }
     
     def _serialize_result(self, result: Any) -> Any:
-        """智能序列化结果"""
+        """Intelligent result serialization"""
         if self.serializer and SERIALIZATION_ENGINE_AVAILABLE:
             serialization_result = self.serializer.serialize(result)
             
@@ -328,18 +329,18 @@ class MCPServer:
             )
     
     async def _auto_cleanup_objects(self):
-        """后台任务：自动清理闲置对象"""
+        """Background task: Automatically cleanup idle objects"""
         while True:
             try:
-                await asyncio.sleep(300)  # 每5分钟检查一次
+                await asyncio.sleep(300)  # Check every 5 minutes
                 if self.serializer:
-                    removed = self.serializer.cleanup_objects(max_age_seconds=1800)  # 清理30分钟未使用的对象
+                    removed = self.serializer.cleanup_objects(max_age_seconds=1800)  # Cleanup objects unused for 30 minutes
                     if removed > 0:
-                        logger.info(f"已自动清理 {removed} 个闲置对象")
+                        logger.info(f"Automatically cleaned up {removed} idle objects")
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.error(f"对象清理任务出错: {e}")
+                logger.error(f"Object cleanup task error: {e}")
 
     def create_streamable_http_app(self, host: str = "127.0.0.1", port: int = 8000, stateless: bool = False):
         if not HTTP_AVAILABLE:
@@ -357,7 +358,7 @@ class MCPServer:
         
         @contextlib.asynccontextmanager
         async def lifespan(app: Starlette) -> AsyncIterator[None]:
-            # 启动后台清理任务
+            # Start background cleanup task
             cleanup_task = asyncio.create_task(self._auto_cleanup_objects())
             
             async with session_manager.run():
@@ -419,3 +420,4 @@ def serve(title: str, tools: List[Dict], function_map: Dict, library_name: str):
     else:
         logger.info("Starting stdio server")
         asyncio.run(server.run_stdio())
+

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-通用智能序列化引擎
-支持：
-1. 自动检测对象类型和大小
-2. 小对象直接序列化，大对象返回object_id
-3. 文件类对象返回Resource URI
-4. 可配置的序列化策略
+Universal Intelligent Serialization Engine
+Supports:
+1. Automatic detection of object type and size
+2. Small objects serialized directly, large objects return object_id
+3. File-like objects return Resource URI
+4. Configurable serialization strategy
 """
 
 import json
@@ -20,7 +20,7 @@ import inspect
 
 @dataclass
 class SerializationResult:
-    """序列化结果"""
+    """Serialization result"""
     type: str  # 'direct', 'object_ref', 'resource'
     data: Any
     metadata: Optional[Dict[str, Any]] = None
@@ -28,12 +28,12 @@ class SerializationResult:
 
 @dataclass
 class ObjectMetadata:
-    """存储对象的元数据"""
+    """Metadata for stored objects"""
     object_id: str
     object_type: str
-    size_estimate: int  # 估算大小(字节)
+    size_estimate: int  # Estimated size (bytes)
     available_methods: List[Dict[str, Any]]
-    preview: Optional[str] = None  # 序列化预览(前100字符)
+    preview: Optional[str] = None  # Serialization preview (first 100 chars)
     created_at: str = None
     
     def __post_init__(self):
@@ -43,36 +43,36 @@ class ObjectMetadata:
 
 
 class SerializationConfig:
-    """序列化配置"""
+    """Serialization configuration"""
     
     def __init__(self, config_dict: Optional[Dict] = None):
         """
-        配置参数：
-        - max_direct_size: 直接序列化的最大字节数(默认10KB)
-        - max_preview_length: 预览文本最大长度(默认200)
-        - max_iterator_items: 迭代器最大消费项数(默认1000)
-        - enable_resources: 是否启用Resource URI(默认True)
-        - resource_base_url: Resource服务的基础URL
-        - type_handlers: 自定义类型处理器
+        Configuration parameters:
+        - max_direct_size: Max bytes for direct serialization (default 10KB)
+        - max_preview_length: Max length for preview text (default 200)
+        - max_iterator_items: Max items to consume from iterator (default 1000)
+        - enable_resources: Whether to enable Resource URI (default True)
+        - resource_base_url: Base URL for Resource service
+        - type_handlers: Custom type handlers
         """
         config = config_dict or {}
         
         self.max_direct_size = config.get('max_direct_size', 10 * 1024)  # 10KB
         self.max_preview_length = config.get('max_preview_length', 200)
-        self.max_iterator_items = config.get('max_iterator_items', 1000)  # 最多消费1000项
+        self.max_iterator_items = config.get('max_iterator_items', 1000)  # Max 1000 items
         self.enable_resources = config.get('enable_resources', True)
         self.resource_base_url = config.get('resource_base_url', 'mcp://resources')
         
-        # 自定义类型处理器: type_pattern -> handler_function_name
+        # Custom type handlers: type_pattern -> handler_function_name
         self.type_handlers = config.get('type_handlers', {})
         
-        # 文件类型检测模式
+        # File type detection patterns
         self.file_like_patterns = config.get('file_like_patterns', [
             'BufferedReader', 'BufferedWriter', 'TextIOWrapper',
             'BytesIO', 'StringIO', 'FileIO'
         ])
         
-        # 数据容器类型(需要检查大小)
+        # Data container patterns (need size check)
         self.data_container_patterns = config.get('data_container_patterns', [
             'DataFrame', 'Series', 'ndarray', 'Tensor',
             'Dataset', 'DataArray'
@@ -80,14 +80,14 @@ class SerializationConfig:
     
     @classmethod
     def from_file(cls, config_path: str):
-        """从JSON文件加载配置"""
+        """Load configuration from JSON file"""
         with open(config_path, 'r', encoding='utf-8') as f:
             config_dict = json.load(f)
         return cls(config_dict)
 
 
 class SmartSerializer:
-    """智能序列化器"""
+    """Intelligent Serializer"""
     
     def __init__(self, config: Optional[SerializationConfig] = None):
         self.config = config or SerializationConfig()
@@ -95,50 +95,50 @@ class SmartSerializer:
         self.metadata_store: Dict[str, ObjectMetadata] = {}
         self.resource_store: Dict[str, Any] = {}  # resource_id -> data
         
-        # 自动加载库特定处理器
+        # Automatically load library-specific handlers
         self._load_library_handlers()
     
     def _load_library_handlers(self):
-        """动态加载库特定处理器"""
+        """Dynamically load library-specific handlers"""
         try:
             from allbeapi.serialization.handlers import create_handler_registry
             
-            # 创建处理器注册表
+            # Create handler registry
             handler_registry = create_handler_registry({'library_specific': {}})
             
-            # 注册处理器到配置中
+            # Register handlers into configuration
             for full_type_name, handler_func in handler_registry.items():
-                # 为每个类型创建一个包装方法
+                # Create a wrapper method for each type
                 method_name = f"_custom_handler_{full_type_name.replace('.', '_')}"
                 
-                # 动态绑定处理器方法
+                # Dynamically bind handler method
                 setattr(self, method_name, lambda obj, ctx, h=handler_func: h(obj, ctx))
                 
-                # 在配置中注册类型 -> 方法名映射
+                # Register type -> method name mapping in configuration
                 self.config.type_handlers[full_type_name] = method_name
         except ImportError:
-            # 处理器模块不可用，跳过
+            # Handler module not available, skip
             pass
     
     def serialize(self, obj: Any, context: Optional[Dict] = None) -> SerializationResult:
         """
-        智能序列化对象
+        Intelligently serialize object
         
-        决策树：
-        1. None/基本类型 -> 直接返回
-        2. 可直接JSON序列化 -> 尝试序列化，检查大小
-        3. 生成器/迭代器 -> 消费并序列化内容
-        4. 文件类对象 -> Resource URI
-        5. 大型数据容器 -> 检查大小，决定直接序列化还是对象引用
-        6. 其他复杂对象 -> 对象引用
+        Decision tree:
+        1. None/Basic types -> Return directly
+        2. Directly JSON serializable -> Try serialize, check size
+        3. Generator/Iterator -> Consume and serialize content
+        4. File-like object -> Resource URI
+        5. Large data container -> Check size, decide direct serialization or object reference
+        6. Other complex objects -> Object reference
         """
         context = context or {}
         
-        # 1. None 和基本类型
+        # 1. None and basic types
         if obj is None or isinstance(obj, (bool, int, float, str)):
             return SerializationResult(type='direct', data=obj)
         
-        # 2. 检查自定义类型处理器
+        # 2. Check custom type handlers
         type_name = type(obj).__name__
         full_type_name = f"{type(obj).__module__}.{type_name}"
         
@@ -146,123 +146,123 @@ class SmartSerializer:
             handler_name = self.config.type_handlers[full_type_name]
             if hasattr(self, handler_name):
                 result = getattr(self, handler_name)(obj, context)
-                # 处理器返回None表示无法处理，继续其他处理流程
+                # Handler returns None means cannot handle, continue other processing flow
                 if result is not None:
                     return result
         
-        # 3. 生成器和迭代器 -> 消费并序列化内容
+        # 3. Generator and Iterator -> Consume and serialize content
         if self._is_iterator_or_generator(obj):
             return self._handle_iterator(obj, context)
         
-        # 4. 文件类对象 -> Resource
+        # 4. File-like object -> Resource
         if self._is_file_like(obj):
             return self._handle_file_like(obj, context)
         
-        # 5. 列表和元组 - 递归序列化
+        # 5. List and Tuple - Recursive serialization
         if isinstance(obj, (list, tuple)):
             return self._handle_sequence(obj, context)
         
-        # 6. 字典
+        # 6. Dictionary
         if isinstance(obj, dict):
             return self._handle_dict(obj, context)
         
-        # 7. 大型数据容器 - 检查大小
+        # 7. Large data container - Check size
         if self._is_data_container(obj):
             return self._handle_data_container(obj, context)
         
-        # 7. 尝试直接JSON序列化
+        # 7. Try direct JSON serialization
         try:
             serialized = json.dumps(obj)
             size = len(serialized.encode('utf-8'))
             
             if size <= self.config.max_direct_size:
-                # 小对象，直接返回
+                # Small object, return directly
                 return SerializationResult(
                     type='direct',
-                    data=json.loads(serialized),  # 反序列化回Python对象
+                    data=json.loads(serialized),  # Deserialize back to Python object
                     metadata={'size_bytes': size}
                 )
             else:
-                # 大对象，存储并返回引用
+                # Large object, store and return reference
                 return self._store_object(obj, preview=serialized[:self.config.max_preview_length])
         except (TypeError, ValueError):
-            # 无法JSON序列化，存储对象
+            # Cannot JSON serialize, store object
             return self._store_object(obj)
     
     def _is_file_like(self, obj: Any) -> bool:
-        """判断是否是文件类对象"""
+        """Check if object is file-like"""
         type_name = type(obj).__name__
         
-        # 检查类型名称
+        # Check type name
         if any(pattern in type_name for pattern in self.config.file_like_patterns):
             return True
         
-        # 检查是否有read/write方法
+        # Check if has read/write methods
         return hasattr(obj, 'read') and (hasattr(obj, 'write') or hasattr(obj, 'seek'))
     
     def _is_data_container(self, obj: Any) -> bool:
-        """判断是否是数据容器"""
+        """Check if object is a data container"""
         type_name = type(obj).__name__
         return any(pattern in type_name for pattern in self.config.data_container_patterns)
     
     def _is_iterator_or_generator(self, obj: Any) -> bool:
-        """判断是否是迭代器或生成器"""
+        """Check if object is an iterator or generator"""
         import types
         import collections.abc
         
-        # 检查是否是生成器
+        # Check if generator
         if isinstance(obj, types.GeneratorType):
             return True
         
-        # 检查是否是迭代器（但排除字符串、字节、列表、元组、字典等已处理的类型）
+        # Check if iterator (but exclude string, bytes, list, tuple, dict, set, frozenset etc.)
         if isinstance(obj, (str, bytes, bytearray, list, tuple, dict, set, frozenset)):
             return False
         
-        # 检查是否有 __iter__ 和 __next__ 方法（迭代器协议）
+        # Check if has __iter__ and __next__ methods (iterator protocol)
         return (hasattr(obj, '__iter__') and hasattr(obj, '__next__') and 
                 callable(getattr(obj, '__iter__', None)) and 
                 callable(getattr(obj, '__next__', None)))
     
     def _handle_iterator(self, obj: Any, context: Dict) -> SerializationResult:
-        """处理迭代器和生成器 - 消费它们并序列化内容"""
-        max_items = context.get('max_iterator_items', self.config.max_direct_size // 100)  # 默认最多100项
+        """Handle iterator and generator - consume them and serialize content"""
+        max_items = context.get('max_iterator_items', self.config.max_direct_size // 100)  # Default max 100 items
         
         try:
-            # 消费迭代器，收集所有元素
+            # Consume iterator, collect all items
             items = []
             total_size = 0
             is_truncated = False
             is_bytes_content = False
             
             for i, item in enumerate(obj):
-                # 检查是否超过最大项数
+                # Check if max items exceeded
                 if i >= max_items:
                     is_truncated = True
                     break
                 
-                # 检查是否是字节内容（如 iter_content 返回的）
+                # Check if bytes content (e.g. iter_content returns)
                 if isinstance(item, bytes):
                     is_bytes_content = True
                     items.append(item)
                     total_size += len(item)
                 else:
                     items.append(item)
-                    # 估算大小
+                    # Estimate size
                     try:
                         total_size += len(json.dumps(item).encode('utf-8'))
                     except:
-                        total_size += 100  # 粗略估计
+                        total_size += 100  # Rough estimate
                 
-                # 检查总大小是否超限
+                # Check if total size exceeded
                 if total_size > self.config.max_direct_size:
                     is_truncated = True
                     break
             
-            # 如果是字节内容（如 HTTP 响应体），合并为单个字节对象
+            # If bytes content (e.g. HTTP response body), combine into single bytes object
             if is_bytes_content:
                 combined_bytes = b''.join(items)
                 
-                # 尝试解码为文本
+                # Try decode as text
                 try:
                     text_content = combined_bytes.decode('utf-8')
                     return SerializationResult(
@@ -280,7 +280,7 @@ class SmartSerializer:
                         }
                     )
                 except UnicodeDecodeError:
-                    # 无法解码，返回 base64 编码
+                    # Cannot decode, return base64 encoded
                     import base64
                     encoded_content = base64.b64encode(combined_bytes).decode('ascii')
                     return SerializationResult(
@@ -298,7 +298,7 @@ class SmartSerializer:
                         }
                     )
             
-            # 如果不是字节内容，递归序列化每个项
+            # If not bytes content, recursively serialize each item
             serialized_items = []
             for item in items:
                 result = self.serialize(item, context)
@@ -321,7 +321,7 @@ class SmartSerializer:
             )
             
         except Exception as e:
-            # 消费迭代器失败，存储原始对象
+            # Failed to consume iterator, store original object
             return self._store_object(
                 obj, 
                 preview=f"<Iterator/Generator: {type(obj).__name__}>",
@@ -329,34 +329,34 @@ class SmartSerializer:
             )
     
     def _handle_file_like(self, obj: Any, context: Dict) -> SerializationResult:
-        """处理文件类对象 -> Resource URI"""
+        """Handle file-like object -> Resource URI"""
         if not self.config.enable_resources:
-            # 如果禁用Resource，则存储对象
+            # If resources disabled, store object
             return self._store_object(obj)
         
-        # 生成resource_id
+        # Generate resource_id
         resource_id = f"file_{uuid.uuid4().hex[:12]}"
         
-        # 尝试读取内容
+        # Try read content
         content = None
         content_type = 'application/octet-stream'
         
         try:
             if hasattr(obj, 'read'):
-                # 保存当前位置
+                # Save current position
                 current_pos = obj.tell() if hasattr(obj, 'tell') else None
                 
                 content = obj.read()
                 
-                # 恢复位置
+                # Restore position
                 if current_pos is not None and hasattr(obj, 'seek'):
                     obj.seek(current_pos)
                 
-                # 判断内容类型
+                # Determine content type
                 if isinstance(content, str):
                     content_type = 'text/plain'
                 elif isinstance(content, bytes):
-                    # 尝试判断文件类型
+                    # Try determine file type
                     if content.startswith(b'\x89PNG'):
                         content_type = 'image/png'
                     elif content.startswith(b'\xff\xd8\xff'):
@@ -364,17 +364,17 @@ class SmartSerializer:
                     elif content.startswith(b'%PDF'):
                         content_type = 'application/pdf'
         except Exception as e:
-            # 读取失败，存储对象本身
+            # Read failed, store object itself
             return self._store_object(obj, error=str(e))
         
-        # 存储到resource store
+        # Store to resource store
         self.resource_store[resource_id] = {
             'content': content,
             'content_type': content_type,
             'original_object': obj
         }
         
-        # 返回Resource URI
+        # Return Resource URI
         uri = f"{self.config.resource_base_url}/{resource_id}"
         
         return SerializationResult(
@@ -391,8 +391,8 @@ class SmartSerializer:
         )
     
     def _handle_sequence(self, obj: Any, context: Dict) -> SerializationResult:
-        """处理列表和元组"""
-        # 递归序列化每个元素
+        """Handle list and tuple"""
+        # Recursively serialize each item
         serialized_items = []
         total_size = 0
         has_complex = False
@@ -404,14 +404,14 @@ class SmartSerializer:
             if result.type != 'direct':
                 has_complex = True
             
-            # 估算大小
+            # Estimate size
             try:
                 item_size = len(json.dumps(result.data).encode('utf-8'))
                 total_size += item_size
             except:
                 has_complex = True
         
-        # 如果总大小过大或包含复杂对象，考虑存储
+        # If total size is too large or contains complex objects, consider storing
         if total_size > self.config.max_direct_size or (has_complex and len(obj) > 100):
             return self._store_object(obj, preview=str(obj)[:self.config.max_preview_length])
         
@@ -422,13 +422,13 @@ class SmartSerializer:
         )
     
     def _handle_dict(self, obj: Dict, context: Dict) -> SerializationResult:
-        """处理字典"""
+        """Handle dictionary"""
         serialized_dict = {}
         total_size = 0
         has_complex = False
         
         for key, value in obj.items():
-            # 键必须是字符串
+            # Key must be string
             str_key = str(key)
             
             result = self.serialize(value, context)
@@ -443,7 +443,7 @@ class SmartSerializer:
             except:
                 has_complex = True
         
-        # 检查总大小
+        # Check total size
         if total_size > self.config.max_direct_size or (has_complex and len(obj) > 50):
             return self._store_object(obj, preview=str(obj)[:self.config.max_preview_length])
         
@@ -454,16 +454,16 @@ class SmartSerializer:
         )
     
     def _handle_data_container(self, obj: Any, context: Dict) -> SerializationResult:
-        """处理数据容器(DataFrame, ndarray等)"""
+        """Handle data container (DataFrame, ndarray, etc.)"""
         type_name = type(obj).__name__
         
-        # 尝试转换为简单格式
+        # Try convert to simple format
         try:
             # pandas DataFrame/Series
             if type_name == 'DataFrame':
-                # 检查大小
+                # Check size
                 num_rows, num_cols = obj.shape
-                estimated_size = num_rows * num_cols * 8  # 粗略估计
+                estimated_size = num_rows * num_cols * 8  # Rough estimate
                 
                 if estimated_size <= self.config.max_direct_size:
                     # Handle MultiIndex columns which cause JSON serialization errors
@@ -479,7 +479,7 @@ class SmartSerializer:
                         export_df.columns = [str(col) for col in export_df.columns]
 
 
-                    # 小数据，直接序列化
+                    # Small data, serialize directly
                     return SerializationResult(
                         type='direct',
                         data={
@@ -491,12 +491,12 @@ class SmartSerializer:
                         metadata={'size_estimate': estimated_size}
                     )
                 else:
-                    # 大数据，存储对象
+                    # Large data, store object
                     preview = f"DataFrame(shape={obj.shape}, columns={obj.columns.tolist()[:5]}...)"
                     return self._store_object(obj, preview=preview)
             
             elif type_name == 'Series':
-                if len(obj) <= 1000:  # 小Series直接序列化
+                if len(obj) <= 1000:  # Small Series serialize directly
                     return SerializationResult(
                         type='direct',
                         data={
@@ -526,40 +526,40 @@ class SmartSerializer:
                 else:
                     return self._store_object(obj, preview=f"ndarray(shape={obj.shape}, dtype={obj.dtype})")
             
-            # 其他数据容器，尝试通用处理
+            # Other data containers, try generic handling
             else:
                 return self._store_object(obj)
                 
         except Exception as e:
-            # 转换失败，存储对象
+            # Conversion failed, store object
             return self._store_object(obj, error=str(e))
     
     def _store_object(self, obj: Any, preview: Optional[str] = None, error: Optional[str] = None) -> SerializationResult:
-        """存储对象并返回引用"""
+        """Store object and return reference"""
         object_id = f"obj_{uuid.uuid4().hex[:12]}"
         
-        # 获取类型信息
+        # Get type info
         obj_type = type(obj)
         type_name = f"{obj_type.__module__}.{obj_type.__name__}"
         
-        # 估算大小
+        # Estimate size
         size_estimate = 0
         try:
             size_estimate = sys.getsizeof(obj)
         except:
             pass
         
-        # 提取可用方法
+        # Extract available methods
         available_methods = self._extract_methods(obj)
         
-        # 生成预览
+        # Generate preview
         if preview is None:
             try:
                 preview = str(obj)[:self.config.max_preview_length]
             except:
                 preview = f"<{type_name} object>"
         
-        # 创建元数据
+        # Create metadata
         metadata = ObjectMetadata(
             object_id=object_id,
             object_type=type_name,
@@ -568,11 +568,11 @@ class SmartSerializer:
             preview=preview
         )
         
-        # 存储
+        # Store
         self.object_store[object_id] = obj
         self.metadata_store[object_id] = metadata
         
-        # 返回结果
+        # Return result
         result_data = {
             'object_id': object_id,
             'object_type': type_name,
@@ -591,7 +591,7 @@ class SmartSerializer:
         )
     
     def _extract_methods(self, obj: Any) -> List[Dict[str, Any]]:
-        """提取对象的可用方法"""
+        """Extract available methods of object"""
         available_methods = []
         
         for name in dir(obj):
@@ -601,7 +601,7 @@ class SmartSerializer:
             try:
                 attr = getattr(obj, name)
                 if callable(attr):
-                    # 提取参数信息
+                    # Extract parameter info
                     try:
                         sig = inspect.signature(attr)
                         params = [
@@ -618,7 +618,7 @@ class SmartSerializer:
                             'params': params
                         })
                     except (ValueError, TypeError):
-                        # 无法获取签名，只添加方法名
+                        # Cannot get signature, only add method name
                         available_methods.append({
                             'name': name,
                             'params': []
@@ -629,19 +629,19 @@ class SmartSerializer:
         return available_methods
     
     def get_object(self, object_id: str) -> Optional[Any]:
-        """获取存储的对象"""
+        """Get stored object"""
         return self.object_store.get(object_id)
     
     def get_metadata(self, object_id: str) -> Optional[ObjectMetadata]:
-        """获取对象元数据"""
+        """Get object metadata"""
         return self.metadata_store.get(object_id)
     
     def get_resource(self, resource_id: str) -> Optional[Dict]:
-        """获取Resource数据"""
+        """Get Resource data"""
         return self.resource_store.get(resource_id)
     
     def cleanup_objects(self, max_age_seconds: int = 3600):
-        """清理旧对象"""
+        """Cleanup old objects"""
         from datetime import datetime, timedelta
         
         now = datetime.now()
@@ -661,12 +661,12 @@ class SmartSerializer:
         return len(to_remove)
 
 
-# 全局序列化器实例(可在MCP server中使用)
+# Global serializer instance (can be used in MCP server)
 _global_serializer: Optional[SmartSerializer] = None
 
 
 def get_serializer(config: Optional[SerializationConfig] = None) -> SmartSerializer:
-    """获取全局序列化器实例"""
+    """Get global serializer instance"""
     global _global_serializer
     
     if _global_serializer is None:
@@ -676,6 +676,7 @@ def get_serializer(config: Optional[SerializationConfig] = None) -> SmartSeriali
 
 
 def reset_serializer():
-    """重置全局序列化器"""
+    """Reset global serializer"""
     global _global_serializer
     _global_serializer = None
+

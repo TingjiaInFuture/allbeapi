@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Python库到生产级OpenAPI服务转换器 - 通用智能版
-支持质量评分、智能过滤和去重,无特定库硬编码
+Python Library to Production-Grade OpenAPI Service Converter - Universal Intelligent Version
+Supports quality scoring, intelligent filtering, and deduplication, without hardcoding for specific libraries.
 """
 
 import ast
@@ -24,10 +24,10 @@ from collections import defaultdict
 
 @dataclass
 class FunctionInfo:
-    """函数信息"""
+    """Function Information"""
     name: str
     module: str
-    class_name: Optional[str]  # 新增：明确记录类名
+    class_name: Optional[str]  # Added: Explicitly record class name
     qualname: str
     signature: str
     doc: Optional[str]
@@ -36,65 +36,65 @@ class FunctionInfo:
     is_async: bool
     http_method: str
     path: str
-    returns_object: bool = False  # 是否返回复杂对象（需要状态管理）
-    object_methods: List[Dict] = None  # 如果返回对象，其可用方法列表
-    # 新增：记录原始注解信息用于质量评估
-    raw_param_annotations: List[Any] = None  # 参数的原始注解
-    raw_return_annotation: Any = None  # 返回值的原始注解
+    returns_object: bool = False  # Whether it returns a complex object (needs state management)
+    object_methods: List[Dict] = None  # If returns object, list of available methods
+    # Added: Record raw annotation info for quality assessment
+    raw_param_annotations: List[Any] = None  # Raw parameter annotations
+    raw_return_annotation: Any = None  # Raw return annotation
 
 
 class QualityMetrics:
-    """函数质量评估指标 - 通用评估机制"""
+    """Function Quality Assessment Metrics - Universal Assessment Mechanism"""
     
     @staticmethod
     def has_good_documentation(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """文档质量评估"""
+        """Documentation Quality Assessment"""
         if not func_info.doc:
             return False, 0.0
         
         doc_len = len(func_info.doc.strip())
         
-        # 评分标准
-        if doc_len > 200:  # 详细文档
+        # Scoring criteria
+        if doc_len > 200:  # Detailed documentation
             return True, 1.0
-        elif doc_len > 100:  # 中等文档
+        elif doc_len > 100:  # Medium documentation
             return True, 0.7
-        elif doc_len > 30:  # 简短文档
+        elif doc_len > 30:  # Short documentation
             return True, 0.4
         else:
             return False, 0.1
     
     @staticmethod
     def has_reasonable_params(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """参数合理性评估"""
+        """Parameter Reasonableness Assessment"""
         num_params = len(func_info.parameters)
         
-        # 理想参数数量: 1-5个
+        # Ideal parameter count: 1-5
         if 1 <= num_params <= 5:
             return True, 1.0
-        elif num_params == 0:  # 无参数函数可能是工厂函数
+        elif num_params == 0:  # No-param function might be a factory function
             return True, 0.8
         elif 6 <= num_params <= 8:
             return True, 0.6
-        elif num_params > 10:  # 过多参数通常是内部函数
+        elif num_params > 10:  # Too many parameters usually indicate internal function
             return False, 0.2
         else:
             return True, 0.5
     
     @staticmethod
     def has_type_annotations(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """类型注解完整性评估 - 改进版"""
-        # 使用原始注解信息进行判断
+        """Type Annotation Completeness Assessment - Improved Version"""
+        # Use raw annotation info for judgment
         if hasattr(func_info, 'raw_param_annotations') and func_info.raw_param_annotations:
             total_params = len(func_info.raw_param_annotations)
             if total_params == 0:
-                # 无参数，只看返回值
+                # No params, check return value only
                 has_return = (hasattr(func_info, 'raw_return_annotation') and 
                              func_info.raw_return_annotation is not None and 
                              func_info.raw_return_annotation != inspect.Signature.empty)
                 return has_return, 1.0 if has_return else 0.5
             
-            # 计算真实的注解覆盖率
+            # Calculate real annotation coverage
             annotated_params = sum(
                 1 for ann in func_info.raw_param_annotations 
                 if ann is not None and ann != inspect.Parameter.empty
@@ -105,7 +105,7 @@ class QualityMetrics:
                          func_info.raw_return_annotation is not None and 
                          func_info.raw_return_annotation != inspect.Signature.empty)
             
-            # 综合评分 - 放宽要求
+            # Comprehensive score - Relaxed requirements
             if param_coverage >= 0.8 and has_return:
                 return True, 1.0
             elif param_coverage >= 0.5 and has_return:
@@ -113,72 +113,72 @@ class QualityMetrics:
             elif param_coverage >= 0.5 or has_return:
                 return True, 0.6
             else:
-                # 即使没有注解，也给予基础分（避免完全0分）
+                # Give base score even without annotations (avoid complete 0)
                 return False, 0.4
         
-        # 降级：使用旧的schema判断方式（向后兼容）
+        # Fallback: Use old schema judgment (backward compatibility)
         total_params = len(func_info.parameters)
         if total_params == 0:
             has_return = func_info.return_type is not None
             return has_return, 1.0 if has_return else 0.5
         
-        # 计算注解覆盖率
+        # Calculate annotation coverage
         annotated_params = sum(
             1 for p in func_info.parameters 
-            if p.get('schema', {}).get('type') != 'string'  # string是默认类型
+            if p.get('schema', {}).get('type') != 'string'  # string is default type
         )
         
         param_coverage = annotated_params / total_params
         has_return = func_info.return_type is not None
         
-        # 综合评分 - 放宽要求
+        # Comprehensive score - Relaxed requirements
         if param_coverage >= 0.8 and has_return:
             return True, 1.0
         elif param_coverage >= 0.5 or has_return:
             return True, 0.6
         else:
-            # 即使没有注解，也给予基础分
+            # Give base score even without annotations
             return False, 0.4
     
     @staticmethod
     def is_public_api(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """判断是否是公开API - 通用机制（改进版）"""
-        # 1. 名称不以下划线开头
+        """Determine if it is a public API - Universal Mechanism (Improved)"""
+        # 1. Name does not start with underscore
         if func_info.name.startswith('_'):
             return False, 0.0
         
-        # 2. 检查是否在模块的 __all__ 中
+        # 2. Check if in module's __all__
         try:
             module = sys.modules.get(func_info.module)
             if module and hasattr(module, '__all__'):
                 if func_info.name in module.__all__:
                     return True, 1.0
                 else:
-                    # 不在__all__中，但如果是顶层模块，仍给较高分
-                    # 顶层模块判断：模块名只有一个点或就是库名本身
+                    # Not in __all__, but if top-level module, still give higher score
+                    # Top-level module check: module name has one dot or is library name itself
                     module_parts = func_info.module.split('.')
-                    is_top_level = len(module_parts) <= 2  # 如 pdfkit 或 pdfkit.api
+                    is_top_level = len(module_parts) <= 2  # e.g. pdfkit or pdfkit.api
                     
                     if is_top_level and not func_info.class_name:
-                        # 顶层模块的直接函数，虽然不在__all__，也给较高分
+                        # Direct function of top-level module, give higher score even if not in __all__
                         return True, 0.8
                     else:
-                        # 不在__all__中，降低分数
+                        # Not in __all__, lower score
                         return True, 0.5
             else:
-                # 没有__all__属性，根据模块层级判断
+                # No __all__ attribute, judge by module hierarchy
                 module_parts = func_info.module.split('.')
                 is_top_level = len(module_parts) <= 2
                 
                 if is_top_level and not func_info.class_name:
-                    # 顶层模块的直接函数
+                    # Direct function of top-level module
                     return True, 0.9
                 else:
                     return True, 0.7
         except:
             pass
         
-        # 3. 检查模块路径是否包含internal/_等
+        # 3. Check if module path contains internal/_ etc.
         if re.search(r'(internal|_private|compat|testing)', func_info.module):
             return False, 0.2
         
@@ -186,28 +186,28 @@ class QualityMetrics:
     
     @staticmethod
     def naming_quality(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """命名规范性评估"""
+        """Naming Convention Assessment"""
         name = func_info.name
         
-        # 好的命名特征
+        # Good naming patterns
         good_patterns = [
-            r'^[a-z][a-z0-9_]*$',  # 小写+下划线
-            r'^[A-Z][a-zA-Z0-9]*$',  # 大驼峰(类名)
+            r'^[a-z][a-z0-9_]*$',  # lowercase + underscore
+            r'^[A-Z][a-zA-Z0-9]*$',  # UpperCamelCase (Class name)
         ]
         
-        # 不好的命名特征
+        # Bad naming patterns
         bad_patterns = [
-            r'.*\d+$',  # 以数字结尾 (如 func1, test2)
-            r'^(test|demo|example)_.*',  # 测试/示例函数
-            r'.*_(internal|private|impl)$',  # 内部实现
+            r'.*\d+$',  # Ends with digit (e.g. func1, test2)
+            r'^(test|demo|example)_.*',  # Test/Example functions
+            r'.*_(internal|private|impl)$',  # Internal implementation
         ]
         
-        # 检查不好的模式
+        # Check bad patterns
         for pattern in bad_patterns:
             if re.match(pattern, name, re.IGNORECASE):
                 return False, 0.2
         
-        # 检查好的模式
+        # Check good patterns
         for pattern in good_patterns:
             if re.match(pattern, name):
                 return True, 1.0
@@ -216,27 +216,27 @@ class QualityMetrics:
 
     @staticmethod
     def hierarchy_quality(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """层级质量评估 - 通用版"""
+        """Hierarchy Quality Assessment - Universal Version"""
         module_parts = func_info.module.split('.')
         
-        # 1. 私有模块检测 (通用约定)
-        # 任何以 _ 开头的路径组件通常表示私有
-        # tests/testing 也是通用的非生产代码目录
+        # 1. Private module detection (Universal convention)
+        # Any path component starting with _ usually indicates private
+        # tests/testing are also common non-production code directories
         for part in module_parts:
             if part.startswith('_') or part.lower() in ('tests', 'testing', 'test'):
                 return False, 0.0
         
-        # 2. 深度评分 (相对深度)
-        # 越浅越好，但不再硬编码 core/common 等词汇
-        # 假设库名为 root (depth 1)
+        # 2. Depth scoring (Relative depth)
+        # Shallower is better, but no longer hardcoding core/common etc.
+        # Assume library name is root (depth 1)
         # root.api (depth 2) -> 1.0
         # root.sub.detail (depth 3) -> 0.8
         # root.sub.detail.impl (depth 4) -> 0.6
         
-        # 基础分
+        # Base score
         score = 1.0
         
-        # 深度惩罚 (从第3层开始，每层扣0.2)
+        # Depth penalty (Start from 3rd level, deduct 0.2 per level)
         # pandas (1) -> 1.0
         # pandas.io (2) -> 1.0
         # pandas.core.frame (3) -> 0.8
@@ -249,19 +249,19 @@ class QualityMetrics:
 
 
 class TypeParser:
-    """类型注解解析器"""
+    """Type Annotation Parser"""
     
     @staticmethod
     def parse_annotation(annotation: Any) -> Dict[str, Any]:
-        """将Python类型注解转换为OpenAPI Schema"""
+        """Convert Python type annotation to OpenAPI Schema"""
         if annotation is None or annotation == inspect.Parameter.empty:
-            # 策略二：无法确定的类型映射为 {} (Any)
+            # Strategy 2: Map undetermined types to {} (Any)
             return {}
         
         if isinstance(annotation, str):
             return TypeParser._parse_string_annotation(annotation)
         
-        # 策略三：基于抽象基类 (ABC) 的检测
+        # Strategy 3: Detection based on Abstract Base Classes (ABC)
         try:
             import os
             if isinstance(annotation, type) and issubclass(annotation, os.PathLike):
@@ -301,7 +301,7 @@ class TypeParser:
             items = TypeParser.parse_annotation(args[0]) if args else {}
             return {"type": "array", "uniqueItems": True, "items": items}
         
-        # 策略一：实现“联合类型拆包” (Union Unwrapping)
+        # Strategy 1: Implement "Union Unwrapping"
         if origin is Union:
             schemas = []
             has_none = False
@@ -320,7 +320,7 @@ class TypeParser:
                     schema["nullable"] = True
                 return schema
             
-            # 使用 anyOf 允许匹配任意一个子类型
+            # Use anyOf to allow matching any subtype
             result = {"anyOf": schemas}
             if has_none:
                 result["nullable"] = True
@@ -336,20 +336,20 @@ class TypeParser:
         if annotation is Any:
             return {}
         
-        # 策略二：修正“Any”类型的映射语义
-        # 将无法确定的类型映射为 Empty Schema ({})，而不是 "object"
+        # Strategy 2: Fix "Any" type mapping semantics
+        # Map undetermined types to Empty Schema ({}) instead of "object"
         return {}
     
     @staticmethod
     def _parse_dataclass(dc: type) -> Dict[str, Any]:
-        """解析dataclass"""
+        """Parse dataclass"""
         properties = {}
         required = []
         
         try:
             for field in fields(dc):
                 properties[field.name] = TypeParser.parse_annotation(field.type)
-                # 修复：使用正确的MISSING检查
+                # Fix: Use correct MISSING check
                 from dataclasses import MISSING
                 if field.default is MISSING and field.default_factory is MISSING:
                     required.append(field.name)
@@ -363,7 +363,7 @@ class TypeParser:
     
     @staticmethod
     def _parse_string_annotation(annotation: str) -> Dict[str, Any]:
-        """解析字符串注解"""
+        """Parse string annotation"""
         annotation = annotation.strip()
         
         basic = {
@@ -390,15 +390,15 @@ class TypeParser:
             schema["nullable"] = True
             return schema
         
-        # 策略二：无法解析的字符串注解回退到 {} (Any)
+        # Strategy 2: Unparsable string annotations fallback to {} (Any)
         return {}
 
 
 class APIAnalyzer:
-    """API分析器 - 通用智能版"""
+    """API Analyzer - Universal Intelligent Version"""
     
     
-    # 可序列化的基本类型
+    # Serializable basic types
     SERIALIZABLE_TYPES = {
         int, float, str, bool, bytes, type(None),
         list, dict, tuple, set,
@@ -411,7 +411,7 @@ class APIAnalyzer:
                  enable_state_management: bool = True,
                  path_style: str = 'auto',
                  max_functions: int = None,
-                 # 新增质量控制参数
+                 # Added quality control parameters
                  enable_quality_filter: bool = True,
                  min_quality_score: float = 60.0,
                  enable_deduplication: bool = True,
@@ -425,17 +425,17 @@ class APIAnalyzer:
         self.path_style = path_style
         self.max_functions = max_functions
         
-        # 质量控制参数
+        # Quality control parameters
         self.enable_quality_filter = enable_quality_filter
         self.min_quality_score = min_quality_score
         self.enable_deduplication = enable_deduplication
         self.quality_mode = quality_mode
         self.enable_input_complexity_filter = enable_input_complexity_filter
         
-        # 应用质量模式预设
+        # Apply quality mode presets
         self._apply_quality_mode()
         
-        # 数据存储
+        # Data storage
         self.functions: List[FunctionInfo] = []
         self.analyzed: Set[str] = set()
         self.skipped_functions: List[Dict[str, str]] = []
@@ -444,7 +444,7 @@ class APIAnalyzer:
         self.quality_stats: Dict[str, Any] = {}
     
     def _apply_quality_mode(self):
-        """应用质量模式预设"""
+        """Apply quality mode presets"""
         modes = {
             'strict': {
                 'min_quality_score': 95,
@@ -462,32 +462,32 @@ class APIAnalyzer:
         
         if self.quality_mode in modes:
             mode_config = modes[self.quality_mode]
-            # 只在未明确设置时应用预设值
-            if self.min_quality_score == 60.0:  # 默认值
+            # Only apply presets if not explicitly set
+            if self.min_quality_score == 60.0:  # Default value
                 self.min_quality_score = mode_config['min_quality_score']
             if self.max_functions is None:
                 self.max_functions = mode_config['max_functions']
-        
+    
     def analyze(self) -> Dict[str, Any]:
-        """分析库 - 增强版带质量过滤"""
+        """Analyze library - Enhanced version with quality filtering."""
         try:
             root = importlib.import_module(self.library_name)
         except ImportError as e:
             return {"error": f"Cannot import: {e}"}
         
-        # 1. 扫描模块
+        # 1. Scan module
         self._scan_module(root)
         
-        # 2. 如果启用质量过滤，进行后处理
+        # 2. If quality filtering is enabled, apply post-processing
         if self.enable_quality_filter:
             self._apply_quality_filtering()
         
-        # 3. 生成OpenAPI规范
+        # 3. Generate OpenAPI specification
         return self._generate_openapi()
     
     def _apply_quality_filtering(self):
-        """应用质量过滤和去重"""
-        # 1. 计算质量分数
+        """Apply quality filtering and deduplication."""
+        # 1. Calculate quality scores
         scored_functions = []
         for func in self.functions:
             score = self.calculate_function_score(func)
@@ -496,25 +496,32 @@ class APIAnalyzer:
             if score >= self.min_quality_score:
                 scored_functions.append((func, score))
         
-        # 2. 去重
+        # Fallback mechanism: if no functions found and mode is not permissive, try lowering threshold
+        if not scored_functions and self.min_quality_score > 60:
+            for func in self.functions:
+                score = self.function_scores[func.qualname]
+                if score >= 60:
+                    scored_functions.append((func, score))
+
+        # 2. Deduplication
         if self.enable_deduplication and len(scored_functions) > 0:
             funcs = [f for f, s in scored_functions]
             deduped = self._deduplicate_similar_functions(funcs)
             scored_functions = [(f, s) for f, s in scored_functions if f in deduped]
         
-        # 3. 按分数排序并限制数量
+        # 3. Sort by score and limit quantity
         scored_functions.sort(key=lambda x: x[1], reverse=True)
         if self.max_functions and len(scored_functions) > self.max_functions:
             scored_functions = scored_functions[:self.max_functions]
         
-        # 4. 更新函数列表
+        # 4. Update function list
         self.functions = [f for f, s in scored_functions]
         
-        # 5. 记录统计信息
+        # 5. Record statistics
         self._collect_quality_stats(scored_functions)
     
     def calculate_function_score(self, func_info: FunctionInfo) -> float:
-        """计算函数质量分数 (0-100)"""
+        """Calculate function quality score (0-100)."""
         score = 0.0
         weights = {
             'documentation': 25,
@@ -524,36 +531,36 @@ class APIAnalyzer:
             'hierarchy': 25,
         }
         
-        # 1. 文档质量
+        # 1. Documentation quality
         _, doc_score = QualityMetrics.has_good_documentation(func_info)
         score += weights['documentation'] * doc_score
         
-        # 2. 类型注解
+        # 2. Type annotations
         _, type_score = QualityMetrics.has_type_annotations(func_info)
         score += weights['type_annotations'] * type_score
         
-        # 3. 公开API
+        # 3. Public API
         _, public_score = QualityMetrics.is_public_api(func_info)
         score += weights['public_api'] * public_score
         
-        # 4. 命名规范
+        # 4. Naming convention
         _, name_score = QualityMetrics.naming_quality(func_info)
         score += weights['naming'] * name_score
         
-        # 5. 层级质量
+        # 5. Hierarchy quality
         _, hierarchy_score = QualityMetrics.hierarchy_quality(func_info)
         score += weights['hierarchy'] * hierarchy_score
         
-        # 额外加分项
-        # - 返回简单类型而非对象 (+5)
+        # Extra points
+        # - Returns simple type instead of object (+5)
         if not func_info.returns_object:
             score += 5
         
         return min(score, 100.0)
     
     def _normalize_function_purpose(self, func_name: str) -> str:
-        """提取函数的核心语义目的"""
-        # 移除常见前缀
+        """Extract core semantic purpose of the function"""
+        # Remove common prefixes
         name = func_name.lower()
         prefixes = ['get_', 'fetch_', 'query_', 'find_', 'search_',
                    'create_', 'add_', 'insert_', 'make_',
@@ -567,30 +574,30 @@ class APIAnalyzer:
         return name
     
     def _deduplicate_similar_functions(self, functions: List[FunctionInfo]) -> List[FunctionInfo]:
-        """去除功能相似的冗余函数"""
-        # 按核心目的分组
+        """Remove redundant functions with similar functionality"""
+        # Group by core purpose
         groups = defaultdict(list)
         for func in functions:
             key = self._normalize_function_purpose(func.name)
             groups[key].append(func)
         
-        # 每组只保留最优的
+        # Keep only the best one per group
         result = []
         for group_funcs in groups.values():
             if len(group_funcs) == 1:
                 result.append(group_funcs[0])
             else:
-                # 选择最优函数
+                # Select the best function
                 best = max(group_funcs, key=lambda f: (
-                    # 1. 质量分数
+                    # 1. Quality score
                     self.function_scores.get(f.qualname, 0),
-                    # 2. 文档长度
+                    # 2. Documentation length
                     len(f.doc or ''),
-                    # 3. 参数数量越少越好
+                    # 3. Fewer parameters is better
                     -len(f.parameters),
-                    # 4. 在__all__中
+                    # 4. In __all__
                     f.name in getattr(sys.modules.get(f.module), '__all__', []),
-                    # 5. 命名长度(通常短的更通用)
+                    # 5. Name length (shorter is usually more generic)
                     -len(f.name),
                 ))
                 result.append(best)
@@ -641,16 +648,16 @@ class APIAnalyzer:
                     if self._should_include(name, obj, module, is_method=False):
                         info = self._extract_function(name, obj, module)
                         if info:
-                            # 检查是否返回复杂对象
+                            # Check if returns complex object
                             self._analyze_return_type(info, obj)
                             
-                            # 检查是否适合作为 API
+                            # Check if suitable for API
                             if self._is_suitable_for_api(info, obj):
                                 self.functions.append(info)
                                 if info.returns_object:
                                     self.object_returning_functions.append(info)
                             elif self.skip_non_serializable:
-                                # 记录跳过原因
+                                # Record skip reason
                                 reason = self._get_unsuitability_reason(info, obj)
                                 self.skipped_functions.append({
                                     'qualname': info.qualname,
@@ -665,7 +672,7 @@ class APIAnalyzer:
         if hasattr(module, '__path__'):
             try:
                 for _, subname, _ in pkgutil.iter_modules(module.__path__, f"{module.__name__}."):
-                    # 过滤私有模块和测试模块 (通用规则)
+                    # Filter private modules and test modules (Universal rule)
                     last_part = subname.split('.')[-1]
                     if last_part.startswith('_') or last_part.lower() in ('tests', 'testing', 'test'):
                         continue
@@ -679,56 +686,56 @@ class APIAnalyzer:
                 pass
     
     def _scan_class(self, cls: type, module: ModuleType):
-        """扫描类 - 仅保留静态方法和类方法(工厂方法)，过滤实例方法"""
-        # 策略：只提取不需要实例就能调用的方法（工厂方法、静态工具）
-        # 实例方法应通过 call-object-method 调用，不作为顶级 Tool 生成
+        """Scan class - Keep only static methods and class methods (factory methods), filter instance methods"""
+        # Strategy: Only extract methods that can be called without an instance (factory methods, static utilities)
+        # Instance methods should be called via call-object-method, not exposed as top-level Tools
         
         for name, member in inspect.getmembers(cls):
             if name.startswith('_'):
                 continue
             
-            # 必须是可调用的
+            # Must be callable
             if not callable(member):
                 continue
                 
             should_extract = False
             
-            # Case 1: 类方法 (@classmethod)
-            # inspect.ismethod() 对类方法返回 True，且 __self__ 绑定到类
+            # Case 1: Class method (@classmethod)
+            # inspect.ismethod() returns True for class methods, and __self__ is bound to the class
             if inspect.ismethod(member) and member.__self__ is cls:
                 should_extract = True
                 
-            # Case 2: 函数 (可能是实例方法或静态方法)
+            # Case 2: Function (could be instance method or static method)
             elif inspect.isfunction(member):
                 try:
                     sig = inspect.signature(member)
                     params = list(sig.parameters.keys())
                     
-                    # 签名自省过滤
+                    # Signature introspection filtering
                     if not params:
-                        # 无参数函数 -> 静态方法 -> 保留
+                        # No-param function -> static method -> keep
                         should_extract = True
                     elif params[0] == 'self':
-                        # 第一个参数是 self -> 实例方法 -> 过滤
+                        # First param is self -> instance method -> filter
                         should_extract = False
                     elif params[0] == 'cls':
-                        # 第一个参数是 cls -> 类方法 (未被 @classmethod 装饰的情况) -> 保留
+                        # First param is cls -> class method (not decorated with @classmethod) -> keep
                         should_extract = True
                     else:
-                        # 其他情况 -> 静态方法 -> 保留
+                        # Other cases -> static method -> keep
                         should_extract = True
                 except (ValueError, TypeError):
-                    # 无法获取签名 -> 保守跳过
+                    # Cannot get signature -> conservatively skip
                     should_extract = False
             
             if should_extract:
                 if self._should_include(name, member, module, is_method=True):
                     info = self._extract_function(name, member, module, class_name=cls.__name__)
                     if info:
-                        # 分析返回类型
+                        # Analyze return type
                         self._analyze_return_type(info, member)
                         
-                        # 检查是否适合作为 API
+                        # Check if suitable for API
                         if self._is_suitable_for_api(info, member):
                             self.functions.append(info)
                             if info.returns_object:
@@ -741,11 +748,11 @@ class APIAnalyzer:
                             })
     
     def _should_include(self, name: str, obj: Any, module: ModuleType = None, is_method: bool = False) -> bool:
-        """判断是否包含 - 通用智能版"""
+        """Determine whether to include - Universal Intelligent Version"""
         if not callable(obj) or name.startswith('_'):
             return False
         
-        # 基础检查：必须属于本库
+        # Basic check: Must belong to this library
         if hasattr(obj, '__module__') and obj.__module__:
             if not obj.__module__.startswith(self.library_name):
                 return False
@@ -753,48 +760,48 @@ class APIAnalyzer:
         if is_method:
             return True
 
-        # 模块级函数的关键过滤逻辑
+        # Key filtering logic for module-level functions
         if module:
-            # 1. 优先尊崇 __all__
-            # 如果模块定义了 __all__，那么只有在其中的才是公开 API
+            # 1. Prioritize __all__
+            # If module defines __all__, only those in it are public APIs
             if hasattr(module, '__all__'):
                 return name in module.__all__
                 
-            # 2. 如果没有 __all__，采用“定义地原则”
-            # 只有定义在当前模块的函数才被视为该模块的 API
-            # 这能有效过滤掉 import 进来的工具函数
+            # 2. If no __all__, use "Definition Place Principle"
+            # Only functions defined in the current module are considered APIs of that module
+            # This effectively filters out imported utility functions
             if obj.__module__ == module.__name__:
                 return True
                 
-            # 3. 处理 __init__.py 的重导出 (Facade Pattern)
-            # 如果当前模块是包的初始化文件，它通常会从子模块导入功能并暴露
-            # 判断依据：模块名是包名，或者文件路径是 __init__.py
+            # 3. Handle __init__.py re-exports (Facade Pattern)
+            # If current module is package init file, it usually imports functionality from submodules and exposes it
+            # Criteria: module name is package name, or file path is __init__.py
             is_init = False
             if hasattr(module, '__file__') and module.__file__:
                 is_init = module.__file__.endswith('__init__.py')
             
             if is_init:
-                # 允许从子模块导入
-                # 例如：在 pandas/__init__.py 中导入 pandas.core.frame.DataFrame
+                # Allow import from submodules
+                # e.g. import pandas.core.frame.DataFrame in pandas/__init__.py
                 if obj.__module__.startswith(module.__name__):
                     return True
             
-            # 4. 其他情况（普通模块中的导入），视为依赖，不作为 API 暴露
-            # 例如：在 pandas/core/frame.py 中导入了 pandas/core/common.py 的函数
-            # 除非它在 __all__ 中（上面已处理），否则不应该被视为 frame.py 的 API
+            # 4. Other cases (imports in normal modules), considered dependencies, not exposed as API
+            # e.g. pandas/core/frame.py imports functions from pandas/core/common.py
+            # Unless it is in __all__ (handled above), it should not be considered an API of frame.py
             return False
 
         return True
     
     def _infer_return_type_from_ast(self, func_obj: Any) -> Optional[str]:
-        """通过AST分析推断返回类型(静态分析，无副作用)"""
+        """Infer return type via AST analysis (Static analysis, no side effects)"""
         try:
             source = inspect.getsource(func_obj)
-            # 处理缩进问题
+            # Handle indentation issues
             source = inspect.cleandoc(source)
             tree = ast.parse(source)
             
-            # 查找函数定义
+            # Find function definition
             func_def = None
             for node in ast.walk(tree):
                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
@@ -804,7 +811,7 @@ class APIAnalyzer:
             if not func_def:
                 return None
                 
-            # 查找返回语句
+            # Find return statements
             returns = []
             for node in ast.walk(func_def):
                 if isinstance(node, ast.Return):
@@ -813,7 +820,7 @@ class APIAnalyzer:
                     elif isinstance(node.value, ast.Constant):
                         returns.append(type(node.value.value).__name__)
                     elif isinstance(node.value, ast.Call):
-                        # 尝试获取被调用函数/类的名称
+                        # Try to get called function/class name
                         if isinstance(node.value.func, ast.Name):
                             returns.append(node.value.func.id)
                         elif isinstance(node.value.func, ast.Attribute):
@@ -822,7 +829,7 @@ class APIAnalyzer:
             if not returns:
                 return "None"
             
-            # 如果所有返回类型相同
+            # If all return types are the same
             if len(set(returns)) == 1:
                 return returns[0]
             
@@ -832,35 +839,35 @@ class APIAnalyzer:
             return None
 
     def _analyze_return_type(self, func_info: FunctionInfo, func_obj: Any):
-        """分析函数返回类型，检测是否返回复杂对象"""
+        """Analyze function return type, check if it returns a complex object"""
         if not self.enable_state_management:
             return
         
-        # 1. 先检查类型注解
+        # 1. Check type annotation first
         if func_info.return_type is not None and func_info.return_type != inspect.Signature.empty:
             if not self._is_type_serializable(func_info.return_type):
                 func_info.returns_object = True
                 func_info.object_methods = self._extract_object_methods(func_info.return_type)
                 return
         
-        # 2. AST静态分析 (替代运行时检测)
-        # 运行时检测在大型库(如pandas)中会导致严重的性能问题和副作用
+        # 2. AST static analysis (replaces runtime check)
+        # Runtime check causes severe performance issues and side effects in large libraries (like pandas)
         try:
             inferred_type = self._infer_return_type_from_ast(func_obj)
             if inferred_type:
-                # 简单的启发式判断：如果返回的是看起来像类名的东西
+                # Simple heuristic: if it looks like a class name
                 if inferred_type[0].isupper() and inferred_type not in ('None', 'True', 'False'):
-                    # 检查是否是基本类型
+                    # Check if basic type
                     if inferred_type not in ('int', 'float', 'str', 'bool', 'list', 'dict', 'set', 'tuple'):
                         func_info.returns_object = True
-                        # 尝试获取该类型的定义（如果可能）
-                        # 这里我们无法轻易获取到类对象，所以只标记为对象
+                        # Try to get definition of that type (if possible)
+                        # Here we cannot easily get the class object, so just mark as object
                         return
         except:
             pass
     
     def _extract_object_methods(self, obj_type: Any) -> List[Dict]:
-        """提取对象的可用方法"""
+        """Extract available methods of the object"""
         methods = []
         
         try:
@@ -892,18 +899,18 @@ class APIAnalyzer:
         except:
             pass
         
-        return methods[:20]  # 限制数量
+        return methods[:20]  # Limit quantity
     
     def _is_type_serializable(self, annotation: Any) -> bool:
-        """检查类型是否可序列化 - 通用机制"""
+        """Check if type is serializable - Universal Mechanism"""
         if annotation is None or annotation == inspect.Parameter.empty:
-            return True  # 无类型注解，假设可以
+            return True  # No type annotation, assume yes
         
-        # 基本类型
+        # Basic types
         if annotation in self.SERIALIZABLE_TYPES:
             return True
         
-        # 字符串注解
+        # String annotations
         if isinstance(annotation, str):
             annotation_lower = annotation.lower()
             if annotation_lower in ('int', 'float', 'str', 'bool', 'bytes', 'none', 'any'):
@@ -912,18 +919,18 @@ class APIAnalyzer:
                 return True
             return False
         
-        # typing 模块的类型
+        # Types from typing module
         origin = get_origin(annotation)
         args = get_args(annotation)
         
-        # List, Dict, Tuple, Set, Optional 等
+        # List, Dict, Tuple, Set, Optional etc.
         if origin in (list, dict, tuple, set, List, Dict, Tuple, Set):
-            # 递归检查内部类型
+            # Recursively check internal types
             if args:
                 return all(self._is_type_serializable(arg) for arg in args)
             return True
         
-        # Union 和 Optional
+        # Union and Optional
         if origin is Union:
             return all(self._is_type_serializable(arg) for arg in args)
         
@@ -931,11 +938,11 @@ class APIAnalyzer:
         if annotation is Any:
             return True
         
-        # dataclass 可以序列化
+        # dataclass is serializable
         if is_dataclass(annotation):
             return True
         
-        # 检查是否是 Pydantic BaseModel
+        # Check if Pydantic BaseModel
         try:
             from pydantic import BaseModel
             if isinstance(annotation, type) and issubclass(annotation, BaseModel):
@@ -943,18 +950,18 @@ class APIAnalyzer:
         except ImportError:
             pass
         
-        # 其他自定义类型 - 通过尝试序列化来判断
-        # 对于用户自定义类，如果有__dict__属性通常可以序列化
+        # Other custom types - Judge by trying to serialize
+        # For user custom classes, if they have __dict__ attribute, usually serializable
         if isinstance(annotation, type):
             if hasattr(annotation, '__dict__'):
-                # 尝试检查是否有简单的属性
+                # Try to check if it has simple attributes
                 return True
         
         return False
     
     def _is_suitable_for_api(self, func_info: FunctionInfo, func_obj: Any) -> bool:
-        """检查函数是否适合作为 API"""
-        # 1. 输入复杂度过滤
+        """Check if function is suitable for API"""
+        # 1. Input complexity filter
         if self.enable_input_complexity_filter:
             if not self._check_input_complexity(func_obj):
                 return False
@@ -962,64 +969,64 @@ class APIAnalyzer:
         if not self.skip_non_serializable:
             return True
         
-        # 1. 检查参数类型
+        # 1. Check parameter types
         try:
             sig = inspect.signature(func_obj)
             for param_name, param in sig.parameters.items():
                 if param_name in ('self', 'cls'):
                     continue
                 
-                # 检查参数类型是否可序列化
+                # Check if parameter type is serializable
                 if not self._is_type_serializable(param.annotation):
                     return False
                 
-                # 检查默认值是否可序列化
+                # Check if default value is serializable
                 if param.default != inspect.Parameter.empty:
                     if not self._is_value_serializable(param.default):
                         return False
         except:
             pass
         
-        # 2. 如果启用状态管理，返回对象的函数也接受
+        # 2. If state management enabled, functions returning objects are also accepted
         if self.enable_state_management and func_info.returns_object:
             return True
         
-        # 3. 检查返回类型注解
+        # 3. Check return type annotation
         if func_info.return_type is not None:
             if not self._is_type_serializable(func_info.return_type):
-                # 如果没有启用状态管理，则拒绝
+                # If state management not enabled, reject
                 if not self.enable_state_management:
                     return False
         
-        # 4. 运行时检测已移除，改为基于配置的策略
+        # 4. Runtime check removed, changed to configuration-based strategy
         if func_info.return_type is None or func_info.return_type == inspect.Signature.empty:
-            # 如果启用了状态管理，我们假设它是安全的（或者返回对象）
+            # If state management is enabled, we assume it is safe (or returns object)
             if self.enable_state_management:
                 return True
             else:
-                # 如果没有状态管理，且无法确定返回类型，保守起见拒绝
+                # If no state management and return type undetermined, conservatively reject
                 return False
         
         return True
     
     def _check_input_complexity(self, func_obj: Any) -> bool:
-        """输入复杂度过滤器：只允许接受基本类型或容器类型的函数"""
+        """Input complexity filter: Only allow functions accepting basic types or container types"""
         try:
             sig = inspect.signature(func_obj)
             for name, param in sig.parameters.items():
-                # 忽略 self, cls
+                # Ignore self, cls
                 if name in ('self', 'cls'):
                     continue
                 
-                # 只检查必填参数 (没有默认值)
+                # Only check required parameters (no default value)
                 if param.default != inspect.Parameter.empty:
                     continue
                 
-                # 检查类型注解
+                # Check type annotation
                 annotation = param.annotation
                 
-                # 如果没有注解，视为 Any (Safe)，除非我们想非常严格
-                # 但为了兼容性，我们假设无注解是安全的（或者无法判断）
+                # If no annotation, treat as Any (Safe), unless we want to be very strict
+                # But for compatibility, we assume no annotation is safe (or undetermined)
                 if annotation == inspect.Parameter.empty:
                     continue
 
@@ -1028,12 +1035,12 @@ class APIAnalyzer:
             
             return True
         except:
-            # 如果无法获取签名，保守起见保留（或者丢弃？）
-            # 通常无法获取签名的函数可能不是 Python 函数
+            # If cannot get signature, conservatively keep (or discard?)
+            # Usually functions without signature might not be Python functions
             return True
 
     def _is_safe_input_type(self, annotation: Any) -> bool:
-        """检查类型是否是安全的（基本类型或容器）"""
+        """Check if type is safe (basic type or container)"""
         if annotation is None or annotation == inspect.Parameter.empty:
             return True
 
@@ -1045,13 +1052,13 @@ class APIAnalyzer:
                 return any(self._is_safe_input_type(p) for p in parts)
 
             ann_lower = annotation.lower()
-            # 基本类型
+            # Basic types
             if ann_lower in ('int', 'float', 'str', 'bool', 'bytes', 'none', 'any', 'filepath', 'path'):
                 return True
-            # 容器类型
+            # Container types
             if ann_lower in ('list', 'dict', 'set', 'tuple', 'sequence', 'iterable', 'mapping'):
                 return True
-            # 泛型容器
+            # Generic containers
             if '[' in annotation:
                 base = annotation.split('[')[0].lower()
                 if base in ('list', 'dict', 'union', 'optional', 'set', 'tuple', 'sequence', 'iterable', 'mapping'):
@@ -1062,22 +1069,22 @@ class APIAnalyzer:
         origin = get_origin(annotation)
         args = get_args(annotation)
 
-        # 基本类型
+        # Basic types
         if annotation in (int, float, str, bool, list, dict, set, tuple, bytes, type(None)):
             return True
         
         if annotation is Any:
             return True
 
-        # 容器类型
+        # Container types
         if origin in (list, dict, set, tuple, List, Dict, Set, Tuple, Sequence, Iterable, Mapping):
             return True
         
-        # Union (只要有一个是安全的，就认为是安全的，因为调用者可以选择安全的那个)
+        # Union (as long as one is safe, consider safe, because caller can choose the safe one)
         if origin is Union:
             return any(self._is_safe_input_type(arg) for arg in args)
             
-        # PathLike (视为字符串)
+        # PathLike (treat as string)
         try:
             import os
             if isinstance(annotation, type) and issubclass(annotation, os.PathLike):
@@ -1088,46 +1095,46 @@ class APIAnalyzer:
         return False
     
     def _suitable_for_api_via_signature(self, func_info: FunctionInfo, func_obj: Any) -> bool:
-        """通过签名检查函数是否适合作为 API"""
+        """Check if function is suitable for API via signature"""
         try:
             sig = inspect.signature(func_obj)
             for param_name, param in sig.parameters.items():
                 if param_name in ('self', 'cls'):
                     continue
                 
-                # 检查参数类型是否可序列化
+                # Check if parameter type is serializable
                 if not self._is_type_serializable(param.annotation):
                     return False
                 
-                # 检查默认值是否可序列化
+                # Check if default value is serializable
                 if param.default != inspect.Parameter.empty:
                     if not self._is_value_serializable(param.default):
                         return False
         except:
             return False
         
-        # 2. 如果启用状态管理，返回对象的函数也接受
+        # 2. If state management enabled, functions returning objects are also accepted
         if self.enable_state_management and func_info.returns_object:
             return True
         
-        # 3. 检查返回类型注解
+        # 3. Check return type annotation
         if func_info.return_type is not None:
             if not self._is_type_serializable(func_info.return_type):
-                # 如果没有启用状态管理，则拒绝
+                # If state management not enabled, reject
                 if not self.enable_state_management:
                     return False
         
         return True
     
     def _suitable_for_api_via_ast(self, func_info: FunctionInfo, func_obj: Any) -> bool:
-        """通过AST分析检查函数是否适合作为 API"""
-        # 1. AST分析：检查返回值类型
+        """Check if function is suitable for API via AST analysis"""
+        # 1. AST analysis: Check return value type
         try:
             inferred_type = self._infer_return_type_from_ast(func_obj)
             if inferred_type:
-                # 简单的启发式判断：如果返回的是看起来像类名的东西
+                # Simple heuristic: if it looks like a class name
                 if inferred_type[0].isupper() and inferred_type not in ('None', 'True', 'False'):
-                    # 检查是否是基本类型
+                    # Check if basic type
                     if inferred_type not in ('int', 'float', 'str', 'bool', 'list', 'dict', 'set', 'tuple'):
                         return False
         except:
@@ -1136,8 +1143,8 @@ class APIAnalyzer:
         return True
     
     def _is_suitable_for_api(self, func_info: FunctionInfo, func_obj: Any) -> bool:
-        """检查函数是否适合作为 API"""
-        # 1. 输入复杂度过滤
+        """Check if function is suitable for API"""
+        # 1. Input complexity filter
         if self.enable_input_complexity_filter:
             if not self._check_input_complexity(func_obj):
                 return False
@@ -1145,39 +1152,39 @@ class APIAnalyzer:
         if not self.skip_non_serializable:
             return True
         
-        # 尝试通过签名判断
+        # Try to judge via signature
         if self._suitable_for_api_via_signature(func_info, func_obj):
             return True
         
-        # 尝试通过AST分析判断
+        # Try to judge via AST analysis
         if self.enable_state_management and func_info.returns_object:
-            # 返回对象的函数，允许作为API
+            # Function returning object, allow as API
             return True
         
         if func_info.return_type is not None:
             if not self._is_type_serializable(func_info.return_type):
-                # 如果没有启用状态管理，则拒绝
+                # If state management not enabled, reject
                 if not self.enable_state_management:
                     return False
         
         return True
     
     def _is_value_serializable(self, value: Any) -> bool:
-        """检查值是否可 JSON 序列化"""
+        """Check if value is JSON serializable"""
         if value is None:
             return True
         if isinstance(value, (int, float, str, bool)):
             return True
         if isinstance(value, (list, tuple, dict, set)):
             return True
-        # 其他复杂对象认为不可序列化
+        # Other complex objects considered not serializable
         return False
     
     def _get_unsuitability_reason(self, func_info: FunctionInfo, func_obj: Any) -> str:
-        """获取函数不适合作为 API 的原因"""
+        """Get reason why function is not suitable for API"""
         reasons = []
         
-        # 检查参数
+        # Check parameters
         try:
             sig = inspect.signature(func_obj)
             for param_name, param in sig.parameters.items():
@@ -1186,27 +1193,27 @@ class APIAnalyzer:
                 
                 if not self._is_type_serializable(param.annotation):
                     param_type = self._get_type_name(param.annotation)
-                    reasons.append(f"参数 '{param_name}' 类型不可序列化 ({param_type})")
+                    reasons.append(f"Parameter '{param_name}' type not serializable ({param_type})")
         except:
             pass
         
-        # 检查返回类型注解
+        # Check return type annotation
         if func_info.return_type is not None:
             if not self._is_type_serializable(func_info.return_type):
                 return_type = self._get_type_name(func_info.return_type)
-                reasons.append(f"返回类型不可序列化 ({return_type})")
+                reasons.append(f"Return type not serializable ({return_type})")
         
-        # 检查运行时返回值
+        # Check runtime return value
         if not reasons and (func_info.return_type is None or func_info.return_type == inspect.Signature.empty):
             if not self.enable_state_management:
-                reasons.append("返回类型未知且未启用状态管理")
+                reasons.append("Return type unknown and state management not enabled")
         
-        return "; ".join(reasons) if reasons else "未知原因"
+        return "; ".join(reasons) if reasons else "Unknown reason"
     
     def _get_type_name(self, annotation: Any) -> str:
-        """获取类型的可读名称"""
+        """Get readable name of type"""
         if annotation is None or annotation == inspect.Parameter.empty:
-            return "未知"
+            return "Unknown"
         
         if isinstance(annotation, str):
             return annotation
@@ -1218,13 +1225,13 @@ class APIAnalyzer:
     
     def _extract_function(self, name: str, obj: Any, module: ModuleType, 
                          class_name: Optional[str] = None) -> Optional[FunctionInfo]:
-        """提取函数信息"""
+        """Extract function information"""
         try:
             sig = inspect.signature(obj)
         except:
             return None
         
-        # 解析文档字符串
+        # Parse docstring
         doc_string = inspect.getdoc(obj)
         parsed_doc = None
         param_docs = {}
@@ -1237,28 +1244,28 @@ class APIAnalyzer:
                 pass
 
         parameters = []
-        raw_param_annotations = []  # 记录原始注解
+        raw_param_annotations = []  # Record raw annotations
         existing_param_names = set()
         
         for pname, param in sig.parameters.items():
             if pname in ('self', 'cls'):
                 continue
             
-            # 记录原始注解
+            # Record raw annotations
             raw_param_annotations.append(param.annotation)
             
-            # 处理 **kwargs
+            # Handle **kwargs
             if param.kind == inspect.Parameter.VAR_KEYWORD:
-                # 从文档中提取额外的参数
+                # Extract extra parameters from docstring
                 if parsed_doc:
                     for doc_p in parsed_doc.params:
                         if doc_p.arg_name not in existing_param_names and doc_p.arg_name not in ('self', 'cls', 'args', 'kwargs'):
-                            # 这是一个只在文档中存在的参数（通过 kwargs 传递）
+                            # This is a parameter only existing in docstring (passed via kwargs)
                             param_info = self._create_param_from_doc(doc_p, name)
                             parameters.append(param_info)
                 continue
 
-            # 跳过 *args
+            # Skip *args
             if param.kind == inspect.Parameter.VAR_POSITIONAL:
                 continue
             
@@ -1269,24 +1276,24 @@ class APIAnalyzer:
             if has_default:
                 default_value = self._serialize_default(param.default)
             
-            # 获取文档信息
+            # Get doc info
             doc_param = param_docs.get(pname)
             description = doc_param.description if doc_param else None
             
-            # 解析类型：优先使用签名中的注解，如果是 Any 或空，尝试使用文档中的类型
+            # Parse type: Prioritize annotation in signature, if Any or empty, try to use type in docstring
             schema = TypeParser.parse_annotation(param.annotation)
             if (not schema or schema == {}) and doc_param and doc_param.type_name:
                 schema = TypeParser._parse_string_annotation(doc_param.type_name)
             
-            # 如果不确定类型，就不指定 type，允许任何类型（Any）
+            # If type uncertain, do not specify type, allow any type (Any)
             if not schema:
                 schema = {}
             
-            # 添加描述
+            # Add description
             if description:
                 schema["description"] = description
                 
-            # 尝试从描述中提取枚举值
+            # Try to extract enum values from description
             if description and "enum" not in schema:
                 enums = self._extract_enums_from_description(description)
                 if enums:
@@ -1314,7 +1321,7 @@ class APIAnalyzer:
         http_method = self._infer_method(name)
         qualname = f"{module.__name__}.{class_name}.{name}" if class_name else f"{module.__name__}.{name}"
         
-        # 🔥 传递模块名
+        # 🔥 Pass module name
         path = self._generate_path(name, parameters, class_name, module_name=module.__name__)
         
         return FunctionInfo(
@@ -1334,22 +1341,22 @@ class APIAnalyzer:
         )
 
     def _extract_enums_from_description(self, description: str) -> Optional[List[str]]:
-        """从描述中提取枚举值"""
+        """Extract enum values from description"""
         if not description:
             return None
             
-        # 模式 1: One of: 'a', 'b', 'c'
+        # Pattern 1: One of: 'a', 'b', 'c'
         match = re.search(r'One of:? (.*)', description, re.IGNORECASE)
         if match:
             values_str = match.group(1)
-            # 尝试提取引号中的内容
+            # Try to extract content in quotes
             values = re.findall(r"['\"]([^'\"]+)['\"]", values_str)
             if values:
                 return values
-            # 尝试逗号分隔
+            # Try comma separated
             return [v.strip() for v in values_str.split(',') if v.strip()]
             
-        # 模式 2: {'a', 'b', 'c'}
+        # Pattern 2: {'a', 'b', 'c'}
         match = re.search(r'\{([^}]+)\}', description)
         if match:
             values_str = match.group(1)
@@ -1360,7 +1367,7 @@ class APIAnalyzer:
         return None
 
     def _create_param_from_doc(self, doc_param: Any, func_name: str) -> Dict[str, Any]:
-        """从文档参数创建参数信息"""
+        """Create parameter info from docstring parameter"""
         schema = TypeParser._parse_string_annotation(doc_param.type_name) if doc_param.type_name else {"type": "string"}
         
         if doc_param.description:
@@ -1379,7 +1386,7 @@ class APIAnalyzer:
         }
     
     def _serialize_default(self, value: Any) -> Any:
-        """安全序列化默认值"""
+        """Safely serialize default value"""
         if value is None:
             return None
         
@@ -1397,13 +1404,13 @@ class APIAnalyzer:
             return None
     
     def _classify_param(self, param_name: str, func_name: str) -> str:
-        """分类参数"""
+        """Classify parameter"""
         if re.match(r'.*_?id$', param_name, re.IGNORECASE):
             return 'path'
         return 'query'
     
     def _infer_method(self, name: str) -> str:
-        """推断HTTP方法"""
+        """Infer HTTP method"""
         name_lower = name.lower()
         
         if any(name_lower.startswith(p) for p in ['get', 'list', 'fetch', 'search', 'query', 'find']):
@@ -1424,9 +1431,9 @@ class APIAnalyzer:
             return 'post'
     
     def _generate_path(self, name: str, parameters: List[Dict], class_name: Optional[str] = None, module_name: str = None) -> str:
-        """生成路径（支持多种策略）"""
+        """Generate path (supports multiple strategies)"""
         
-        # 1. Simple: 只用类名和函数名（默认，可能冲突）
+        # 1. Simple: Only use class name and function name (default, may conflict)
         if self.path_style == 'simple':
             base = f"/{class_name.lower()}" if class_name else ""
             path_params = [p['name'] for p in parameters if p['in'] == 'path']
@@ -1437,12 +1444,12 @@ class APIAnalyzer:
             else:
                 return f"{base}/{name}"
         
-        # 2. Module: 包含相对模块路径（去掉库名）
+        # 2. Module: Include relative module path (remove library name)
         elif self.path_style == 'module':
             if module_name:
-                # 移除库名前缀：pdfkit.config.Configuration -> config/configuration
+                # Remove library name prefix: pdfkit.config.Configuration -> config/configuration
                 module_parts = module_name.replace(f"{self.library_name}.", "").split('.')
-                # 过滤掉空字符串和库名本身
+                # Filter out empty strings and library name itself
                 module_parts = [p for p in module_parts if p and p != self.library_name]
                 module_path = '/'.join([p.lower() for p in module_parts]) if module_parts else ""
                 
@@ -1460,10 +1467,10 @@ class APIAnalyzer:
             else:
                 return f"{base}/{name}"
         
-        # 3. Full: 完整模块路径
+        # 3. Full: Full module path
         elif self.path_style == 'full':
             if module_name:
-                # 完整路径：pdfkit.config.Configuration -> pdfkit/config/configuration
+                # Full path: pdfkit.config.Configuration -> pdfkit/config/configuration
                 module_parts = module_name.split('.')
                 module_path = '/'.join([p.lower() for p in module_parts])
                 
@@ -1483,7 +1490,7 @@ class APIAnalyzer:
             else:
                 return f"{base}/{name}"
         
-        # 4. Auto: 简单路径，后续检测冲突后升级（在 _generate_openapi 中处理）
+        # 4. Auto: Simple path, upgrade after detecting conflict (handled in _generate_openapi)
         else:  # 'auto'
             base = f"/{class_name.lower()}" if class_name else ""
             path_params = [p['name'] for p in parameters if p['in'] == 'path']
@@ -1495,13 +1502,13 @@ class APIAnalyzer:
                 return f"{base}/{name}"
     
     def _generate_openapi(self) -> Dict[str, Any]:
-        """生成OpenAPI规范"""
+        """Generate OpenAPI specification"""
         paths = {}
         conflicts = []
         
-        # 如果是 auto 模式，需要检测冲突并重新生成路径
+        # If auto mode, need to detect conflicts and regenerate paths
         if self.path_style == 'auto':
-            # 第一遍：收集所有路径和方法的组合
+            # First pass: Collect all path and method combinations
             path_method_funcs = {}  # (path, method) -> [FunctionInfo]
             
             for func in self.functions:
@@ -1510,17 +1517,17 @@ class APIAnalyzer:
                     path_method_funcs[key] = []
                 path_method_funcs[key].append(func)
             
-            # 检测冲突并重新生成路径
+            # Detect conflicts and regenerate paths
             for (path, method), funcs in path_method_funcs.items():
                 if len(funcs) > 1:
-                    # 有冲突，尝试升级路径
+                    # Conflict exists, try to upgrade path
                     for func in funcs:
-                        # 先尝试 module 模式
+                        # Try module mode first
                         old_style = self.path_style
                         self.path_style = 'module'
                         new_path = self._generate_path(func.name, func.parameters, func.class_name, func.module)
                         
-                        # 检查新路径是否还冲突
+                        # Check if new path still conflicts
                         still_conflict = False
                         for other_func in funcs:
                             if other_func is not func:
@@ -1530,14 +1537,14 @@ class APIAnalyzer:
                                     still_conflict = True
                                     break
                         
-                        # 如果还冲突，升级为 full 模式
+                        # If still conflicts, upgrade to full mode
                         if still_conflict:
                             self.path_style = 'full'
                             new_path = self._generate_path(func.name, func.parameters, func.class_name, func.module)
                         
                         self.path_style = old_style
                         
-                        # 记录冲突
+                        # Record conflict
                         conflicts.append({
                             'old_path': path,
                             'new_path': new_path,
@@ -1545,10 +1552,10 @@ class APIAnalyzer:
                             'qualname': func.qualname
                         })
                         
-                        # 更新路径
+                        # Update path
                         func.path = new_path
         
-        # 构建最终的 paths
+        # Build final paths
         for func in self.functions:
             operation = self._build_operation(func)
             
@@ -1570,10 +1577,10 @@ class APIAnalyzer:
         }
     
     def _generate_description(self) -> str:
-        """生成API描述，包含质量统计"""
+        """Generate API description, including quality statistics"""
         desc = f"Auto-generated API for {self.library_name}"
         
-        # 添加质量统计信息
+        # Add quality statistics
         if self.quality_stats and self.enable_quality_filter:
             stats = self.quality_stats
             desc += f"""
@@ -1599,12 +1606,12 @@ class APIAnalyzer:
         return desc
     
     def _build_operation(self, func: FunctionInfo) -> Dict[str, Any]:
-        """构建操作"""
+        """Build operation"""
         operation = {
             "summary": func.name.replace('_', ' ').title(),
             "operationId": func.qualname.replace('.', '_'),
             "tags": [func.module.split('.')[0]],
-            # 新增：保存函数元信息
+            # New: Save function meta info
             "x-function": {
                 "module": func.module,
                 "class": func.class_name,
@@ -1624,9 +1631,9 @@ class APIAnalyzer:
         path_params = [p for p in func.parameters if p['in'] == 'path']
         query_params = [p for p in func.parameters if p['in'] == 'query']
         
-        # 对于 POST/PUT/PATCH，query 参数应该在 requestBody 中，不在 parameters 中
+        # For POST/PUT/PATCH, query parameters should be in requestBody, not in parameters
         if func.http_method in ('post', 'put', 'patch'):
-            # 只添加 path 参数到 parameters
+            # Only add path parameters to parameters
             if path_params:
                 operation["parameters"] = []
                 for param in path_params:
@@ -1640,7 +1647,7 @@ class APIAnalyzer:
                         p["schema"]["default"] = param["default"]
                     operation["parameters"].append(p)
             
-            # query 参数放在 requestBody 中
+            # query parameters put in requestBody
             if query_params:
                 properties = {}
                 required = []
@@ -1663,7 +1670,7 @@ class APIAnalyzer:
                     }
                 }
         else:
-            # 对于 GET/DELETE，所有参数都在 parameters 中
+            # For GET/DELETE, all parameters are in parameters
             if path_params or query_params:
                 operation["parameters"] = []
                 for param in path_params + query_params:
@@ -1677,17 +1684,17 @@ class APIAnalyzer:
                         p["schema"]["default"] = param["default"]
                     operation["parameters"].append(p)
         
-        # 响应 schema - 如果返回对象，使用特殊格式
+        # Response schema - if returns object, use special format
         if func.returns_object:
             response_schema = {
                 "type": "object",
                 "properties": {
                     "success": {"type": "boolean"},
-                    "object_id": {"type": "string", "description": "对象ID，用于后续调用"},
-                    "object_type": {"type": "string", "description": "对象类型"},
+                    "object_id": {"type": "string", "description": "Object ID, used for subsequent calls"},
+                    "object_type": {"type": "string", "description": "Object type"},
                     "available_methods": {
                         "type": "array",
-                        "description": "可用的方法列表",
+                        "description": "List of available methods",
                         "items": {"type": "object"}
                     }
                 }
@@ -1708,7 +1715,7 @@ class APIAnalyzer:
 
 
 def _format_python_value(value: Any, indent: int = 0) -> str:
-    """将Python值格式化为代码字符串"""
+    """Format Python value as code string"""
     if value is None:
         return "None"
     elif isinstance(value, bool):
@@ -1740,7 +1747,7 @@ def _format_python_value(value: Any, indent: int = 0) -> str:
 
 
 def _infer_python_type(schema: Dict) -> str:
-    """推断Python类型"""
+    """Infer Python type"""
     type_map = {
         "integer": "int",
         "number": "float",
@@ -1755,55 +1762,55 @@ def _infer_python_type(schema: Dict) -> str:
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='Python库到OpenAPI转换器 - 通用智能版')
-    parser.add_argument('library', help='库名')
-    parser.add_argument('-o', '--output', default=None, help='输出文件（默认：<库名>_openapi.json）')
+    parser = argparse.ArgumentParser(description='Python Library to OpenAPI Converter - Universal Intelligent Version')
+    parser.add_argument('library', help='Library name')
+    parser.add_argument('-o', '--output', default=None, help='Output file (default: <library_name>_openapi.json)')
     
-    # 基础参数
-    parser.add_argument('--depth', type=int, default=2, help='模块扫描深度')
+    # Basic arguments
+    parser.add_argument('--depth', type=int, default=2, help='Module scan depth')
     parser.add_argument('--skip-non-serializable', action='store_true', 
-                       help='跳过不可序列化的函数（默认不跳过，使用状态管理）')
+                       help='Skip non-serializable functions (default not skip, use state management)')
     parser.add_argument('--no-state-management', action='store_true',
-                       help='禁用状态管理（不推荐）')
+                       help='Disable state management (not recommended)')
     parser.add_argument('--no-warnings', action='store_true', 
-                       help='不显示警告')
+                       help='Do not show warnings')
     
-    # 路径生成策略
+    # Path generation strategy
     parser.add_argument('--path-style', 
                        choices=['simple', 'module', 'full', 'auto'],
                        default='auto',
-                       help='路径生成策略')
+                       help='Path generation strategy')
     
-    # 质量控制参数 (新增)
+    # Quality control arguments (New)
     parser.add_argument('--quality-mode', 
                        choices=['strict', 'balanced', 'permissive'],
                        default='balanced',
-                       help='质量控制模式: strict(严格,<20个API), balanced(平衡,<50个), permissive(宽松,<100个)')
+                       help='Quality control mode: strict(<20 APIs), balanced(<50 APIs), permissive(<100 APIs)')
     
     parser.add_argument('--min-score', type=float, default=None,
-                       help='最低质量分数 (0-100, 默认: strict=85, balanced=70, permissive=60)')
+                       help='Minimum quality score (0-100, default: strict=85, balanced=70, permissive=60)')
     
     parser.add_argument('--max-functions', type=int, default=None,
-                       help='最大API数量 (默认: strict=20, balanced=50, permissive=100)')
+                       help='Maximum number of APIs (default: strict=20, balanced=50, permissive=100)')
     
     parser.add_argument('--no-quality-filter', action='store_true',
-                       help='禁用质量过滤')
+                       help='Disable quality filtering')
     
     parser.add_argument('--no-dedup', action='store_true',
-                       help='禁用去重功能')
+                       help='Disable deduplication')
     
     parser.add_argument('--no-input-complexity-filter', action='store_true',
-                       help='禁用输入复杂度过滤器（允许接受复杂对象的函数）')
+                       help='Disable input complexity filter (allow functions accepting complex objects)')
 
-    parser.add_argument('--stats', action='store_true', help='显示详细统计信息')
+    parser.add_argument('--stats', action='store_true', help='Show detailed statistics')
     
     args = parser.parse_args()
     
-    # 如果没有指定输出文件，使用库名作为前缀
+    # If output file not specified, use library name as prefix
     if args.output is None:
         args.output = f"{args.library}_openapi.json"
     
-    # 构建参数
+    # Build arguments
     analyzer_kwargs = {
         'max_depth': args.depth,
         'skip_non_serializable': args.skip_non_serializable,
@@ -1821,37 +1828,37 @@ def main():
     if args.max_functions is not None:
         analyzer_kwargs['max_functions'] = args.max_functions
     
-    print(f"[INFO] 分析库: {args.library}")
-    print(f"       质量模式: {args.quality_mode}")
+    print(f"[INFO] Analyzing library: {args.library}")
+    print(f"       Quality mode: {args.quality_mode}")
     
     analyzer = APIAnalyzer(args.library, **analyzer_kwargs)
     spec = analyzer.analyze()
     
     if "error" in spec:
-        print(f"[ERROR] 分析失败: {spec['error']}")
+        print(f"[ERROR] Analysis failed: {spec['error']}")
         sys.exit(1)
     
     with open(args.output, 'w', encoding='utf-8') as f:
         json.dump(spec, f, indent=2, ensure_ascii=False)
     
-    print(f"[SUCCESS] OpenAPI 规范已生成: {args.output}")
+    print(f"[SUCCESS] OpenAPI specification generated: {args.output}")
     
-    # 显示统计信息
+    # Show statistics
     if args.stats and analyzer.quality_stats:
-        print("\n[STATS] 质量统计:")
+        print("\n[STATS] Quality Statistics:")
         stats = analyzer.quality_stats
-        print(f"   模块扫描数: {stats['total_modules_scanned']}")
-        print(f"   发现函数数: {stats['total_functions_found']}")
-        print(f"   暴露API数: {stats['functions_after_filtering']}")
-        print(f"   平均分数: {stats['avg_score']:.1f}/100")
-        print(f"\n   分数分布:")
+        print(f"   Modules Scanned: {stats['total_modules_scanned']}")
+        print(f"   Functions Found: {stats['total_functions_found']}")
+        print(f"   APIs Exposed: {stats['functions_after_filtering']}")
+        print(f"   Average Score: {stats['avg_score']:.1f}/100")
+        print(f"\n   Score Distribution:")
         for score_range, count in stats['score_distribution'].items():
-            print(f"     {score_range}: {count} 个函数")
+            print(f"     {score_range}: {count} functions")
         
         if stats['top_10_functions']:
-            print(f"\n   Top 10 API:")
+            print(f"\n   Top 10 APIs:")
             for i, func in enumerate(stats['top_10_functions'], 1):
-                print(f"     {i}. {func['name']} (分数: {func['score']})")
+                print(f"     {i}. {func['name']} (Score: {func['score']})")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-库特定的序列化处理器
-这些处理器可以通过配置文件动态加载，而非硬编码到核心代码中
+Library-specific serialization handlers
+These handlers can be dynamically loaded via configuration instead of hardcoded into the core code
 """
 
 from typing import Any, Dict
@@ -10,23 +10,23 @@ import json
 
 
 class LibraryHandlers:
-    """库特定处理器集合"""
+    """Collection of library-specific handlers"""
     
     def __init__(self, config: Dict[str, Any]):
         """
-        config: library_specific配置
+        config: library_specific configuration
         """
         self.config = config
     
     def _handle_http_response(self, obj: Any, context: Dict) -> SerializationResult:
-        """处理HTTP响应对象（requests, httpx等通用）"""
+        """Handle HTTP response objects (requests, httpx, etc.)"""
         lib_config = self.config.get('requests', {})
-        max_text_length = lib_config.get('response_max_text_length', 10000)  # 增加默认长度
+        max_text_length = lib_config.get('response_max_text_length', 10000)  # Increase default length
         include_headers = lib_config.get('include_headers', True)
         include_cookies = lib_config.get('include_cookies', False)
         
         try:
-            # 通用HTTP响应接口
+            # Generic HTTP response interface
             data = {
                 '_type': f'{type(obj).__module__}.{type(obj).__name__}',
                 'status_code': getattr(obj, 'status_code', None),
@@ -36,18 +36,18 @@ class LibraryHandlers:
                 'encoding': getattr(obj, 'encoding', None)
             }
             
-            # 🔥 关键修复：正确提取响应内容
-            # 1. 优先尝试 JSON 内容
+            # 🔥 Critical Fix: Correctly extract response content
+            # 1. Try JSON content first
             try:
                 if hasattr(obj, 'json') and callable(obj.json):
                     json_data = obj.json()
                     data['content'] = json_data
                     data['content_type'] = 'json'
             except Exception:
-                # JSON 解析失败，继续尝试文本
+                # JSON parsing failed, continue to try text
                 pass
             
-            # 2. 如果没有 JSON，提取文本内容
+            # 2. If no JSON, extract text content
             if 'content' not in data and hasattr(obj, 'text'):
                 text = obj.text
                 if len(text) > max_text_length:
@@ -59,10 +59,10 @@ class LibraryHandlers:
                     data['content'] = text
                     data['content_type'] = 'text'
             
-            # 3. 如果都没有，尝试二进制内容
+            # 3. If neither, try binary content
             if 'content' not in data and hasattr(obj, 'content'):
                 content_bytes = obj.content
-                # 尝试解码为文本
+                # Try to decode as text
                 try:
                     text = content_bytes.decode(obj.encoding or 'utf-8')
                     if len(text) > max_text_length:
@@ -73,7 +73,7 @@ class LibraryHandlers:
                         data['content'] = text
                     data['content_type'] = 'text'
                 except UnicodeDecodeError:
-                    # 无法解码，返回 base64
+                    # Cannot decode, return base64
                     import base64
                     data['content'] = base64.b64encode(content_bytes[:max_text_length]).decode('ascii')
                     data['content_type'] = 'binary'
@@ -89,7 +89,7 @@ class LibraryHandlers:
             if include_cookies and hasattr(obj, 'cookies'):
                 data['cookies'] = dict(obj.cookies)
             
-            # 计算大小
+            # Calculate size
             size = len(json.dumps(data).encode('utf-8'))
             
             return SerializationResult(
@@ -98,11 +98,11 @@ class LibraryHandlers:
                 metadata={'size_bytes': size, 'handler': 'http_response'}
             )
         except Exception as e:
-            # 降级到默认处理
+            # Fallback to default handling
             return None
     
     def _handle_image(self, obj: Any, context: Dict) -> SerializationResult:
-        """处理PIL Image对象 -> Resource"""
+        """Handle PIL Image object -> Resource"""
         lib_config = self.config.get('PIL', {})
         thumbnail_size = tuple(lib_config.get('thumbnail_size', [200, 200]))
         image_format = lib_config.get('image_format', 'PNG')
@@ -111,19 +111,19 @@ class LibraryHandlers:
             import io
             import uuid
             
-            # 创建缩略图
+            # Create thumbnail
             thumb = obj.copy()
             thumb.thumbnail(thumbnail_size)
             
-            # 转换为字节
+            # Convert to bytes
             buffer = io.BytesIO()
             thumb.save(buffer, format=image_format)
             thumbnail_bytes = buffer.getvalue()
             
-            # 生成resource_id
+            # Generate resource_id
             resource_id = f"img_{uuid.uuid4().hex[:12]}"
             
-            # 返回Resource引用和缩略图
+            # Return Resource reference and thumbnail
             return SerializationResult(
                 type='resource',
                 data={
@@ -133,7 +133,7 @@ class LibraryHandlers:
                     'height': obj.height,
                     'mode': obj.mode,
                     'format': obj.format,
-                    'thumbnail_base64': None  # 可选：包含base64缩略图
+                    'thumbnail_base64': None  # Optional: include base64 thumbnail
                 },
                 metadata={
                     'resource_id': resource_id,
@@ -146,7 +146,7 @@ class LibraryHandlers:
             return None
     
     def _handle_pandas_dataframe(self, obj: Any, context: Dict) -> SerializationResult:
-        """处理pandas DataFrame（增强版）"""
+        """Handle pandas DataFrame (Enhanced)"""
         lib_config = self.config.get('pandas', {})
         max_rows = lib_config.get('max_rows_direct', 100)
         max_cols = lib_config.get('max_cols_direct', 20)
@@ -155,14 +155,14 @@ class LibraryHandlers:
         try:
             num_rows, num_cols = obj.shape
             
-            # 如果超过限制，返回对象引用
+            # If exceeds limit, return object reference
             if num_rows > max_rows or num_cols > max_cols:
                 preview = (
                     f"DataFrame(shape={obj.shape}, "
                     f"columns={obj.columns.tolist()[:5]}..., "
                     f"dtypes={dict(obj.dtypes.head())})"
                 )
-                return None  # 让默认处理器存储对象
+                return None  # Let default handler store object
             
             # Handle MultiIndex columns
             export_df = obj
@@ -171,8 +171,8 @@ class LibraryHandlers:
                 export_df = obj.copy()
                 export_df.columns = [str(col) for col in export_df.columns]
 
-            # 直接序列化
-            # 格式化浮点数
+            # Serialize directly
+            # Format floats
             if float_precision is not None:
                 formatted_data = export_df.round(float_precision).to_dict(orient='records')
             else:
@@ -202,7 +202,7 @@ class LibraryHandlers:
             return None
     
     def _handle_numpy_array(self, obj: Any, context: Dict) -> SerializationResult:
-        """处理numpy数组（增强版）"""
+        """Handle numpy array (Enhanced)"""
         lib_config = self.config.get('numpy', {})
         max_elements = lib_config.get('max_elements_direct', 1000)
         float_precision = lib_config.get('float_precision', 4)
@@ -210,14 +210,14 @@ class LibraryHandlers:
         try:
             import numpy as np
             
-            # 检查元素数量
+            # Check element count
             num_elements = obj.size
             
             if num_elements > max_elements:
                 preview = f"ndarray(shape={obj.shape}, dtype={obj.dtype}, size={num_elements})"
-                return None  # 存储对象
+                return None  # Store object
             
-            # 格式化数组
+            # Format array
             if np.issubdtype(obj.dtype, np.floating):
                 formatted_array = np.round(obj, float_precision).tolist()
             else:
@@ -242,9 +242,9 @@ class LibraryHandlers:
 
 def create_handler_registry(config: Dict[str, Any]) -> Dict[str, callable]:
     """
-    创建处理器注册表
+    Create handler registry
     
-    返回: {full_type_name: handler_method}
+    Returns: {full_type_name: handler_method}
     """
     handlers = LibraryHandlers(config.get('library_specific', {}))
     

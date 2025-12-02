@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-MCP Server Generator - 将 OpenAPI 规范转换为 MCP Server
-支持 Claude Desktop 和其他 MCP 客户端直接使用
+MCP Server Generator - Convert OpenAPI spec to MCP Server
+Supports direct use by Claude Desktop and other MCP clients
 
-v3.0 - StreamableHTTP 传输
-- 使用 StreamableHTTPSessionManager 替代 SSE
-- 基于 examples 中的最佳实践
-- 支持状态化和无状态模式
-- 智能序列化引擎
+v3.0 - StreamableHTTP Transport
+- Uses StreamableHTTPSessionManager instead of SSE
+- Based on best practices from examples
+- Supports stateful and stateless modes
+- Intelligent serialization engine
 """
 
 import json
@@ -17,9 +17,9 @@ from pathlib import Path
 
 
 def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.py", library_name: str = "library"):
-    """从 OpenAPI 规范生成 MCP Server"""
+    """Generate MCP Server from OpenAPI spec"""
     
-    # 提取工具定义
+    # Extract tool definitions
     tools = []
     function_map = {}
     
@@ -28,18 +28,18 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
             op_id = operation["operationId"]
             func_meta = operation.get("x-function", {})
             
-            # 跳过管理端点
+            # Skip management endpoints
             if path.startswith("/objects") or path == "/call_method":
                 continue
             
-            # 注意：不再跳过实例方法（有 class 字段的）
-            # 对于实例方法，我们会在 MCP server 中自动创建类实例
-            # 这样像 requests.Session.get() 这样的方法可以直接作为工具暴露
+            # Note: No longer skipping instance methods (those with class field)
+            # For instance methods, we will automatically create class instances in the MCP server
+            # So methods like requests.Session.get() can be directly exposed as tools
             
-            # 构建 MCP 工具定义
+            # Build MCP tool definition
             tool_name = op_id.replace("_", "-")
             
-            # 提取参数
+            # Extract parameters
             input_schema = {
                 "type": "object",
                 "properties": {},
@@ -54,7 +54,7 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
                 if param.get("required", False):
                     input_schema["required"].append(param_name)
             
-            # 处理 request body
+            # Handle request body
             if "requestBody" in operation:
                 body_schema = operation["requestBody"].get("content", {}).get("application/json", {}).get("schema", {})
                 if "properties" in body_schema:
@@ -62,10 +62,10 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
                     if "required" in body_schema:
                         input_schema["required"].extend(body_schema["required"])
             
-            # 去重 required 数组
+            # Deduplicate required array
             input_schema["required"] = list(dict.fromkeys(input_schema["required"]))
             
-            # 构建工具
+            # Build tool
             tool = {
                 "name": tool_name,
                 "description": operation.get("description") or operation.get("summary", ""),
@@ -74,7 +74,7 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
             
             tools.append(tool)
             
-            # 保存函数映射
+            # Save function mapping
             function_map[tool_name] = {
                 "module": func_meta.get("module", ""),
                 "class": func_meta.get("class"),
@@ -85,7 +85,7 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
                 "http_path": path
             }
     
-    # 添加对象方法调用工具到 tools 列表
+    # Add object method call tool to tools list
     tools.append({
         "name": "call-object-method",
         "description": "Call a method on a stored object. Use this after getting an object_id from another tool.",
@@ -127,7 +127,7 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
         "returns_object": False
     }
     
-    # 生成 MCP Server 代码
+    # Generate MCP Server code
     server_code = f'''#!/usr/bin/env python3
 """
 Auto-generated MCP Server
@@ -163,11 +163,11 @@ if __name__ == "__main__":
     )
 '''
     
-    # 写入文件
+    # Write to file
     with open(output, 'w', encoding='utf-8') as f:
         f.write(server_code)
     
-    # 生成文档
+    # Generate documentation
     generate_readme(tools, library_name, openapi_spec)
     
 
@@ -267,12 +267,12 @@ def main():
     
     args = parser.parse_args()
     
-    # 如果指定了输入文件
+    # If input file is specified
     if args.input:
         input_file = args.input
-        # 尝试从输入文件名推断库名
+        # Try to infer library name from input filename
         if args.library is None:
-            # 例如：pdfkit_openapi.json -> pdfkit
+            # e.g.: pdfkit_openapi.json -> pdfkit
             import re
             match = re.match(r'(.+?)_openapi\.json$', Path(input_file).name)
             if match:
@@ -282,13 +282,13 @@ def main():
         else:
             library_name = args.library
     else:
-        # 如果没有指定输入文件，需要库名
+        # If input file is not specified, library name is required
         if args.library is None:
             sys.exit(1)
         library_name = args.library
         input_file = f"{library_name}_openapi.json"
     
-    # 设置默认输出文件名
+    # Set default output filename
     if args.output is None:
         args.output = f"{library_name}_mcp_server.py"
     
