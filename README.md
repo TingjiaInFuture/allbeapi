@@ -1,6 +1,6 @@
 <img width="1361" height="192" alt="logo" src="https://github.com/user-attachments/assets/2a8a71b8-c141-49a2-b8ef-d9f84b92261b" />
 
-> **Turn any Python library or local script into an LLM Tool in seconds.**
+> **Turn any Python library or your local script into an LLM Tool in seconds.**
 
 ![demo](https://github.com/user-attachments/assets/4fcbcacf-4bdb-4c4a-b451-8e4dae17a2df)
 

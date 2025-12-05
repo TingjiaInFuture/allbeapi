@@ -1,137 +1,175 @@
-# AllBeAPI Custom Code Standards
+# Coding Standards for Custom Tools
 
-本指南旨在帮助开发者编写能够被 AllBeAPI 完美解析、评分最高且对 LLM 最友好的自定义 Python 代码。
+This document outlines the best practices for writing custom Python code intended for use with AllBeAPI.
 
-## 🎯 核心原则 (Core Principles)
+AllBeAPI utilizes static analysis and runtime introspection to generate Model Context Protocol (MCP) server definitions. Adhering to these standards ensures that the generated tools provide accurate schemas, high-quality descriptions, and reliable execution contexts for Large Language Models (LLMs).
 
-AllBeAPI 的分析引擎 (`analyzer.py`) 会根据以下维度对你的代码进行评分。遵循这些原则可以确保生成的 MCP Tool 精确且易用。
+## Core Principles
 
-1.  **强类型注解 (Strict Typing)**: 决定了 Tool Schema 的生成质量。
-2.  **详细文档 (Rich Docstrings)**: 决定了 LLM 对工具用途的理解。
-3.  **显式导出 (Explicit Export)**: 控制上下文窗口，避免无关函数干扰 LLM。
+The AllBeAPI analysis engine (`analyzer.py`) evaluates code based on three primary metrics:
 
----
-
-## ✅ 最佳实践 (Best Practices)
-
-### 1. 类型注解 (Type Hinting)
-
-**规则**: 所有参数和返回值必须包含类型注解。
-**原因**: `TypeParser` 依赖注解生成 JSON Schema。如果没有注解，参数将被视为 `Any`，导致 LLM 无法准确传递参数。
-
-*   **❌ 错误示例**:
-    ```python
-    def add(a, b):
-        return a + b
-    ```
-
-*   **✅ 正确示例**:
-    ```python
-    def add(a: int, b: int) -> int:
-        return a + b
-    ```
-
-### 2. 文档字符串 (Docstrings)
-
-**规则**: 文档长度应大于 30 个字符，并描述参数用途。
-**评分机制**:
-*   `> 200` 字符: 🌟🌟🌟 (1.0分)
-*   `> 100` 字符: 🌟🌟 (0.7分)
-*   `> 30` 字符: 🌟 (0.4分)
-*   无文档: ❌ (0.1分)
-
-*   **✅ 正确示例**:
-    ```python
-    def calculate_bmi(weight: float, height: float) -> float:
-        """
-        根据体重和身高计算 BMI 指数。
-        
-        Args:
-            weight: 体重，单位为千克 (kg)
-            height: 身高，单位为米 (m)
-            
-        Returns:
-            计算出的 BMI 数值，保留两位小数。
-        """
-        return round(weight / (height ** 2), 2)
-    ```
-
-### 3. API 暴露控制 (__all__)
-
-**规则**: 使用 `__all__` 列表明确指定要暴露给 LLM 的函数或类。
-**原因**: 如果不定义 `__all__`，AllBeAPI 可能会暴露导入的第三方库函数（如 `numpy.array`），污染 LLM 的工具列表。
-
-*   **✅ 正确示例**:
-    ```python
-    __all__ = ['create_user', 'get_user_status']
-
-    import json # 这是一个内部依赖，不会被暴露
-
-    def create_user(name: str): ...
-    def get_user_status(uid: str): ...
-    def _internal_helper(): ... # 下划线开头的函数自动被忽略
-    ```
+1.  **Type Precision**: Determines the accuracy of the generated JSON Schema.
+2.  **Documentation Density**: Determines the context provided to the LLM for tool selection.
+3.  **Namespace Clarity**: Ensures only relevant functions are exposed to the context window.
 
 ---
 
-## 🧩 模式规范 (Design Patterns)
+## 1. Namespace Control
 
-### 场景 A: 无状态工具 (Stateless Tools)
-适用于计算、查询、转换等一次性任务。
+### Explicit Export via `__all__`
+By default, AllBeAPI may inspect all functions found in a module, including those imported from third-party libraries. To prevent polluting the LLM context window with utility functions or imports, you must explicitly define the `__all__` list.
 
-*   **设计**: 使用纯函数。
-*   **输入**: 基本类型 (`int`, `str`, `bool`) 或 `List`/`Dict`。
-*   **输出**: 可 JSON 序列化的数据。
+**Requirement:**
+Define `__all__` at the module level containing the strings of the functions or classes you wish to expose.
 
-### 场景 B: 有状态对象 (Stateful Objects)
-适用于游戏角色、数据库连接、窗口管理等需要保持状态的场景。
+**Example:**
 
-*   **原理**: AllBeAPI 会自动缓存返回的对象实例，并向 LLM 返回 `object_id`。
-*   **设计**:
-    1.  定义一个类 (`Class`) 处理业务逻辑。
-    2.  提供一个**工厂函数** (`Factory Function`) 用于创建实例。
-*   **示例**:
-    ```python
-    class BankAccount:
-        def __init__(self, owner: str):
-            self.balance = 0
-        def deposit(self, amount: int):
-            self.balance += amount
+```python
+__all__ = ['calculate_metric', 'UserSession']
 
-    # LLM 调用此函数，获得 object_id
-    def open_account(owner: str) -> BankAccount:
-        """为用户开设一个新的银行账户"""
-        return BankAccount(owner)
-    ```
+import json  # This will be ignored by the analyzer
+import numpy as np  # This will be ignored
 
-### 场景 C: 数据处理 (Data Containers)
-适用于处理 Pandas DataFrame、Numpy Array 或 PIL Image。
+def _internal_helper():
+    # Functions starting with underscore are automatically ignored
+    pass
 
-*   **设计**: 直接返回复杂对象即可。
-*   **机制**: `SmartSerializer` 会自动判断数据大小：
-    *   **小数据**: 直接转为 JSON 返回。
-    *   **大数据**: 自动存储并返回 Markdown 预览 + `object_id`。
+def calculate_metric(data: list) -> float:
+    return np.mean(data)
+
+class UserSession:
+    pass
+```
 
 ---
 
-## 🚫 避免事项 (Don'ts)
+## 2. Type Hinting
 
-1.  **不要**在函数名中使用无意义的名称 (如 `func1`, `do_it`)，这会降低评分。
-2.  **不要**让参数列表过长 (超过 5 个参数会降低评分)。
-3.  **不要**在参数中使用无法序列化的自定义类，除非该类已在代码中定义且支持状态管理。
-4.  **不要**将核心逻辑放在 `if __name__ == "__main__":` 块中，否则无法被导入分析。
+AllBeAPI uses the Python `typing` module to generate the `inputSchema` for MCP tools. Missing type hints result in arguments being treated as `Any`, which significantly degrades the LLM's ability to call tools correctly.
+
+**Requirement:**
+All exposed functions and methods must have type annotations for arguments and return values.
+
+**Supported Types:**
+- Primitives: `int`, `float`, `str`, `bool`
+- Containers: `List[...]`, `Dict[..., ...]`, `Optional[...]`
+- Complex: Custom Classes (for stateful workflows)
+
+**Correct:**
+```python
+def resize_image(width: int, height: int, keep_aspect: bool = True) -> str:
+    ...
+```
+
+**Incorrect:**
+```python
+def resize_image(width, height, keep_aspect=True):
+    ...
+```
 
 ---
 
-## 🏆 完美评分检查表 (Quality Checklist)
+## 3. Documentation
 
-在提交代码前，请检查：
+The docstring of a function is transformed directly into the tool description field in the MCP protocol. This is the primary signal the LLM uses to decide which tool to call. The `QualityMetrics` engine scores APIs based on docstring length and detail.
 
-- [ ] 函数/类名是否采用清晰的 `snake_case` 或 `CamelCase`？
-- [ ] 是否定义了 `__all__`？
-- [ ] 所有参数都有类型注解吗？
-- [ ] 文档字符串是否超过 30 个字符？
-- [ ] 函数参数数量是否在 1-5 个之间？
-- [ ] 是否避免了以 `_` 开头的私有函数？
+**Scoring Thresholds:**
+- **High Quality**: > 200 characters.
+- **Medium Quality**: > 100 characters.
+- **Low Quality**: < 30 characters (May be filtered out in strict mode).
+
+**Requirement:**
+Provide a descriptive docstring that explains the purpose of the function and the meaning of its arguments.
+
+**Example:**
+```python
+def calculate_compound_interest(principal: float, rate: float, years: int) -> float:
+    """
+    Calculates the future value of an investment based on compound interest.
+
+    This function uses the standard compound interest formula. It is useful for
+    financial projections and savings estimation.
+
+    Args:
+        principal: The initial amount of money deposited or invested.
+        rate: The annual interest rate (as a decimal, e.g., 0.05 for 5%).
+        years: The number of years the money is invested for.
+
+    Returns:
+        The future value of the investment rounded to two decimal places.
+    """
+    return round(principal * (1 + rate) ** years, 2)
+```
 
 ---
+
+## 4. Design Patterns
+
+### Pattern A: Stateless Tools
+Use this pattern for utility functions, data transformations, or database queries that return immediate results.
+
+*   **Structure**: Pure functions.
+*   **Input**: Primitives or Data Structures.
+*   **Output**: JSON-serializable data, Strings, or DataFrames.
+
+### Pattern B: Stateful Agents (The Factory Pattern)
+Use this pattern when you need to maintain context (e.g., database connections, game states, file system cursors) across multiple LLM turns.
+
+*   **Mechanism**: When a function returns a class instance, AllBeAPI caches the instance and returns a reference ID. The LLM can then call methods on that specific instance.
+*   **Structure**: A class definition and a factory function to instantiate it.
+
+**Example:**
+
+```python
+class DatabaseConnection:
+    """Represents an active connection to a specific database."""
+    
+    def __init__(self, db_name: str):
+        self.db_name = db_name
+        self.is_connected = True
+
+    def query(self, sql: str) -> list:
+        """Executes a SQL query on the active connection."""
+        return ["mock_result"]
+
+    def close(self) -> bool:
+        """Closes the connection."""
+        self.is_connected = False
+        return True
+
+# The Factory Function (The Entry Point for the LLM)
+def connect_to_db(db_name: str) -> DatabaseConnection:
+    """
+    Establishes a connection to the database.
+    Returns a connection object that can be used for subsequent queries.
+    """
+    return DatabaseConnection(db_name)
+```
+
+### Pattern C: Data Containers
+AllBeAPI's `SmartSerializer` automatically handles complex data types like Pandas DataFrames, NumPy Arrays, or PIL Images.
+
+*   **Requirement**: Simply return the object. Do not manually convert it to a string or dictionary unless specific formatting is required.
+*   **Behavior**: Small objects are serialized to JSON; large objects are stored, and a preview is returned to the LLM.
+
+---
+
+## 5. Naming Conventions
+
+The analyzer applies heuristics to function names to determine their purpose and quality.
+
+*   **Style**: Use `snake_case` for functions and `CamelCase` for classes.
+*   **Clarity**: Avoid generic names like `run`, `do_it`, or `func1`.
+*   **Prefixes**: The analyzer recognizes intent prefixes such as `get_`, `create_`, `update_`, `delete_`, and `calculate_`.
+
+---
+
+## Quality Checklist
+
+Before exposing your custom code to an LLM, verify the following:
+
+- [ ] **Export**: Is `__all__` defined?
+- [ ] **Typing**: Are all arguments and return values typed?
+- [ ] **Docs**: Does the docstring exceed 30 characters?
+- [ ] **Complexity**: Is the argument count between 1 and 5 (ideal range)?
+- [ ] **Naming**: Are names descriptive and compliant with PEP 8?
