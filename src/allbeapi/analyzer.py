@@ -1150,22 +1150,6 @@ class APIAnalyzer:
         
         return True
     
-    def _suitable_for_api_via_ast(self, func_info: FunctionInfo, func_obj: Any) -> bool:
-        """Check if function is suitable for API via AST analysis"""
-        # 1. AST analysis: Check return value type
-        try:
-            inferred_type = self._infer_return_type_from_ast(func_obj)
-            if inferred_type:
-                # Simple heuristic: if it looks like a class name
-                if inferred_type[0].isupper() and inferred_type not in ('None', 'True', 'False'):
-                    # Check if basic type
-                    if inferred_type not in ('int', 'float', 'str', 'bool', 'list', 'dict', 'set', 'tuple'):
-                        return False
-        except:
-            return False
-        
-        return True
-    
     def _is_suitable_for_api(self, func_info: FunctionInfo, func_obj: Any) -> bool:
         """Check if function is suitable for API"""
         # 1. Input complexity filter
