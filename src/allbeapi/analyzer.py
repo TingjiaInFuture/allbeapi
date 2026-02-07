@@ -580,7 +580,8 @@ class APIAnalyzer:
         if self.enable_deduplication and len(scored_functions) > 0:
             funcs = [f for f, s in scored_functions]
             deduped = self._deduplicate_similar_functions(funcs)
-            scored_functions = [(f, s) for f, s in scored_functions if f in deduped]
+            deduped_qualnames = {f.qualname for f in deduped}
+            scored_functions = [(f, s) for f, s in scored_functions if f.qualname in deduped_qualnames]
         
         # 3. Sort by score and limit quantity
         scored_functions.sort(key=lambda x: x[1], reverse=True)
