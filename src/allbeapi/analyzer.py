@@ -499,7 +499,12 @@ class APIAnalyzer:
                  min_quality_score: float = 60.0,
                  enable_deduplication: bool = True,
                  quality_mode: str = 'balanced',
-                 enable_input_complexity_filter: bool = True):
+                 enable_input_complexity_filter: bool = True,
+                 # Adaptive filtering parameters
+                 enable_adaptive_filter: bool = True,
+                 adaptive_keep_ratio: float = 0.3,
+                 adaptive_min_keep: int = 3,
+                 adaptive_max_keep: int = 30):
         self.library_name = library_name
         self.max_depth = max_depth
         self.skip_non_serializable = skip_non_serializable
@@ -514,6 +519,10 @@ class APIAnalyzer:
         self.enable_deduplication = enable_deduplication
         self.quality_mode = quality_mode
         self.enable_input_complexity_filter = enable_input_complexity_filter
+        self.enable_adaptive_filter = enable_adaptive_filter
+        self.adaptive_keep_ratio = adaptive_keep_ratio
+        self.adaptive_min_keep = adaptive_min_keep
+        self.adaptive_max_keep = adaptive_max_keep
         
         # Apply quality mode presets
         self._apply_quality_mode()
@@ -593,6 +602,10 @@ class APIAnalyzer:
                 if score >= 60:
                     scored_functions.append((func, score))
 
+        # 1.5 Adaptive filtering: keep the best functions per module (self-tuning)
+        if self.enable_adaptive_filter and scored_functions:
+            scored_functions = self._apply_adaptive_filter(scored_functions)
+
         # 2. Deduplication
         if self.enable_deduplication and len(scored_functions) > 0:
             funcs = [f for f, s in scored_functions]
@@ -611,6 +624,30 @@ class APIAnalyzer:
         
         # 5. Record statistics
         self._collect_quality_stats(scored_functions)
+
+    def _apply_adaptive_filter(self, scored_functions: List[Tuple[FunctionInfo, float]]) -> List[Tuple[FunctionInfo, float]]:
+        """Adaptive filter: keep top-N per module based on relative quality."""
+        by_module: Dict[str, List[Tuple[FunctionInfo, float]]] = defaultdict(list)
+        for func, score in scored_functions:
+            by_module[func.module].append((func, score))
+
+        kept: List[Tuple[FunctionInfo, float]] = []
+        for module, items in by_module.items():
+            items.sort(key=lambda x: x[1], reverse=True)
+            keep_n = int(len(items) * self.adaptive_keep_ratio)
+            keep_n = max(self.adaptive_min_keep, min(self.adaptive_max_keep, keep_n))
+
+            # Always keep items above absolute min score
+            absolute_keep = [item for item in items if item[1] >= self.min_quality_score]
+            relative_keep = items[:keep_n]
+
+            merged = {f.qualname: (f, s) for f, s in absolute_keep}
+            for f, s in relative_keep:
+                merged.setdefault(f.qualname, (f, s))
+
+            kept.extend(merged.values())
+
+        return kept
     
     def calculate_function_score(self, func_info: FunctionInfo) -> float:
         """Calculate function quality score (0-100)."""
