@@ -269,6 +269,7 @@ class QualityMetrics:
         bad_patterns = [
             r'.*\d+$',  # Ends with digit (e.g. func1, test2)
             r'^(test|demo|example)_.*',  # Test/Example functions
+            r'^(bench|benchmark)_.*',  # Benchmark functions
             r'.*_(internal|private|impl)$',  # Internal implementation
         ]
         
