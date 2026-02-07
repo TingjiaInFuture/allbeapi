@@ -356,8 +356,14 @@ class MCPServer:
             try:
                 await asyncio.sleep(300)  # Check every 5 minutes
                 if self.serializer:
+                    before = set(self.serializer.object_store.keys())
                     removed = self.serializer.cleanup_objects(max_age_seconds=1800)  # Cleanup objects unused for 30 minutes
                     if removed > 0:
+                        after = set(self.serializer.object_store.keys())
+                        removed_ids = before - after
+                        for object_id in removed_ids:
+                            self._object_store.pop(object_id, None)
+                            self._object_methods.pop(object_id, None)
                         logger.info(f"Automatically cleaned up {removed} idle objects")
             except asyncio.CancelledError:
                 break
