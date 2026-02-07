@@ -858,6 +858,14 @@ class APIAnalyzer:
             if self._is_internal_module(obj.__module__, None):
                 return False
             
+        # If root module defines __all__, treat it as the public surface.
+        # For submodules, only include names explicitly re-exported by root __all__.
+        if module and not is_method:
+            root = sys.modules.get(self.library_name)
+            if root and hasattr(root, '__all__') and module.__name__ != self.library_name:
+                if name not in root.__all__:
+                    return False
+
         if is_method:
             return True
 
