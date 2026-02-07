@@ -210,7 +210,7 @@ class QualityMetrics:
     def is_public_api(func_info: FunctionInfo) -> Tuple[bool, float]:
         """Determine if it is a public API - Universal Mechanism (Improved)"""
         # 0. Skip test/internal/experimental modules regardless of __all__
-        if re.search(r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated)(\.|$)', func_info.module, re.IGNORECASE):
+        if re.search(r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache)(\.|$)', func_info.module, re.IGNORECASE):
             return False, 0.0
 
         # 1. Name does not start with underscore
@@ -290,8 +290,8 @@ class QualityMetrics:
         """Hierarchy Quality Assessment - Universal Version"""
         module_parts = func_info.module.split('.')
         
-        # 0. Utility/helper modules are often not intended as primary public APIs
-        if any(part.lower() in ('utils', 'util', 'helpers', 'helper') for part in module_parts[1:]):
+        # 0. Utility/helper/cache modules are often not intended as primary public APIs
+        if any(part.lower() in ('utils', 'util', 'helpers', 'helper', 'cache') for part in module_parts[1:]):
             return True, 0.4
 
         # 1. Private module detection (Universal convention)
@@ -473,11 +473,11 @@ class APIAnalyzer:
     """API Analyzer - Universal Intelligent Version"""
     
     INTERNAL_MODULE_PATTERN = re.compile(
-        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated)(\.|$)',
+        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache)(\.|$)',
         re.IGNORECASE
     )
     INTERNAL_PATH_PATTERN = re.compile(
-        r'(^|/)(tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated)(/|$)',
+        r'(^|/)(tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache)(/|$)',
         re.IGNORECASE
     )
     
