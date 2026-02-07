@@ -65,6 +65,7 @@ class MCPServer:
         # Cache
         self._func_cache = {}
         self._object_store = {}
+        self._object_methods = {}
         
         # Initialize intelligent serializer
         if SERIALIZATION_ENGINE_AVAILABLE:
@@ -209,6 +210,11 @@ class MCPServer:
         if object_id not in self._object_store:
             raise ValueError(f"Object {object_id} not found")
         
+        if not isinstance(method_name, str) or not method_name:
+            raise ValueError("Method name must be a non-empty string")
+        if method_name.startswith('_'):
+            raise ValueError("Access to private/dunder methods is not allowed")
+        
         
         obj = self._object_store[object_id]
         if not hasattr(obj, method_name):
@@ -219,6 +225,9 @@ class MCPServer:
         
         # Check if callable (method or property?)
         if callable(attr):
+            allowed = self._object_methods.get(object_id)
+            if allowed is not None and method_name not in allowed:
+                raise ValueError(f"Method '{method_name}' is not allowed on object")
             # If method, execute call
             loop = asyncio.get_running_loop()
             if asyncio.iscoroutinefunction(attr):
@@ -254,6 +263,8 @@ class MCPServer:
                 obj_id = serialization_result.data['object_id']
                 obj = self.serializer.get_object(obj_id)
                 self._object_store[obj_id] = obj
+                available = serialization_result.data.get('available_methods', [])
+                self._object_methods[obj_id] = {m.get("name") for m in available if isinstance(m, dict) and m.get("name")}
                 return serialization_result.data
             else:
                 return serialization_result.data
@@ -317,6 +328,7 @@ class MCPServer:
                     except:
                         available_methods.append({"name": name, "params": []})
         
+        self._object_methods[object_id] = {m.get("name") for m in available_methods if m.get("name")}
         return {
             "object_id": object_id,
             "object_type": type_name,
@@ -430,4 +442,3 @@ def serve(title: str, tools: List[Dict], function_map: Dict, library_name: str):
     else:
         logger.info("Starting stdio server")
         asyncio.run(server.run_stdio())
-
