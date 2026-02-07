@@ -473,11 +473,11 @@ class APIAnalyzer:
     """API Analyzer - Universal Intelligent Version"""
     
     INTERNAL_MODULE_PATTERN = re.compile(
-        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|utils?|cookies?|sessions?|base)(\.|$)',
+        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|utils?|cookies?|sessions?|base|scrapers?)(\.|$)',
         re.IGNORECASE
     )
     INTERNAL_PATH_PATTERN = re.compile(
-        r'(^|/)(tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|utils?|cookies?|sessions?|base)(/|$)',
+        r'(^|/)(tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|utils?|cookies?|sessions?|base|scrapers?)(/|$)',
         re.IGNORECASE
     )
     
