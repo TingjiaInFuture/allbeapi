@@ -290,6 +290,10 @@ class QualityMetrics:
         """Hierarchy Quality Assessment - Universal Version"""
         module_parts = func_info.module.split('.')
         
+        # 0. Utility/helper modules are often not intended as primary public APIs
+        if any(part.lower() in ('utils', 'util', 'helpers', 'helper') for part in module_parts[1:]):
+            return True, 0.4
+
         # 1. Private module detection (Universal convention)
         # Any path component starting with _ usually indicates private
         # tests/testing are also common non-production code directories
