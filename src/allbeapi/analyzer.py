@@ -1032,56 +1032,6 @@ class APIAnalyzer:
         
         return False
     
-    def _is_suitable_for_api(self, func_info: FunctionInfo, func_obj: Any) -> bool:
-        """Check if function is suitable for API"""
-        # 1. Input complexity filter
-        if self.enable_input_complexity_filter:
-            if not self._check_input_complexity(func_obj):
-                return False
-
-        if not self.skip_non_serializable:
-            return True
-        
-        # 1. Check parameter types
-        try:
-            sig = inspect.signature(func_obj)
-            for param_name, param in sig.parameters.items():
-                if param_name in ('self', 'cls'):
-                    continue
-                
-                # Check if parameter type is serializable
-                if not self._is_type_serializable(param.annotation):
-                    return False
-                
-                # Check if default value is serializable
-                if param.default != inspect.Parameter.empty:
-                    if not self._is_value_serializable(param.default):
-                        return False
-        except:
-            pass
-        
-        # 2. If state management enabled, functions returning objects are also accepted
-        if self.enable_state_management and func_info.returns_object:
-            return True
-        
-        # 3. Check return type annotation
-        if func_info.return_type is not None:
-            if not self._is_type_serializable(func_info.return_type):
-                # If state management not enabled, reject
-                if not self.enable_state_management:
-                    return False
-        
-        # 4. Runtime check removed, changed to configuration-based strategy
-        if func_info.return_type is None or func_info.return_type == inspect.Signature.empty:
-            # If state management is enabled, we assume it is safe (or returns object)
-            if self.enable_state_management:
-                return True
-            else:
-                # If no state management and return type undetermined, conservatively reject
-                return False
-        
-        return True
-    
     def _check_input_complexity(self, func_obj: Any) -> bool:
         """Input complexity filter: Only allow functions accepting basic types or container types"""
         try:
