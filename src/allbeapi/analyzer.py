@@ -209,6 +209,10 @@ class QualityMetrics:
     @staticmethod
     def is_public_api(func_info: FunctionInfo) -> Tuple[bool, float]:
         """Determine if it is a public API - Universal Mechanism (Improved)"""
+        # 0. Skip test/internal/experimental modules regardless of __all__
+        if re.search(r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated)(\.|$)', func_info.module, re.IGNORECASE):
+            return False, 0.0
+
         # 1. Name does not start with underscore
         if func_info.name.startswith('_'):
             return False, 0.0
@@ -463,6 +467,14 @@ class TypeParser:
 class APIAnalyzer:
     """API Analyzer - Universal Intelligent Version"""
     
+    INTERNAL_MODULE_PATTERN = re.compile(
+        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated)(\.|$)',
+        re.IGNORECASE
+    )
+    INTERNAL_PATH_PATTERN = re.compile(
+        r'(^|/)(tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated)(/|$)',
+        re.IGNORECASE
+    )
     
     # Serializable basic types
     SERIALIZABLE_TYPES = {
@@ -703,6 +715,10 @@ class APIAnalyzer:
         if depth > self.max_depth or module.__name__ in self.analyzed:
             return
         
+        # Skip test/internal/experimental modules early to reduce noise and speed up scanning
+        if self._is_internal_module(module.__name__, getattr(module, "__file__", None)):
+            return
+        
         self.analyzed.add(module.__name__)
         
         try:
@@ -826,10 +842,15 @@ class APIAnalyzer:
         """Determine whether to include - Universal Intelligent Version"""
         if not callable(obj) or name.startswith('_'):
             return False
+
+        if module and self._is_internal_module(module.__name__, getattr(module, "__file__", None)):
+            return False
         
         # Basic check: Must belong to this library
         if hasattr(obj, '__module__') and obj.__module__:
             if not obj.__module__.startswith(self.library_name):
+                return False
+            if self._is_internal_module(obj.__module__, None):
                 return False
             
         if is_method:
@@ -867,6 +888,14 @@ class APIAnalyzer:
             return False
 
         return True
+
+    def _is_internal_module(self, module_name: str, module_file: Optional[str]) -> bool:
+        """Heuristic filter for test/internal/experimental modules."""
+        if module_name and self.INTERNAL_MODULE_PATTERN.search(module_name):
+            return True
+        if module_file and self.INTERNAL_PATH_PATTERN.search(module_file.replace("\\", "/")):
+            return True
+        return False
     
     def _infer_return_type_from_ast(self, func_obj: Any) -> Optional[str]:
         """Infer return type via AST analysis (Static analysis, no side effects)"""
