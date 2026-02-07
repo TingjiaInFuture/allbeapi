@@ -1231,18 +1231,11 @@ class APIAnalyzer:
         
         return str(annotation)
     
-    def _extract_function(self, name: str, obj: Any, module: ModuleType, 
-                         class_name: Optional[str] = None) -> Optional[FunctionInfo]:
-        """Extract function information"""
-        try:
-            sig = inspect.signature(obj)
-        except:
-            return None
-        
-        # Parse docstring
+    def _parse_docstring(self, obj: Any) -> Tuple[Optional[str], Optional[Any], Dict[str, Any]]:
+        """Parse docstring and build param docs map"""
         doc_string = inspect.getdoc(obj)
         parsed_doc = None
-        param_docs = {}
+        param_docs: Dict[str, Any] = {}
         if doc_string and docstring_parser:
             try:
                 parsed_doc = docstring_parser.parse(doc_string)
@@ -1250,18 +1243,27 @@ class APIAnalyzer:
                     param_docs[p.arg_name] = p
             except:
                 pass
+        return doc_string, parsed_doc, param_docs
 
-        parameters = []
-        raw_param_annotations = []  # Record raw annotations
+    def _extract_parameters(
+        self,
+        sig: inspect.Signature,
+        param_docs: Dict[str, Any],
+        parsed_doc: Optional[Any],
+        func_name: str
+    ) -> Tuple[List[Dict[str, Any]], List[Any]]:
+        """Extract parameters and raw annotations from signature and docstring"""
+        parameters: List[Dict[str, Any]] = []
+        raw_param_annotations: List[Any] = []
         existing_param_names = set()
-        
+
         for pname, param in sig.parameters.items():
             if pname in ('self', 'cls'):
                 continue
-            
+
             # Record raw annotations
             raw_param_annotations.append(param.annotation)
-            
+
             # Handle **kwargs
             if param.kind == inspect.Parameter.VAR_KEYWORD:
                 # Extract extra parameters from docstring
@@ -1269,26 +1271,26 @@ class APIAnalyzer:
                     for doc_p in parsed_doc.params:
                         if doc_p.arg_name not in existing_param_names and doc_p.arg_name not in ('self', 'cls', 'args', 'kwargs'):
                             # This is a parameter only existing in docstring (passed via kwargs)
-                            param_info = self._create_param_from_doc(doc_p, name)
+                            param_info = self._create_param_from_doc(doc_p, func_name)
                             parameters.append(param_info)
                 continue
 
             # Skip *args
             if param.kind == inspect.Parameter.VAR_POSITIONAL:
                 continue
-            
+
             existing_param_names.add(pname)
 
             # Get doc info first for optional check
             doc_param = param_docs.get(pname)
             description = doc_param.description if doc_param else None
-            
+
             # Check if parameter is optional (from default value, is_optional flag, or description)
             has_default = param.default != inspect.Parameter.empty
             default_value = None
             if has_default:
                 default_value = self._serialize_default(param.default)
-            
+
             # Check if description indicates optional (e.g., "(optional) ..." or contains "optional")
             is_optional_from_desc = description and (
                 description.strip().lower().startswith('(optional)') or
@@ -1296,20 +1298,20 @@ class APIAnalyzer:
             )
             # Determine if parameter is optional: has default OR is_optional flag OR description says optional
             is_optional = has_default or (doc_param and doc_param.is_optional) or is_optional_from_desc
-            
+
             # Parse type: Prioritize annotation in signature, if Any or empty, try to use type in docstring
             schema = TypeParser.parse_annotation(param.annotation)
             if (not schema or schema == {}) and doc_param and doc_param.type_name:
                 schema = TypeParser._parse_string_annotation(doc_param.type_name)
-            
+
             # If type uncertain, do not specify type, allow any type (Any)
             if not schema:
                 schema = {}
-            
+
             # Add description
             if description:
                 schema["description"] = description
-                
+
             # Try to extract enum values from description
             if description and "enum" not in schema:
                 enums = self._extract_enums_from_description(description)
@@ -1322,13 +1324,27 @@ class APIAnalyzer:
                 "name": pname,
                 "required": not is_optional,
                 "schema": schema,
-                "in": self._classify_param(pname, name)
+                "in": self._classify_param(pname, func_name)
             }
-            
+
             if default_value is not None:
                 param_info["default"] = default_value
-            
+
             parameters.append(param_info)
+
+        return parameters, raw_param_annotations
+
+    def _extract_function(self, name: str, obj: Any, module: ModuleType, 
+                         class_name: Optional[str] = None) -> Optional[FunctionInfo]:
+        """Extract function information"""
+        try:
+            sig = inspect.signature(obj)
+        except:
+            return None
+        
+        # Parse docstring and parameters
+        doc_string, parsed_doc, param_docs = self._parse_docstring(obj)
+        parameters, raw_param_annotations = self._extract_parameters(sig, param_docs, parsed_doc, name)
         
         return_type = None
         raw_return_annotation = sig.return_annotation
