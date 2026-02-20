@@ -79,6 +79,7 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
                 "function": func_meta.get("name", ""),
                 "is_async": func_meta.get("is_async", False),
                 "returns_object": func_meta.get("returns_object", False),
+                "is_constructor": func_meta.get("is_constructor", False),
                 "http_method": method,
                 "http_path": path
             }
@@ -122,8 +123,12 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
         "class": None,
         "function": "_call_method",
         "is_async": False,
-        "returns_object": False
+        "returns_object": False,
+        "is_constructor": False,
     }
+
+    tools_json = json.dumps(tools, ensure_ascii=False)
+    function_map_json = json.dumps(function_map, ensure_ascii=False)
     
     # Generate MCP Server code
     server_code = f'''#!/usr/bin/env python3
@@ -134,6 +139,7 @@ Based on: {openapi_spec["info"]["title"]}
 
 import sys
 import os
+import json
 
 try:
     from allbemcp.runtime.server import serve
@@ -147,10 +153,10 @@ except ImportError:
         sys.exit(1)
 
 # Tool definitions
-TOOLS = {repr(tools)}
+TOOLS = json.loads({tools_json!r})
 
 # Function mapping
-FUNCTION_MAP = {repr(function_map)}
+FUNCTION_MAP = json.loads({function_map_json!r})
 
 if __name__ == "__main__":
     serve(

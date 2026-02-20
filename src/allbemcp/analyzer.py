@@ -43,10 +43,17 @@ class FunctionInfo:
     # Added: Record raw annotation info for quality assessment
     raw_param_annotations: List[Any] = None  # Raw parameter annotations
     raw_return_annotation: Any = None  # Raw return annotation
+    target_name: Optional[str] = None  # Actual callable name in source module/class
+    is_constructor: bool = False  # Whether this function is a class-constructor factory tool
 
 
 class QualityMetrics:
     """Function Quality Assessment Metrics - Universal Assessment Mechanism"""
+
+    _INTERNAL_PATTERN = re.compile(
+        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache)(\.|$)',
+        re.IGNORECASE,
+    )
     
     @staticmethod
     def has_good_documentation(func_info: FunctionInfo) -> Tuple[bool, float]:
@@ -158,7 +165,7 @@ class QualityMetrics:
     def is_public_api(func_info: FunctionInfo) -> Tuple[bool, float]:
         """Determine if it is a public API - Universal Mechanism (Improved)"""
         # 0. Skip test/internal/experimental modules regardless of __all__
-        if re.search(r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache)(\.|$)', func_info.module, re.IGNORECASE):
+        if QualityMetrics._INTERNAL_PATTERN.search(func_info.module):
             return False, 0.0
 
         # 1. Name does not start with underscore
@@ -240,7 +247,7 @@ class QualityMetrics:
         
         # 0. Utility/helper/cache modules are often not intended as primary public APIs
         if any(part.lower() in ('utils', 'util', 'helpers', 'helper', 'cache') for part in module_parts[1:]):
-            return True, 0.4
+            return True, 0.7
 
         # 1. Private module detection (Universal convention)
         # Any path component starting with _ usually indicates private
@@ -464,11 +471,11 @@ class APIAnalyzer:
     """API Analyzer - Universal Intelligent Version"""
 
     INTERNAL_MODULE_PATTERN = re.compile(
-        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|utils?|cookies?|sessions?|base|scrapers?)(\.|$)',
+        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|cookies?|sessions?)(\.|$)',
         re.IGNORECASE
     )
     INTERNAL_PATH_PATTERN = re.compile(
-        r'(^|/)(tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|utils?|cookies?|sessions?|base|scrapers?)(/|$)',
+        r'(^|/)(tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|cookies?|sessions?)(/|$)',
         re.IGNORECASE
     )
 
@@ -523,9 +530,10 @@ class APIAnalyzer:
         self.analysis_cache = AnalysisCache(cache_dir) if enable_analysis_cache else None
 
         # AST caches
-        self._ast_cache: Dict[str, ast.Module] = {}
+        self._ast_cache: Dict[str, bool] = {}
         self._ast_return_index_cache: Dict[str, Dict[int, str]] = {}
         self._ast_name_index_cache: Dict[str, Dict[str, str]] = {}
+        self._module_all_cache: Dict[str, Optional[Set[str]]] = {}
         
         # Apply quality mode presets
         self._apply_quality_mode()
@@ -546,7 +554,7 @@ class APIAnalyzer:
                 'max_functions': 50,
             },
             'balanced': {
-                'min_quality_score': 90,
+                'min_quality_score': 75,
                 'max_functions': 3000,
             },
             'permissive': {
@@ -645,9 +653,29 @@ class APIAnalyzer:
         """Apply quality filtering and deduplication."""
         # 1. Calculate quality scores
         scored_functions = []
-        score_weights = self._get_adaptive_weights()
+        self._module_all_cache = {}
+
         for func in self.functions:
-            score = self.calculate_function_score(func, score_weights)
+            module_name = func.module
+            if module_name in self._module_all_cache:
+                continue
+            module_obj = sys.modules.get(module_name)
+            if module_obj and hasattr(module_obj, '__all__'):
+                try:
+                    self._module_all_cache[module_name] = set(getattr(module_obj, '__all__', []) or [])
+                except Exception:
+                    self._module_all_cache[module_name] = None
+            else:
+                self._module_all_cache[module_name] = None
+
+        score_weights = self._get_adaptive_weights()
+
+        for func in self.functions:
+            score = self.calculate_function_score(
+                func,
+                score_weights,
+                module_all=self._module_all_cache.get(func.module),
+            )
             self.function_scores[func.qualname] = score
             
             if score >= self.min_quality_score:
@@ -691,7 +719,7 @@ class APIAnalyzer:
         self._collect_quality_stats(scored_functions)
 
     def _apply_adaptive_filter(self, scored_functions: List[Tuple[FunctionInfo, float]]) -> List[Tuple[FunctionInfo, float]]:
-        """Adaptive filter with module importance-aware quotas."""
+        """Adaptive filter using two-phase allocation (fair minimum + weighted remainder)."""
         by_module: Dict[str, List[Tuple[FunctionInfo, float]]] = defaultdict(list)
         for func, score in scored_functions:
             by_module[func.module].append((func, score))
@@ -707,19 +735,76 @@ class APIAnalyzer:
             avg_score = sum(score for _, score in items) / len(items)
             module_weights[module] = ((1.0 / depth) * (2.0 if has_all else 1.0)) * (0.5 + avg_score / 200.0)
 
-        total_budget = int(len(scored_functions) * self.adaptive_keep_ratio)
-        min_budget = min(len(scored_functions), len(by_module) * self.adaptive_min_keep)
-        total_budget = max(total_budget, min_budget, 1)
-        total_weight = sum(module_weights.values()) or 1.0
+        total_items = len(scored_functions)
+        total_budget = int(total_items * self.adaptive_keep_ratio)
+        min_needed = sum(min(self.adaptive_min_keep, len(items)) for items in by_module.values())
+        total_budget = min(total_items, max(total_budget, min_needed, 1))
+
+        for items in by_module.values():
+            items.sort(key=lambda x: x[1], reverse=True)
 
         kept: List[Tuple[FunctionInfo, float]] = []
-        for module, items in by_module.items():
-            items.sort(key=lambda x: x[1], reverse=True)
-            quota = int(total_budget * module_weights[module] / total_weight)
-            quota = max(self.adaptive_min_keep, quota)
-            quota = min(self.adaptive_max_keep, quota, len(items))
-            kept.extend(items[:quota])
+        allocated: Dict[str, int] = {module: 0 for module in by_module}
 
+        # Phase 1: minimum keep per module
+        for module, items in by_module.items():
+            min_keep = min(self.adaptive_min_keep, self.adaptive_max_keep, len(items))
+            if min_keep <= 0:
+                continue
+            kept.extend(items[:min_keep])
+            allocated[module] = min_keep
+
+        remaining_budget = total_budget - len(kept)
+        if remaining_budget <= 0:
+            kept.sort(key=lambda x: x[1], reverse=True)
+            return kept[:total_budget]
+
+        # Phase 2: weighted distribution of remaining budget
+        total_weight = sum(module_weights.values()) or 1.0
+        extra_targets: Dict[str, int] = {module: 0 for module in by_module}
+        for module, items in by_module.items():
+            capacity = min(self.adaptive_max_keep, len(items)) - allocated[module]
+            if capacity <= 0:
+                continue
+            quota = int(remaining_budget * (module_weights[module] / total_weight))
+            extra_targets[module] = min(capacity, max(0, quota))
+
+        assigned = sum(extra_targets.values())
+        if assigned < remaining_budget:
+            ranked_modules = sorted(
+                by_module.keys(),
+                key=lambda module: module_weights[module],
+                reverse=True,
+            )
+            remaining = remaining_budget - assigned
+            for module in ranked_modules:
+                if remaining <= 0:
+                    break
+                items = by_module[module]
+                capacity = min(self.adaptive_max_keep, len(items)) - allocated[module] - extra_targets[module]
+                if capacity <= 0:
+                    continue
+                take = min(capacity, remaining)
+                extra_targets[module] += take
+                remaining -= take
+
+        candidates: List[Tuple[FunctionInfo, float]] = []
+        for module, items in by_module.items():
+            start = allocated[module]
+            end = start + extra_targets[module]
+            candidates.extend(items[start:end])
+
+        if len(candidates) < remaining_budget:
+            spillover: List[Tuple[FunctionInfo, float]] = []
+            for module, items in by_module.items():
+                start = allocated[module] + extra_targets[module]
+                max_end = min(self.adaptive_max_keep, len(items))
+                if start < max_end:
+                    spillover.extend(items[start:max_end])
+            spillover.sort(key=lambda x: x[1], reverse=True)
+            candidates.extend(spillover[: remaining_budget - len(candidates)])
+
+        kept.extend(candidates[:remaining_budget])
         kept.sort(key=lambda x: x[1], reverse=True)
         return kept[:total_budget]
     
@@ -734,34 +819,42 @@ class APIAnalyzer:
                 'hierarchy': 25,
             }
 
-        doc_coverage = sum(1 for f in self.functions if f.doc) / max(len(self.functions), 1)
-        if doc_coverage < 0.3:
-            return {
-                'documentation': 10,
-                'type_annotations': 20,
-                'public_api': 25,
-                'naming': 10,
-                'hierarchy': 35,
-            }
+        total = max(len(self.functions), 1)
+        doc_coverage = sum(1 for f in self.functions if f.doc) / total
+        type_coverage = sum(
+            1
+            for f in self.functions
+            if getattr(f, 'raw_return_annotation', None) not in (None, inspect.Signature.empty)
+        ) / total
+        all_coverage = sum(
+            1
+            for f in self.functions
+            if (self._module_all_cache.get(f.module) if self._module_all_cache else None) is not None
+        ) / total
 
-        return {
-            'documentation': 25,
-            'type_annotations': 20,
-            'public_api': 20,
+        dynamic = {
+            'documentation': 10 + 20 * doc_coverage,
+            'type_annotations': 10 + 15 * type_coverage,
+            'public_api': 15 + 10 * all_coverage,
             'naming': 10,
-            'hierarchy': 25,
+            'hierarchy': 15 + 10 * (1 - doc_coverage),
         }
+        total_weight = sum(dynamic.values()) or 1.0
+        return {k: (v * 100.0 / total_weight) for k, v in dynamic.items()}
 
-    def calculate_function_score(self, func_info: FunctionInfo, weights: Optional[Dict[str, float]] = None) -> float:
+    def calculate_function_score(
+        self,
+        func_info: FunctionInfo,
+        weights: Optional[Dict[str, float]] = None,
+        module_all: Optional[Set[str]] = None,
+    ) -> float:
         """Calculate function quality score (0-100)."""
         score = 0.0
         weights = weights or self._get_adaptive_weights()
 
-        module_obj = sys.modules.get(func_info.module)
-        has_module_all = bool(module_obj and hasattr(module_obj, '__all__'))
+        has_module_all = module_all is not None
         all_gate_bonus = False
         if has_module_all and not func_info.class_name:
-            module_all = getattr(module_obj, '__all__', [])
             if func_info.name in module_all:
                 all_gate_bonus = True
             else:
@@ -820,7 +913,7 @@ class APIAnalyzer:
         groups = defaultdict(list)
         for func in functions:
             purpose = self._normalize_function_purpose(func.name)
-            param_sig = tuple(sorted(p.get('name', '') for p in func.parameters))
+            param_sig = frozenset(p.get('name', '') for p in func.parameters)
             key = (purpose, param_sig)
             groups[key].append(func)
         
@@ -930,7 +1023,12 @@ class APIAnalyzer:
                     submodule_names.append(subname)
 
                 submodules: List[ModuleType] = []
-                if self.enable_parallel_scan and self.parallel_scan_workers > 1 and len(submodule_names) > 3:
+                if (
+                    self.enable_parallel_scan
+                    and self.parallel_scan_workers > 1
+                    and len(submodule_names) > 3
+                    and depth == 0
+                ):
                     with ThreadPoolExecutor(max_workers=self.parallel_scan_workers) as executor:
                         for sub in executor.map(self._safe_import_submodule, submodule_names):
                             if sub is not None:
@@ -969,12 +1067,12 @@ class APIAnalyzer:
             source = p.read_text(encoding='utf-8', errors='ignore')
             tree = ast.parse(source, filename=file_key)
         except Exception:
-            self._ast_cache[file_key] = None
+            self._ast_cache[file_key] = True
             self._ast_return_index_cache[file_key] = {}
             self._ast_name_index_cache[file_key] = {}
             return
 
-        self._ast_cache[file_key] = tree
+        self._ast_cache[file_key] = True
         by_lineno: Dict[int, str] = {}
         by_name: Dict[str, str] = {}
 
@@ -1013,9 +1111,27 @@ class APIAnalyzer:
         return 'Union[' + ', '.join(unique) + ']'
     
     def _scan_class(self, cls: type, module: ModuleType):
-        """Scan class - Keep only static methods and class methods (factory methods), filter instance methods"""
-        # Strategy: Only extract methods that can be called without an instance (factory methods, static utilities)
-        # Instance methods should be called via call-object-method, not exposed as top-level Tools
+        """Scan class and expose constructor factory + static/class methods."""
+        # Constructor factory: create_<class> that returns object_id through runtime object storage.
+        try:
+            init_obj = getattr(cls, '__init__', None)
+            if callable(init_obj):
+                constructor_name = f"create_{cls.__name__.lower()}"
+                constructor_info = self._extract_function(
+                    constructor_name,
+                    init_obj,
+                    module,
+                    class_name=cls.__name__,
+                    target_name='__init__',
+                    is_constructor=True,
+                )
+                if constructor_info and self._is_suitable_for_api(constructor_info, init_obj):
+                    constructor_info.returns_object = True
+                    constructor_info.object_methods = self._extract_object_methods(cls)
+                    self.functions.append(constructor_info)
+                    self.object_returning_functions.append(constructor_info)
+        except Exception:
+            pass
         
         for name, member in inspect.getmembers(cls):
             if name.startswith('_'):
@@ -1097,10 +1213,6 @@ class APIAnalyzer:
         if is_method or not module:
             return True
 
-        root = sys.modules.get(self.library_name)
-        if root and hasattr(root, '__all__') and module.__name__ != self.library_name:
-            return name in root.__all__
-
         if hasattr(module, '__all__'):
             return name in module.__all__
 
@@ -1112,6 +1224,9 @@ class APIAnalyzer:
 
         obj_module = getattr(obj, '__module__', None)
         if obj_module == module.__name__:
+            return True
+
+        if obj_module and obj_module.startswith(f"{self.library_name}."):
             return True
 
         module_file = getattr(module, '__file__', '') or ''
@@ -1599,8 +1714,15 @@ class APIAnalyzer:
 
         return parameters, raw_param_annotations
 
-    def _extract_function(self, name: str, obj: Any, module: ModuleType, 
-                         class_name: Optional[str] = None) -> Optional[FunctionInfo]:
+    def _extract_function(
+        self,
+        name: str,
+        obj: Any,
+        module: ModuleType,
+        class_name: Optional[str] = None,
+        target_name: Optional[str] = None,
+        is_constructor: bool = False,
+    ) -> Optional[FunctionInfo]:
         """Extract function information"""
         try:
             sig = inspect.signature(obj)
@@ -1635,7 +1757,9 @@ class APIAnalyzer:
             http_method=http_method,
             path=path,
             raw_param_annotations=raw_param_annotations,
-            raw_return_annotation=raw_return_annotation
+            raw_return_annotation=raw_return_annotation,
+            target_name=target_name or name,
+            is_constructor=is_constructor,
         )
 
     def _extract_enums_from_description(self, description: str) -> Optional[List[str]]:
@@ -1925,10 +2049,11 @@ class APIAnalyzer:
             "x-function": {
                 "module": func.module,
                 "class": func.class_name,
-                "name": func.name,
+                "name": func.target_name or func.name,
                 "is_async": func.is_async,
                 "returns_object": func.returns_object,
-                "object_methods": func.object_methods if func.returns_object else None
+                "object_methods": func.object_methods if func.returns_object else None,
+                "is_constructor": func.is_constructor,
             }
         }
         

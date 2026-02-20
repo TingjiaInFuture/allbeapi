@@ -12,6 +12,9 @@ import json
 import sys
 import io
 import uuid
+import importlib
+import threading
+import time
 from typing import Any, Dict, Optional, Tuple, List
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -94,9 +97,17 @@ class SmartSerializer:
         self.object_store: Dict[str, Any] = {}
         self.metadata_store: Dict[str, ObjectMetadata] = {}
         self.resource_store: Dict[str, Any] = {}  # resource_id -> data
+        self._ref_timestamps: Dict[str, float] = {}
+        self._type_dispatch: Dict[type, Any] = {}
+        self._cleanup_interval = 300
+        self._max_object_age = 3600
+        self._cleanup_timer: Optional[threading.Timer] = None
+        self._lock = threading.Lock()
         
         # Automatically load library-specific handlers
         self._load_library_handlers()
+        self._build_type_dispatch()
+        self._schedule_cleanup()
     
     def _load_library_handlers(self):
         """Dynamically load library-specific handlers"""
@@ -119,6 +130,58 @@ class SmartSerializer:
         except ImportError:
             # Handler module not available, skip
             pass
+
+    def _build_type_dispatch(self):
+        """Build type-dispatch table from configured type handlers."""
+        self._type_dispatch = {}
+        for full_type_name, handler_name in (self.config.type_handlers or {}).items():
+            if not hasattr(self, handler_name):
+                continue
+            try:
+                module_name, class_name = full_type_name.rsplit('.', 1)
+                module_obj = importlib.import_module(module_name)
+                target_type = getattr(module_obj, class_name)
+            except Exception:
+                continue
+            self._type_dispatch[target_type] = getattr(self, handler_name)
+
+    def _resolve_dispatched_handler(self, obj_type: type):
+        handler = self._type_dispatch.get(obj_type)
+        if handler is not None:
+            return handler, True
+
+        for base in obj_type.__mro__[1:]:
+            handler = self._type_dispatch.get(base)
+            if handler is not None:
+                return handler, True
+
+        return None, False
+
+    def _schedule_cleanup(self):
+        if self._cleanup_interval <= 0:
+            return
+        timer = threading.Timer(self._cleanup_interval, self._auto_cleanup)
+        timer.daemon = True
+        timer.start()
+        self._cleanup_timer = timer
+
+    def _auto_cleanup(self):
+        try:
+            self.cleanup_objects(self._max_object_age)
+        finally:
+            self._schedule_cleanup()
+
+    def close(self):
+        timer = self._cleanup_timer
+        if timer is not None:
+            timer.cancel()
+            self._cleanup_timer = None
+
+    def __del__(self):
+        try:
+            self.close()
+        except Exception:
+            pass
     
     def serialize(self, obj: Any, context: Optional[Dict] = None) -> SerializationResult:
         """
@@ -138,19 +201,13 @@ class SmartSerializer:
         if obj is None or isinstance(obj, (bool, int, float, str)):
             return SerializationResult(type='direct', data=obj)
         
-        # 2. Check custom type handlers
-        type_name = type(obj).__name__
-        full_type_name = f"{type(obj).__module__}.{type_name}"
-        matched_custom_handler = False
-        
-        if full_type_name in self.config.type_handlers:
-            matched_custom_handler = True
-            handler_name = self.config.type_handlers[full_type_name]
-            if hasattr(self, handler_name):
-                result = getattr(self, handler_name)(obj, context)
-                # Handler returns None means cannot handle, continue other processing flow
-                if result is not None:
-                    return result
+        # 2. Check custom type handlers via dispatch table
+        handler, matched_custom_handler = self._resolve_dispatched_handler(type(obj))
+        if matched_custom_handler and handler is not None:
+            result = handler(obj, context)
+            # Handler returns None means cannot handle, continue other processing flow
+            if result is not None:
+                return result
         
         # If a dedicated handler exists but chooses not to serialize directly
         # (typically due to configured size limits), fallback to object reference.
@@ -520,8 +577,10 @@ class SmartSerializer:
         )
         
         # Store
-        self.object_store[object_id] = obj
-        self.metadata_store[object_id] = metadata
+        with self._lock:
+            self.object_store[object_id] = obj
+            self.metadata_store[object_id] = metadata
+            self._ref_timestamps[object_id] = time.time()
         
         # Return result
         result_data = {
@@ -593,21 +652,23 @@ class SmartSerializer:
     
     def cleanup_objects(self, max_age_seconds: int = 3600):
         """Cleanup old objects"""
-        from datetime import datetime, timedelta
+        from datetime import datetime
         
         now = datetime.now()
         to_remove = []
         
-        for object_id, metadata in self.metadata_store.items():
+        for object_id, metadata in list(self.metadata_store.items()):
             created_at = datetime.fromisoformat(metadata.created_at)
             age = (now - created_at).total_seconds()
             
             if age > max_age_seconds:
                 to_remove.append(object_id)
         
-        for object_id in to_remove:
-            del self.object_store[object_id]
-            del self.metadata_store[object_id]
+        with self._lock:
+            for object_id in to_remove:
+                self.object_store.pop(object_id, None)
+                self.metadata_store.pop(object_id, None)
+                self._ref_timestamps.pop(object_id, None)
         
         return len(to_remove)
 

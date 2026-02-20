@@ -12,6 +12,7 @@ import inspect
 import json
 import logging
 import types as py_types
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union, get_args, get_origin, get_type_hints
 
@@ -59,6 +60,8 @@ class MCPServer:
         self._func_cache: Dict[str, Callable[..., Any]] = {}
         self._object_store: Dict[str, Any] = {}
         self._object_methods: Dict[str, set[str]] = {}
+        self._class_instance_cache: Dict[str, Any] = {}
+        self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="mcp-tool-")
 
         if SERIALIZATION_ENGINE_AVAILABLE:
             config_file = Path(f"{library_name}_serialization_config.json")
@@ -191,7 +194,7 @@ class MCPServer:
             result = await func(**coerced_arguments)
         else:
             loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(None, lambda: func(**coerced_arguments))
+            result = await loop.run_in_executor(self._executor, lambda: func(**coerced_arguments))
 
         if meta.get("returns_object") and not self._is_json_serializable(result):
             obj_info = self._store_object(result)
@@ -233,6 +236,9 @@ class MCPServer:
         return coerced
 
     def _coerce_value(self, annotation: Any, value: Any) -> Any:
+        if isinstance(value, str) and value in self._object_store:
+            return self._object_store[value]
+
         if annotation is inspect.Parameter.empty:
             return value
 
@@ -298,7 +304,7 @@ class MCPServer:
             if inspect.iscoroutinefunction(attr):
                 result = await attr(*args, **kwargs)
             else:
-                result = await loop.run_in_executor(None, lambda: attr(*args, **kwargs))
+                result = await loop.run_in_executor(self._executor, lambda: attr(*args, **kwargs))
         else:
             result = attr
 
@@ -370,12 +376,40 @@ class MCPServer:
 
         if meta.get("class"):
             cls = getattr(module, meta["class"])
+
+            if meta.get("is_constructor"):
+                init_signature = inspect.signature(cls.__init__)
+
+                def constructor_wrapper(**kwargs: Any):
+                    return cls(**kwargs)
+
+                parameters = [
+                    parameter
+                    for parameter_name, parameter in init_signature.parameters.items()
+                    if parameter_name not in ("self", "cls")
+                ]
+                constructor_wrapper.__signature__ = init_signature.replace(parameters=parameters)
+                constructor_wrapper.__annotations__ = dict(getattr(cls.__init__, "__annotations__", {}))
+                self._func_cache[tool_name] = constructor_wrapper
+                return constructor_wrapper
+
             method_name = meta["function"]
             method = getattr(cls, method_name)
             method_signature = inspect.signature(method)
 
+            shared_instance = None
+            try:
+                shared_instance = cls()
+            except Exception:
+                shared_instance = None
+
             def wrapper(**kwargs: Any):
-                instance = cls()
+                instance = shared_instance
+                if instance is None:
+                    instance = self._class_instance_cache.get(tool_name)
+                    if instance is None:
+                        instance = cls()
+                        self._class_instance_cache[tool_name] = instance
                 method = getattr(instance, method_name)
                 return method(**kwargs)
 
