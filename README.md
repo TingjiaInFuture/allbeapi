@@ -1,10 +1,9 @@
 
-<img width="1361" height="192" alt="logo" src="https://github.com/user-attachments/assets/e672b767-c37a-449d-88a6-4fc249c14db8" />
+<img width="1431" height="260" alt="logo" src="https://github.com/user-attachments/assets/21f95f9c-5620-4f05-8a85-6fb4e5f14fef" />
 
 > **Turn any Python library or your local script into an LLM Tool in seconds.**
 
-![demo](https://github.com/user-attachments/assets/2ff57087-97c8-4429-898a-6ac918a47cd3)
-
+![demo](https://github.com/user-attachments/assets/cd25cd00-f055-4daa-be34-fe4b340477e0)
 
 allbemcp is a high-performance bridge that instantly exposes any Python environment—whether standard PyPI libraries or your own custom code—as a Model Context Protocol (MCP) server. It enables Large Language Models (Claude, ChatGPT, etc.) to execute local functions, manipulate dataframes, manage stateful objects, and interact with your system safely and efficiently.
 
