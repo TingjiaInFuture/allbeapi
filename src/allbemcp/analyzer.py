@@ -675,6 +675,7 @@ class APIAnalyzer:
             cache_key = self.analysis_cache.make_cache_key(self.library_name, self._analysis_config_signature, fingerprint)
             cached = self.analysis_cache.load(cache_key)
             if cached:
+                self.quality_stats = cached.get("x-allbemcp", {}).get("quality_stats", {})
                 if self._import_executor is not None:
                     self._import_executor.shutdown(wait=False)
                     self._import_executor = None
@@ -2117,7 +2118,10 @@ class APIAnalyzer:
                 "description": self._generate_description()
             },
             "servers": [{"url": "http://localhost:8000"}],
-            "paths": paths
+            "paths": paths,
+            "x-allbemcp": {
+                "quality_stats": self.quality_stats
+            }
         }
 
     def _resolve_path_conflicts(self, path_method_funcs: Dict[Tuple[str, str], List[FunctionInfo]], conflicts: List[Dict[str, str]]) -> None:
