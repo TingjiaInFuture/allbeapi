@@ -3,8 +3,8 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "allbeapi"
-version = "1.1.0"
+name = "allbemcp"
+version = "1.1.1"
 description = "Turn any Python library into an MCP Server"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -13,8 +13,8 @@ license-files = ["LICENSE"]
 authors = [
   { name = "Tingjia Zhang", email = "tingjiainfuture@gmail.com" },
 ]
-urls.Homepage = "https://github.com/TingjiaInFuture/allbeapi"
-urls.Repository = "https://github.com/TingjiaInFuture/allbeapi"
+urls.Homepage = "https://github.com/TingjiaInFuture/allbemcp"
+urls.Repository = "https://github.com/TingjiaInFuture/allbemcp"
 
 dependencies = [
   "mcp>=1.1.0",
@@ -28,7 +28,7 @@ dependencies = [
 ]
 
 [project.scripts]
-allbeapi = "allbeapi.cli:app"
+allbemcp = "allbemcp.cli:app"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/allbeapi"]
+packages = ["src/allbemcp"]

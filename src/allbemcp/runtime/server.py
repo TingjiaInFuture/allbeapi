@@ -43,7 +43,7 @@ except ImportError:
 
 # Import intelligent serialization engine
 try:
-    from allbeapi.serialization.engine import SmartSerializer, SerializationConfig
+    from allbemcp.serialization.engine import SmartSerializer, SerializationConfig
     SERIALIZATION_ENGINE_AVAILABLE = True
 except ImportError:
     SERIALIZATION_ENGINE_AVAILABLE = False

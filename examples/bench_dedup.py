@@ -10,7 +10,7 @@ from __future__ import annotations
 import time
 from typing import List, Tuple
 
-from allbeapi.analyzer import FunctionInfo
+from allbemcp.analyzer import FunctionInfo
 
 
 def build_scored_functions(total: int, dup_ratio: float = 0.5) -> Tuple[List[Tuple[FunctionInfo, float]], List[FunctionInfo]]:

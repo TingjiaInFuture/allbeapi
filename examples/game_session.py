@@ -31,7 +31,7 @@ def create_character(name: str) -> PlayerCharacter:
     """
     创建一个新的游戏角色。
     
-    返回的是一个复杂对象，AllBeAPI 会自动将其存储在内存中，
+    返回的是一个复杂对象，allbemcp 会自动将其存储在内存中，
     并返回一个 object_id 给 LLM。
     """
     return PlayerCharacter(name)

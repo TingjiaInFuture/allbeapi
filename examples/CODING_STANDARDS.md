@@ -1,12 +1,12 @@
 # Coding Standards for Custom Tools
 
-This document outlines the best practices for writing custom Python code intended for use with AllBeAPI.
+This document outlines the best practices for writing custom Python code intended for use with allbemcp.
 
-AllBeAPI utilizes static analysis and runtime introspection to generate Model Context Protocol (MCP) server definitions. Adhering to these standards ensures that the generated tools provide accurate schemas, high-quality descriptions, and reliable execution contexts for Large Language Models (LLMs).
+allbemcp utilizes static analysis and runtime introspection to generate Model Context Protocol (MCP) server definitions. Adhering to these standards ensures that the generated tools provide accurate schemas, high-quality descriptions, and reliable execution contexts for Large Language Models (LLMs).
 
 ## Core Principles
 
-The AllBeAPI analysis engine (`analyzer.py`) evaluates code based on three primary metrics:
+The allbemcp analysis engine (`analyzer.py`) evaluates code based on three primary metrics:
 
 1.  **Type Precision**: Determines the accuracy of the generated JSON Schema.
 2.  **Documentation Density**: Determines the context provided to the LLM for tool selection.
@@ -17,7 +17,7 @@ The AllBeAPI analysis engine (`analyzer.py`) evaluates code based on three prima
 ## 1. Namespace Control
 
 ### Explicit Export via `__all__`
-By default, AllBeAPI may inspect all functions found in a module, including those imported from third-party libraries. To prevent polluting the LLM context window with utility functions or imports, you must explicitly define the `__all__` list.
+By default, allbemcp may inspect all functions found in a module, including those imported from third-party libraries. To prevent polluting the LLM context window with utility functions or imports, you must explicitly define the `__all__` list.
 
 **Requirement:**
 Define `__all__` at the module level containing the strings of the functions or classes you wish to expose.
@@ -45,7 +45,7 @@ class UserSession:
 
 ## 2. Type Hinting
 
-AllBeAPI uses the Python `typing` module to generate the `inputSchema` for MCP tools. Missing type hints result in arguments being treated as `Any`, which significantly degrades the LLM's ability to call tools correctly.
+allbemcp uses the Python `typing` module to generate the `inputSchema` for MCP tools. Missing type hints result in arguments being treated as `Any`, which significantly degrades the LLM's ability to call tools correctly.
 
 **Requirement:**
 All exposed functions and methods must have type annotations for arguments and return values.
@@ -115,7 +115,7 @@ Use this pattern for utility functions, data transformations, or database querie
 ### Pattern B: Stateful Agents (The Factory Pattern)
 Use this pattern when you need to maintain context (e.g., database connections, game states, file system cursors) across multiple LLM turns.
 
-*   **Mechanism**: When a function returns a class instance, AllBeAPI caches the instance and returns a reference ID. The LLM can then call methods on that specific instance.
+*   **Mechanism**: When a function returns a class instance, allbemcp caches the instance and returns a reference ID. The LLM can then call methods on that specific instance.
 *   **Structure**: A class definition and a factory function to instantiate it.
 
 **Example:**
@@ -147,7 +147,7 @@ def connect_to_db(db_name: str) -> DatabaseConnection:
 ```
 
 ### Pattern C: Data Containers
-AllBeAPI's `SmartSerializer` automatically handles complex data types like Pandas DataFrames, NumPy Arrays, or PIL Images.
+allbemcp's `SmartSerializer` automatically handles complex data types like Pandas DataFrames, NumPy Arrays, or PIL Images.
 
 *   **Requirement**: Simply return the object. Do not manually convert it to a string or dictionary unless specific formatting is required.
 *   **Behavior**: Small objects are serialized to JSON; large objects are stored, and a preview is returned to the LLM.

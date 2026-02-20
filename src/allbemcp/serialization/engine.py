@@ -101,7 +101,7 @@ class SmartSerializer:
     def _load_library_handlers(self):
         """Dynamically load library-specific handlers"""
         try:
-            from allbeapi.serialization.handlers import create_handler_registry
+            from allbemcp.serialization.handlers import create_handler_registry
             
             # Create handler registry
             handler_registry = create_handler_registry({'library_specific': {}})

@@ -6,7 +6,7 @@ def generate_sales_report(days: int = 7) -> pd.DataFrame:
     """
     生成销售数据报表。
     
-    AllBeAPI 会自动检测到这是 DataFrame：
+    allbemcp 会自动检测到这是 DataFrame：
     - 如果数据量小，直接转为 JSON。
     - 如果数据量大，返回 Markdown 预览和 Object ID。
     """
@@ -25,7 +25,7 @@ def analyze_dataframe(df_id: str) -> Dict[str, Any]:
     Args:
         df_id: 上一步生成的 DataFrame 的 object_id
     """
-    # 注意：在实际代码中，AllBeAPI 目前主要处理“返回”对象。
+    # 注意：在实际代码中，allbemcp 目前主要处理“返回”对象。
     # 如果你想把 object_id 传回来，目前需要在自定义代码中维护一个简单的查找表，
     # 或者直接使用 `call-object-method` 调用 DataFrame 自带的方法（如 describe）。
     pass

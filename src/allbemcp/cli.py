@@ -11,19 +11,19 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 # Import internal modules
-# We need to ensure the current directory is in sys.path to import allbeapi if it's not installed
+# We need to ensure the current directory is in sys.path to import allbemcp if it's not installed
 sys.path.append(os.getcwd())
 
 try:
-    from allbeapi.analyzer import APIAnalyzer
-    from allbeapi.generator import generate_mcp_server, generate_requirements
-    from allbeapi.utils.installer import install_dependency
+    from allbemcp.analyzer import APIAnalyzer
+    from allbemcp.generator import generate_mcp_server, generate_requirements
+    from allbemcp.utils.installer import install_dependency
 except ImportError as e:
-    print(f"Error importing allbeapi modules: {e}")
-    print("Please ensure you are running this from the root of the project or have allbeapi installed.")
+    print(f"Error importing allbemcp modules: {e}")
+    print("Please ensure you are running this from the root of the project or have allbemcp installed.")
     sys.exit(1)
 
-app = typer.Typer(help="AllBeAPI - Turn any Python library into an MCP Server")
+app = typer.Typer(help="allbemcp - Turn any Python library into an MCP Server")
 console = Console()
 
 def _ensure_library_installed(library_name: str):

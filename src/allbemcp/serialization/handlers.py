@@ -6,7 +6,7 @@ No code changes needed to add new type handlers - just modify handlers_config.js
 """
 
 from typing import Any, Dict, Optional, Callable
-from allbeapi.serialization.engine import SerializationResult
+from allbemcp.serialization.engine import SerializationResult
 import json
 from pathlib import Path
 

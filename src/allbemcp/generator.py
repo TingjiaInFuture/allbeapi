@@ -139,14 +139,14 @@ import sys
 import os
 
 try:
-    from allbeapi.runtime.server import serve
+    from allbemcp.runtime.server import serve
 except ImportError:
-    # Fallback: try to import from local directory if allbeapi is not installed
+    # Fallback: try to import from local directory if allbemcp is not installed
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
     try:
         from server_runtime import serve
     except ImportError:
-        print("Error: allbeapi package not found. Please install it with `pip install allbeapi`.")
+        print("Error: allbemcp package not found. Please install it with `pip install allbemcp`.")
         sys.exit(1)
 
 # Tool definitions
