@@ -130,10 +130,10 @@ class MCPServer:
         async def call_object_method(
             ctx: Context,
             object_id: str,
-            method_name: Optional[str] = None,
-            method: Optional[str] = None,
-            args: Optional[List[Any]] = None,
-            kwargs: Optional[Dict[str, Any]] = None,
+            method_name: str | None = None,
+            method: str | None = None,
+            args: list[Any] | None = None,
+            kwargs: dict[str, Any] | None = None,
         ):
             selected_method = method_name or method
             if not selected_method:
@@ -430,8 +430,8 @@ class MCPServer:
         except (TypeError, ValueError):
             return False
 
-    async def run(self, transport: str = "stdio", **run_kwargs: Any) -> None:
-        await self.mcp.run(transport=transport, **run_kwargs)
+    def run(self, transport: str = "stdio", **run_kwargs: Any) -> None:
+        self.mcp.run(transport=transport, **run_kwargs)
 
 
 def serve(title: str, tools: List[Dict], function_map: Dict, library_name: str):
@@ -473,4 +473,4 @@ def serve(title: str, tools: List[Dict], function_map: Dict, library_name: str):
         )
 
     logger.info("Starting MCP server with transport=%s", transport)
-    asyncio.run(server.run(transport=transport, **run_kwargs))
+    server.run(transport=transport, **run_kwargs)
