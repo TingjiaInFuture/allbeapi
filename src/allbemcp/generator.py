@@ -8,6 +8,7 @@ with support for stdio and streamable-http transports.
 """
 
 import json
+import re
 import sys
 import importlib.util
 from typing import Any, Dict, List, Optional
@@ -36,6 +37,8 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
             
             # Build MCP tool definition
             tool_name = op_id.replace("_", "-")
+            # Remove leading/trailing dashes and collapse consecutive dashes
+            tool_name = re.sub(r"-{2,}", "-", tool_name).strip("-")
             
             # Extract parameters
             input_schema = {
