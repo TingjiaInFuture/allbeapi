@@ -20,6 +20,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, get_args, get_ori
 
 import mcp.types as types
 from fastmcp import Context, FastMCP
+from fastmcp.tools.function_tool import FunctionTool
 
 try:
     from allbemcp.serialization.engine import SerializationConfig, SmartSerializer
@@ -118,11 +119,12 @@ class MCPServer:
                     ]
 
             self.mcp.add_tool(
-                wrapper,
-                name=tool_name,
-                description=description,
-                input_schema=input_schema,
-                version="1.0",
+                FunctionTool(
+                    fn=wrapper,
+                    name=tool_name,
+                    description=description,
+                    parameters=input_schema,
+                )
             )
 
     def _register_special_tools(self) -> None:
