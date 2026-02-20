@@ -11,8 +11,9 @@ import importlib
 import inspect
 import json
 import logging
+import types as py_types
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union, get_args, get_origin, get_type_hints
 
 import mcp.types as types
 from fastmcp import Context, FastMCP
@@ -184,12 +185,13 @@ class MCPServer:
         func = self._get_function(tool_name)
 
         filtered_arguments = {k: v for k, v in arguments.items() if v not in ("", None)}
+        coerced_arguments = self._coerce_types(func, filtered_arguments)
 
         if meta.get("is_async"):
-            result = await func(**filtered_arguments)
+            result = await func(**coerced_arguments)
         else:
             loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(None, lambda: func(**filtered_arguments))
+            result = await loop.run_in_executor(None, lambda: func(**coerced_arguments))
 
         if meta.get("returns_object") and not self._is_json_serializable(result):
             obj_info = self._store_object(result)
@@ -203,6 +205,69 @@ class MCPServer:
 
         serialized = self._serialize_result(result)
         return {"success": True, "data": serialized}
+
+    def _coerce_types(self, func: Callable[..., Any], kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        """Coerce incoming kwargs based on callable type hints."""
+        if not kwargs:
+            return kwargs
+
+        try:
+            signature = inspect.signature(func)
+        except (TypeError, ValueError):
+            return kwargs
+
+        try:
+            resolved_hints = get_type_hints(func)
+        except Exception:
+            resolved_hints = {}
+
+        coerced = dict(kwargs)
+        for name, value in kwargs.items():
+            param = signature.parameters.get(name)
+            if param is None:
+                continue
+
+            annotation = resolved_hints.get(name, param.annotation)
+            coerced[name] = self._coerce_value(annotation, value)
+
+        return coerced
+
+    def _coerce_value(self, annotation: Any, value: Any) -> Any:
+        if annotation is inspect.Parameter.empty:
+            return value
+
+        origin = get_origin(annotation)
+        if origin is None:
+            if isinstance(annotation, type) and issubclass(annotation, Path) and isinstance(value, str):
+                return annotation(value)
+            return value
+
+        if origin in (list, List):
+            args = get_args(annotation)
+            if isinstance(value, list) and args:
+                return [self._coerce_value(args[0], item) for item in value]
+            return value
+
+        if origin in (dict, Dict):
+            args = get_args(annotation)
+            if isinstance(value, dict) and len(args) == 2:
+                key_type, value_type = args
+                return {
+                    self._coerce_value(key_type, key): self._coerce_value(value_type, item)
+                    for key, item in value.items()
+                }
+            return value
+
+        if origin in (py_types.UnionType, Union):
+            for candidate in get_args(annotation):
+                if candidate is type(None):
+                    continue
+                converted = self._coerce_value(candidate, value)
+                if converted is not value:
+                    return converted
+            return value
+
+        return value
 
     async def _call_stored_method(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         object_id = arguments.get("object_id")
@@ -306,11 +371,21 @@ class MCPServer:
         if meta.get("class"):
             cls = getattr(module, meta["class"])
             method_name = meta["function"]
+            method = getattr(cls, method_name)
+            method_signature = inspect.signature(method)
 
             def wrapper(**kwargs: Any):
                 instance = cls()
                 method = getattr(instance, method_name)
                 return method(**kwargs)
+
+            parameters = [
+                parameter
+                for parameter_name, parameter in method_signature.parameters.items()
+                if parameter_name != "self"
+            ]
+            wrapper.__signature__ = method_signature.replace(parameters=parameters)
+            wrapper.__annotations__ = dict(getattr(method, "__annotations__", {}))
 
             self._func_cache[tool_name] = wrapper
             return wrapper
