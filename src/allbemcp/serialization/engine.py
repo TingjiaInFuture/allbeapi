@@ -19,6 +19,7 @@ from typing import Any, Dict, Optional, Tuple, List
 from dataclasses import dataclass, asdict
 from pathlib import Path
 import inspect
+from collections import OrderedDict
 
 
 @dataclass
@@ -65,6 +66,7 @@ class SerializationConfig:
         self.max_iterator_items = config.get('max_iterator_items', 1000)  # Max 1000 items
         self.enable_resources = config.get('enable_resources', True)
         self.resource_base_url = config.get('resource_base_url', 'mcp://resources')
+        self.max_stored_objects = config.get('max_stored_objects', 10000)
         
         # Custom type handlers: type_pattern -> handler_function_name
         self.type_handlers = config.get('type_handlers', {})
@@ -94,15 +96,22 @@ class SmartSerializer:
     
     def __init__(self, config: Optional[SerializationConfig] = None):
         self.config = config or SerializationConfig()
-        self.object_store: Dict[str, Any] = {}
+        self._object_store: "OrderedDict[str, Any]" = OrderedDict()
+        self.object_store = self._object_store
         self.metadata_store: Dict[str, ObjectMetadata] = {}
         self.resource_store: Dict[str, Any] = {}  # resource_id -> data
         self._ref_timestamps: Dict[str, float] = {}
         self._type_dispatch: Dict[type, Any] = {}
+        self._dispatch_cache: Dict[type, Tuple[Optional[Any], bool]] = {}
         self._cleanup_interval = 300
         self._max_object_age = 3600
-        self._cleanup_timer: Optional[threading.Timer] = None
+        self._cleanup_thread: Optional[threading.Thread] = None
+        self._stop_cleanup = threading.Event()
+        self._cleanup_started = False
+        self._max_objects = max(1, int(self.config.max_stored_objects))
         self._lock = threading.Lock()
+        self._id_lock = threading.Lock()
+        self._id_counter = 0
         
         # Automatically load library-specific handlers
         self._load_library_handlers()
@@ -134,6 +143,7 @@ class SmartSerializer:
     def _build_type_dispatch(self):
         """Build type-dispatch table from configured type handlers."""
         self._type_dispatch = {}
+        self._dispatch_cache.clear()
         for full_type_name, handler_name in (self.config.type_handlers or {}).items():
             if not hasattr(self, handler_name):
                 continue
@@ -146,36 +156,57 @@ class SmartSerializer:
             self._type_dispatch[target_type] = getattr(self, handler_name)
 
     def _resolve_dispatched_handler(self, obj_type: type):
+        cached = self._dispatch_cache.get(obj_type)
+        if cached is not None:
+            return cached
+
         handler = self._type_dispatch.get(obj_type)
         if handler is not None:
-            return handler, True
+            result = (handler, True)
+            self._dispatch_cache[obj_type] = result
+            return result
 
         for base in obj_type.__mro__[1:]:
             handler = self._type_dispatch.get(base)
             if handler is not None:
-                return handler, True
+                result = (handler, True)
+                self._dispatch_cache[obj_type] = result
+                return result
 
-        return None, False
+        result = (None, False)
+        self._dispatch_cache[obj_type] = result
+        return result
 
     def _schedule_cleanup(self):
-        if self._cleanup_interval <= 0:
+        if self._cleanup_interval <= 0 or self._cleanup_started:
             return
-        timer = threading.Timer(self._cleanup_interval, self._auto_cleanup)
-        timer.daemon = True
-        timer.start()
-        self._cleanup_timer = timer
+
+        self._cleanup_started = True
+
+        def _worker():
+            while not self._stop_cleanup.wait(self._cleanup_interval):
+                try:
+                    self.cleanup_objects(self._max_object_age)
+                except Exception:
+                    continue
+
+        self._cleanup_thread = threading.Thread(
+            target=_worker,
+            daemon=True,
+            name="allbemcp-serializer-cleanup",
+        )
+        self._cleanup_thread.start()
 
     def _auto_cleanup(self):
-        try:
-            self.cleanup_objects(self._max_object_age)
-        finally:
-            self._schedule_cleanup()
+        self.cleanup_objects(self._max_object_age)
 
     def close(self):
-        timer = self._cleanup_timer
-        if timer is not None:
-            timer.cancel()
-            self._cleanup_timer = None
+        self._stop_cleanup.set()
+        worker = self._cleanup_thread
+        if worker is not None and worker.is_alive():
+            worker.join(timeout=1.0)
+        self._cleanup_thread = None
+        self._cleanup_started = False
 
     def __del__(self):
         try:
@@ -544,7 +575,7 @@ class SmartSerializer:
     
     def _store_object(self, obj: Any, preview: Optional[str] = None, error: Optional[str] = None) -> SerializationResult:
         """Store object and return reference"""
-        object_id = f"obj_{uuid.uuid4().hex[:12]}"
+        object_id = self._generate_object_id()
         
         # Get type info
         obj_type = type(obj)
@@ -578,7 +609,12 @@ class SmartSerializer:
         
         # Store
         with self._lock:
-            self.object_store[object_id] = obj
+            if len(self._object_store) >= self._max_objects:
+                oldest_id, _ = self._object_store.popitem(last=False)
+                self.metadata_store.pop(oldest_id, None)
+                self._ref_timestamps.pop(oldest_id, None)
+
+            self._object_store[object_id] = obj
             self.metadata_store[object_id] = metadata
             self._ref_timestamps[object_id] = time.time()
         
@@ -599,6 +635,11 @@ class SmartSerializer:
             data=result_data,
             metadata=asdict(metadata)
         )
+
+    def _generate_object_id(self) -> str:
+        with self._id_lock:
+            self._id_counter += 1
+            return f"obj_{self._id_counter:016x}"
     
     def _extract_methods(self, obj: Any) -> List[Dict[str, Any]]:
         """Extract available methods of object"""
@@ -640,7 +681,12 @@ class SmartSerializer:
     
     def get_object(self, object_id: str) -> Optional[Any]:
         """Get stored object"""
-        return self.object_store.get(object_id)
+        with self._lock:
+            obj = self._object_store.get(object_id)
+            if obj is not None:
+                self._object_store.move_to_end(object_id)
+                self._ref_timestamps[object_id] = time.time()
+            return obj
     
     def get_metadata(self, object_id: str) -> Optional[ObjectMetadata]:
         """Get object metadata"""
@@ -652,21 +698,16 @@ class SmartSerializer:
     
     def cleanup_objects(self, max_age_seconds: int = 3600):
         """Cleanup old objects"""
-        from datetime import datetime
-        
-        now = datetime.now()
+        now = time.time()
         to_remove = []
-        
-        for object_id, metadata in list(self.metadata_store.items()):
-            created_at = datetime.fromisoformat(metadata.created_at)
-            age = (now - created_at).total_seconds()
-            
-            if age > max_age_seconds:
-                to_remove.append(object_id)
-        
+
         with self._lock:
+            for object_id, ts in list(self._ref_timestamps.items()):
+                if now - ts > max_age_seconds:
+                    to_remove.append(object_id)
+        
             for object_id in to_remove:
-                self.object_store.pop(object_id, None)
+                self._object_store.pop(object_id, None)
                 self.metadata_store.pop(object_id, None)
                 self._ref_timestamps.pop(object_id, None)
         

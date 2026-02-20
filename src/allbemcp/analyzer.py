@@ -12,6 +12,7 @@ import re
 import json
 import sys
 import hashlib
+import heapq
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Union, Tuple, get_type_hints, get_origin, get_args, Sequence, Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
@@ -467,6 +468,77 @@ class AnalysisCache:
             pass
 
 
+class IncrementalCache:
+    """Module-level incremental cache for scanned function metadata."""
+
+    def __init__(self, cache_dir: str = ".allbemcp_cache"):
+        self.cache_dir = Path(cache_dir) / "modules"
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+
+    def _module_key(self, module_name: str, module_file: str, config_signature: str) -> str:
+        raw = f"{module_name}|{module_file}|{config_signature}"
+        return hashlib.md5(raw.encode("utf-8")).hexdigest()
+
+    def _module_fingerprint(self, module_file: str) -> Optional[str]:
+        try:
+            p = Path(module_file)
+            if not p.exists():
+                return None
+            st = p.stat()
+            return f"{st.st_mtime_ns}:{st.st_size}"
+        except Exception:
+            return None
+
+    def get_module_cache(self, module_name: str, module_file: str, config_signature: str) -> Optional[Dict[str, Any]]:
+        fingerprint = self._module_fingerprint(module_file)
+        if fingerprint is None:
+            return None
+
+        cache_key = self._module_key(module_name, module_file, config_signature)
+        cache_file = self.cache_dir / f"{cache_key}.json"
+        if not cache_file.exists():
+            return None
+
+        try:
+            data = json.loads(cache_file.read_text(encoding="utf-8"))
+            if data.get("fingerprint") != fingerprint:
+                return None
+            return data
+        except Exception:
+            return None
+
+    def save_module_cache(
+        self,
+        module_name: str,
+        module_file: str,
+        config_signature: str,
+        functions: List[Dict[str, Any]],
+        skipped: List[Dict[str, str]],
+    ) -> None:
+        fingerprint = self._module_fingerprint(module_file)
+        if fingerprint is None:
+            return
+
+        cache_key = self._module_key(module_name, module_file, config_signature)
+        cache_file = self.cache_dir / f"{cache_key}.json"
+        payload = {
+            "fingerprint": fingerprint,
+            "functions": functions,
+            "skipped": skipped,
+        }
+        try:
+            cache_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+        except Exception:
+            pass
+
+
+try:
+    from allbemcp.analyzer_types import FunctionInfo, QualityMetrics, TypeParser
+    from allbemcp.analyzer_cache import AnalysisCache, IncrementalCache
+except Exception:
+    pass
+
+
 class APIAnalyzer:
     """API Analyzer - Universal Intelligent Version"""
 
@@ -528,6 +600,16 @@ class APIAnalyzer:
         self.parallel_scan_workers = max(1, parallel_scan_workers)
         self.enable_analysis_cache = enable_analysis_cache
         self.analysis_cache = AnalysisCache(cache_dir) if enable_analysis_cache else None
+        self.incremental_cache = IncrementalCache(cache_dir) if enable_analysis_cache else None
+        self._analysis_config_signature = ""
+        self._import_executor: Optional[ThreadPoolExecutor] = (
+            ThreadPoolExecutor(
+                max_workers=self.parallel_scan_workers,
+                thread_name_prefix="allbemcp-import",
+            )
+            if self.enable_parallel_scan and self.parallel_scan_workers > 1
+            else None
+        )
 
         # AST caches
         self._ast_cache: Dict[str, bool] = {}
@@ -570,6 +652,14 @@ class APIAnalyzer:
                 self.min_quality_score = mode_config['min_quality_score']
             if self.max_functions is None:
                 self.max_functions = mode_config['max_functions']
+
+    def __del__(self):
+        executor = getattr(self, '_import_executor', None)
+        if executor is not None:
+            try:
+                executor.shutdown(wait=False)
+            except Exception:
+                pass
     
     def analyze(self) -> Dict[str, Any]:
         """Analyze library - Enhanced version with quality filtering."""
@@ -579,12 +669,15 @@ class APIAnalyzer:
             return {"error": f"Cannot import: {e}"}
 
         cache_key = None
+        self._analysis_config_signature = self._build_analysis_config_signature()
         if self.enable_analysis_cache and self.analysis_cache:
-            config_signature = self._build_analysis_config_signature()
             fingerprint = self._compute_library_fingerprint(root)
-            cache_key = self.analysis_cache.make_cache_key(self.library_name, config_signature, fingerprint)
+            cache_key = self.analysis_cache.make_cache_key(self.library_name, self._analysis_config_signature, fingerprint)
             cached = self.analysis_cache.load(cache_key)
             if cached:
+                if self._import_executor is not None:
+                    self._import_executor.shutdown(wait=False)
+                    self._import_executor = None
                 return cached
         
         # 1. Scan module
@@ -599,6 +692,10 @@ class APIAnalyzer:
 
         if cache_key and self.analysis_cache:
             self.analysis_cache.save(cache_key, spec)
+
+        if self._import_executor is not None:
+            self._import_executor.shutdown(wait=False)
+            self._import_executor = None
 
         return spec
 
@@ -719,7 +816,7 @@ class APIAnalyzer:
         self._collect_quality_stats(scored_functions)
 
     def _apply_adaptive_filter(self, scored_functions: List[Tuple[FunctionInfo, float]]) -> List[Tuple[FunctionInfo, float]]:
-        """Adaptive filter using two-phase allocation (fair minimum + weighted remainder)."""
+        """Adaptive filter using minimum guarantee + global weighted heap selection."""
         by_module: Dict[str, List[Tuple[FunctionInfo, float]]] = defaultdict(list)
         for func, score in scored_functions:
             by_module[func.module].append((func, score))
@@ -727,86 +824,58 @@ class APIAnalyzer:
         if not by_module:
             return []
 
-        module_weights: Dict[str, float] = {}
-        for module, items in by_module.items():
-            depth = max(1, len(module.split('.')))
-            module_obj = sys.modules.get(module)
-            has_all = bool(module_obj and hasattr(module_obj, '__all__'))
-            avg_score = sum(score for _, score in items) / len(items)
-            module_weights[module] = ((1.0 / depth) * (2.0 if has_all else 1.0)) * (0.5 + avg_score / 200.0)
+        module_weights = self._compute_module_weights(by_module)
 
         total_items = len(scored_functions)
-        total_budget = int(total_items * self.adaptive_keep_ratio)
+        total_budget = max(1, int(total_items * self.adaptive_keep_ratio))
         min_needed = sum(min(self.adaptive_min_keep, len(items)) for items in by_module.values())
-        total_budget = min(total_items, max(total_budget, min_needed, 1))
+        total_budget = min(total_items, max(total_budget, min_needed))
 
         for items in by_module.values():
             items.sort(key=lambda x: x[1], reverse=True)
 
         kept: List[Tuple[FunctionInfo, float]] = []
-        allocated: Dict[str, int] = {module: 0 for module in by_module}
+        allocated: Dict[str, int] = {}
 
         # Phase 1: minimum keep per module
         for module, items in by_module.items():
             min_keep = min(self.adaptive_min_keep, self.adaptive_max_keep, len(items))
-            if min_keep <= 0:
-                continue
-            kept.extend(items[:min_keep])
+            if min_keep > 0:
+                kept.extend(items[:min_keep])
             allocated[module] = min_keep
 
         remaining_budget = total_budget - len(kept)
         if remaining_budget <= 0:
-            kept.sort(key=lambda x: x[1], reverse=True)
-            return kept[:total_budget]
+            return heapq.nlargest(total_budget, kept, key=lambda x: x[1])
 
-        # Phase 2: weighted distribution of remaining budget
-        total_weight = sum(module_weights.values()) or 1.0
-        extra_targets: Dict[str, int] = {module: 0 for module in by_module}
-        for module, items in by_module.items():
-            capacity = min(self.adaptive_max_keep, len(items)) - allocated[module]
-            if capacity <= 0:
-                continue
-            quota = int(remaining_budget * (module_weights[module] / total_weight))
-            extra_targets[module] = min(capacity, max(0, quota))
-
-        assigned = sum(extra_targets.values())
-        if assigned < remaining_budget:
-            ranked_modules = sorted(
-                by_module.keys(),
-                key=lambda module: module_weights[module],
-                reverse=True,
-            )
-            remaining = remaining_budget - assigned
-            for module in ranked_modules:
-                if remaining <= 0:
-                    break
-                items = by_module[module]
-                capacity = min(self.adaptive_max_keep, len(items)) - allocated[module] - extra_targets[module]
-                if capacity <= 0:
-                    continue
-                take = min(capacity, remaining)
-                extra_targets[module] += take
-                remaining -= take
-
-        candidates: List[Tuple[FunctionInfo, float]] = []
+        candidates: List[Tuple[float, int, str, Tuple[FunctionInfo, float]]] = []
         for module, items in by_module.items():
             start = allocated[module]
-            end = start + extra_targets[module]
-            candidates.extend(items[start:end])
+            cap = min(self.adaptive_max_keep, len(items))
+            for i in range(start, cap):
+                weighted_score = items[i][1] * module_weights.get(module, 1.0)
+                heapq.heappush(candidates, (-weighted_score, i, module, items[i]))
 
-        if len(candidates) < remaining_budget:
-            spillover: List[Tuple[FunctionInfo, float]] = []
-            for module, items in by_module.items():
-                start = allocated[module] + extra_targets[module]
-                max_end = min(self.adaptive_max_keep, len(items))
-                if start < max_end:
-                    spillover.extend(items[start:max_end])
-            spillover.sort(key=lambda x: x[1], reverse=True)
-            candidates.extend(spillover[: remaining_budget - len(candidates)])
+        while remaining_budget > 0 and candidates:
+            _, _, _, item = heapq.heappop(candidates)
+            kept.append(item)
+            remaining_budget -= 1
 
-        kept.extend(candidates[:remaining_budget])
-        kept.sort(key=lambda x: x[1], reverse=True)
-        return kept[:total_budget]
+        return heapq.nlargest(total_budget, kept, key=lambda x: x[1])
+
+    def _compute_module_weights(
+        self,
+        by_module: Dict[str, List[Tuple[FunctionInfo, float]]],
+    ) -> Dict[str, float]:
+        """Precompute adaptive module weights once per filtering pass."""
+        module_weights: Dict[str, float] = {}
+        for module, items in by_module.items():
+            depth = max(1, len(module.split('.')))
+            module_obj = sys.modules.get(module)
+            has_all = bool(module_obj and hasattr(module_obj, '__all__'))
+            avg_score = sum(score for _, score in items) / max(len(items), 1)
+            module_weights[module] = ((1.0 / depth) * (2.0 if has_all else 1.0)) * (0.5 + avg_score / 200.0)
+        return module_weights
     
     def _get_adaptive_weights(self) -> Dict[str, float]:
         """Get score weights adapted to the current library characteristics."""
@@ -852,9 +921,14 @@ class APIAnalyzer:
         score = 0.0
         weights = weights or self._get_adaptive_weights()
 
-        has_module_all = module_all is not None
         all_gate_bonus = False
-        if has_module_all and not func_info.class_name:
+        if QualityMetrics._INTERNAL_PATTERN.search(func_info.module):
+            return 0.0
+
+        if func_info.name.startswith('_'):
+            return 0.0
+
+        if module_all is not None and not func_info.class_name:
             if func_info.name in module_all:
                 all_gate_bonus = True
             else:
@@ -869,9 +943,14 @@ class APIAnalyzer:
         score += weights['type_annotations'] * type_score
         
         # 3. Public API
-        _, public_score = QualityMetrics.is_public_api(func_info)
-        if public_score == 0.0:
-            return 0.0
+        if module_all is not None and not func_info.class_name:
+            public_score = 1.0 if func_info.name in module_all else 0.0
+        else:
+            module_parts = func_info.module.split('.')
+            is_top_level = len(module_parts) <= 2 and not func_info.class_name
+            if re.search(r'(internal|_private|compat|testing)', func_info.module):
+                return 0.0
+            public_score = 0.9 if is_top_level else 0.7
         score += weights['public_api'] * public_score
         
         # 4. Naming convention
@@ -913,7 +992,7 @@ class APIAnalyzer:
         groups = defaultdict(list)
         for func in functions:
             purpose = self._normalize_function_purpose(func.name)
-            param_sig = frozenset(p.get('name', '') for p in func.parameters)
+            param_sig = tuple(sorted(p.get('name', '') for p in func.parameters))
             key = (purpose, param_sig)
             groups[key].append(func)
         
@@ -924,21 +1003,21 @@ class APIAnalyzer:
                 result.append(group_funcs[0])
             else:
                 # Select the best function
-                best = max(group_funcs, key=lambda f: (
-                    # 1. Quality score
-                    self.function_scores.get(f.qualname, 0),
-                    # 2. Documentation length
-                    len(f.doc or ''),
-                    # 3. Fewer parameters is better
-                    -len(f.parameters),
-                    # 4. In __all__
-                    f.name in getattr(sys.modules.get(f.module), '__all__', []),
-                    # 5. Name length (shorter is usually more generic)
-                    -len(f.name),
-                ))
+                best = max(group_funcs, key=self._dedup_sort_key)
                 result.append(best)
         
         return result
+
+    def _dedup_sort_key(self, func: FunctionInfo) -> Tuple[float, int, int, bool, int]:
+        module_all = self._module_all_cache.get(func.module)
+        in_all = func.name in module_all if module_all else False
+        return (
+            self.function_scores.get(func.qualname, 0),
+            len(func.doc or ''),
+            -len(func.parameters),
+            in_all,
+            -len(func.name),
+        )
     
     def _collect_quality_stats(self, scored_functions: List[Tuple[FunctionInfo, float]]):
         """收集质量统计信息"""
@@ -971,45 +1050,92 @@ class APIAnalyzer:
         self.analyzed.add(module.__name__)
 
         self._prepare_module_ast_cache(module)
-        
-        try:
-            # 优先检查 __all__
-            if hasattr(module, '__all__'):
-                members = []
-                for name in module.__all__:
-                    try:
-                        val = getattr(module, name)
-                        members.append((name, val))
-                    except AttributeError:
-                        continue
-            else:
-                members = list(vars(module).items())
 
-            for name, obj in members:
-                if inspect.isfunction(obj):
-                    if self._should_include(name, obj, module, is_method=False):
-                        info = self._extract_function(name, obj, module)
-                        if info:
-                            # Check if returns complex object
-                            self._analyze_return_type(info, obj)
-                            
-                            # Check if suitable for API
-                            if self._is_suitable_for_api(info, obj):
-                                self.functions.append(info)
-                                if info.returns_object:
-                                    self.object_returning_functions.append(info)
-                            elif self.skip_non_serializable:
-                                # Record skip reason
-                                reason = self._get_unsuitability_reason(info, obj)
-                                self.skipped_functions.append({
-                                    'qualname': info.qualname,
-                                    'reason': reason
-                                })
-                
-                elif inspect.isclass(obj) and not name.startswith('_'):
-                    self._scan_class(obj, module)
-        except:
-            pass
+        pre_functions_len = len(self.functions)
+        pre_skipped_len = len(self.skipped_functions)
+
+        module_file = getattr(module, '__file__', None)
+        module_cache_hit = False
+        if (
+            self.enable_analysis_cache
+            and self.incremental_cache is not None
+            and module_file
+            and module_file.endswith('.py')
+        ):
+            cached = self.incremental_cache.get_module_cache(
+                module.__name__,
+                module_file,
+                self._analysis_config_signature or self._build_analysis_config_signature(),
+            )
+            if cached:
+                for item in cached.get('functions', []):
+                    func = self._deserialize_function_info_from_cache(item)
+                    if func is not None:
+                        self.functions.append(func)
+                        if func.returns_object:
+                            self.object_returning_functions.append(func)
+                self.skipped_functions.extend(cached.get('skipped', []))
+                module_cache_hit = True
+        
+        if not module_cache_hit:
+            try:
+                # 优先检查 __all__
+                if hasattr(module, '__all__'):
+                    members = []
+                    for name in module.__all__:
+                        try:
+                            val = getattr(module, name)
+                            members.append((name, val))
+                        except AttributeError:
+                            continue
+                else:
+                    members = list(vars(module).items())
+
+                for name, obj in members:
+                    if inspect.isfunction(obj):
+                        if self._should_include(name, obj, module, is_method=False):
+                            info = self._extract_function(name, obj, module)
+                            if info:
+                                # Check if returns complex object
+                                self._analyze_return_type(info, obj)
+
+                                # Check if suitable for API
+                                if self._is_suitable_for_api(info, obj):
+                                    self.functions.append(info)
+                                    if info.returns_object:
+                                        self.object_returning_functions.append(info)
+                                elif self.skip_non_serializable:
+                                    # Record skip reason
+                                    reason = self._get_unsuitability_reason(info, obj)
+                                    self.skipped_functions.append({
+                                        'qualname': info.qualname,
+                                        'reason': reason
+                                    })
+
+                    elif inspect.isclass(obj) and not name.startswith('_'):
+                        self._scan_class(obj, module)
+            except:
+                pass
+
+            if (
+                self.enable_analysis_cache
+                and self.incremental_cache is not None
+                and module_file
+                and module_file.endswith('.py')
+            ):
+                module_funcs = [
+                    self._serialize_function_info_for_cache(f)
+                    for f in self.functions[pre_functions_len:]
+                    if f.module == module.__name__
+                ]
+                module_skipped = list(self.skipped_functions[pre_skipped_len:])
+                self.incremental_cache.save_module_cache(
+                    module.__name__,
+                    module_file,
+                    self._analysis_config_signature or self._build_analysis_config_signature(),
+                    module_funcs,
+                    module_skipped,
+                )
         
         if hasattr(module, '__path__'):
             try:
@@ -1023,16 +1149,15 @@ class APIAnalyzer:
                     submodule_names.append(subname)
 
                 submodules: List[ModuleType] = []
-                if (
-                    self.enable_parallel_scan
-                    and self.parallel_scan_workers > 1
+                use_parallel = (
+                    self._import_executor is not None
                     and len(submodule_names) > 3
-                    and depth == 0
-                ):
-                    with ThreadPoolExecutor(max_workers=self.parallel_scan_workers) as executor:
-                        for sub in executor.map(self._safe_import_submodule, submodule_names):
-                            if sub is not None:
-                                submodules.append(sub)
+                    and depth <= 1
+                )
+                if use_parallel:
+                    for sub in self._import_executor.map(self._safe_import_submodule, submodule_names):
+                        if sub is not None:
+                            submodules.append(sub)
                 else:
                     for subname in submodule_names:
                         sub = self._safe_import_submodule(subname)
@@ -1076,12 +1201,19 @@ class APIAnalyzer:
         by_lineno: Dict[int, str] = {}
         by_name: Dict[str, str] = {}
 
-        for node in ast.walk(tree):
+        for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 inferred = self._infer_return_type_from_ast_node(node)
                 if inferred:
                     by_lineno[node.lineno] = inferred
                     by_name.setdefault(node.name, inferred)
+            elif isinstance(node, ast.ClassDef):
+                for item in node.body:
+                    if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        inferred = self._infer_return_type_from_ast_node(item)
+                        if inferred:
+                            by_lineno[item.lineno] = inferred
+                            by_name.setdefault(item.name, inferred)
 
         self._ast_return_index_cache[file_key] = by_lineno
         self._ast_name_index_cache[file_key] = by_name
@@ -1270,25 +1402,38 @@ class APIAnalyzer:
                     return name_index[func_name]
         except Exception:
             pass
+        return None
 
+    def _serialize_function_info_for_cache(self, func: FunctionInfo) -> Dict[str, Any]:
+        payload = asdict(func)
+        payload['raw_param_annotations'] = []
+        payload['raw_return_annotation'] = None
+        return_type = payload.get('return_type')
+        if not isinstance(return_type, (type(None), bool, int, float, str, list, dict)):
+            payload['return_type'] = str(return_type)
+        return payload
+
+    def _deserialize_function_info_from_cache(self, payload: Dict[str, Any]) -> Optional[FunctionInfo]:
         try:
-            source = inspect.getsource(func_obj)
-            # Handle indentation issues
-            source = inspect.cleandoc(source)
-            tree = ast.parse(source)
-            
-            # Find function definition
-            func_def = None
-            for node in ast.walk(tree):
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                    func_def = node
-                    break
-            
-            if not func_def:
-                return None
-
-            return self._infer_return_type_from_ast_node(func_def)
-            
+            return FunctionInfo(
+                name=payload.get('name', ''),
+                module=payload.get('module', ''),
+                class_name=payload.get('class_name'),
+                qualname=payload.get('qualname', ''),
+                signature=payload.get('signature', ''),
+                doc=payload.get('doc'),
+                parameters=payload.get('parameters', []) or [],
+                return_type=payload.get('return_type'),
+                is_async=bool(payload.get('is_async', False)),
+                http_method=payload.get('http_method', 'post'),
+                path=payload.get('path', ''),
+                returns_object=bool(payload.get('returns_object', False)),
+                object_methods=payload.get('object_methods') or [],
+                raw_param_annotations=[],
+                raw_return_annotation=None,
+                target_name=payload.get('target_name'),
+                is_constructor=bool(payload.get('is_constructor', False)),
+            )
         except Exception:
             return None
 

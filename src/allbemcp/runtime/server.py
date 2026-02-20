@@ -11,8 +11,10 @@ import importlib
 import inspect
 import json
 import logging
+import time
 import types as py_types
 from concurrent.futures import ThreadPoolExecutor
+from collections import defaultdict
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Union, get_args, get_origin, get_type_hints
 
@@ -61,6 +63,7 @@ class MCPServer:
         self._object_store: Dict[str, Any] = {}
         self._object_methods: Dict[str, set[str]] = {}
         self._class_instance_cache: Dict[str, Any] = {}
+        self._call_stats = defaultdict(lambda: {"count": 0, "total_time": 0.0, "errors": 0})
         self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="mcp-tool-")
 
         if SERIALIZATION_ENGINE_AVAILABLE:
@@ -177,7 +180,31 @@ class MCPServer:
                     )
             return payload
 
+        @self.mcp.tool(name="get-call-stats", description="Get per-tool runtime call statistics.")
+        async def get_call_stats(_: Context):
+            return self.get_call_stats()
+
     async def _execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
+        start = time.perf_counter()
+        stats = self._call_stats[tool_name]
+        try:
+            result = await self._do_execute(tool_name, arguments)
+            elapsed = time.perf_counter() - start
+            stats["count"] += 1
+            stats["total_time"] += elapsed
+            return result
+        except Exception:
+            stats["errors"] += 1
+            raise
+
+    async def _do_execute_tool_call(self, func: Callable[..., Any], coerced_arguments: Dict[str, Any], is_async: bool) -> Any:
+        if is_async:
+            return await func(**coerced_arguments)
+
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(self._executor, lambda: func(**coerced_arguments))
+
+    async def _do_execute(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         if tool_name == "call-object-method":
             return await self._call_stored_method(arguments)
 
@@ -190,11 +217,7 @@ class MCPServer:
         filtered_arguments = {k: v for k, v in arguments.items() if v not in ("", None)}
         coerced_arguments = self._coerce_types(func, filtered_arguments)
 
-        if meta.get("is_async"):
-            result = await func(**coerced_arguments)
-        else:
-            loop = asyncio.get_running_loop()
-            result = await loop.run_in_executor(self._executor, lambda: func(**coerced_arguments))
+        result = await self._do_execute_tool_call(func, coerced_arguments, bool(meta.get("is_async")))
 
         if meta.get("returns_object") and not self._is_json_serializable(result):
             obj_info = self._store_object(result)
@@ -208,6 +231,20 @@ class MCPServer:
 
         serialized = self._serialize_result(result)
         return {"success": True, "data": serialized}
+
+    def get_call_stats(self) -> Dict[str, Dict[str, float]]:
+        snapshot: Dict[str, Dict[str, float]] = {}
+        for tool_name, stats in self._call_stats.items():
+            count = max(0, int(stats.get("count", 0)))
+            total_time = float(stats.get("total_time", 0.0))
+            errors = int(stats.get("errors", 0))
+            snapshot[tool_name] = {
+                "count": count,
+                "errors": errors,
+                "total_time": total_time,
+                "avg_time": (total_time / count) if count > 0 else 0.0,
+            }
+        return snapshot
 
     def _coerce_types(self, func: Callable[..., Any], kwargs: Dict[str, Any]) -> Dict[str, Any]:
         """Coerce incoming kwargs based on callable type hints."""
