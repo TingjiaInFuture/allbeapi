@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "allbemcp"
-version = "1.1.1"
+version = "1.2.0"
 description = "Turn any Python library into an MCP Server"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,7 +17,8 @@ urls.Homepage = "https://github.com/TingjiaInFuture/allbemcp"
 urls.Repository = "https://github.com/TingjiaInFuture/allbemcp"
 
 dependencies = [
-  "mcp>=1.1.0",
+  "fastmcp>=3.0.0",
+  "mcp>=1.26.0",
   "fastapi>=0.110.0",
   "uvicorn>=0.29.0",
   "typer>=0.12.0",

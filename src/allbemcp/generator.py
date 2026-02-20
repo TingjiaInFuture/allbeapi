@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 """
 MCP Server Generator - Convert OpenAPI spec to MCP Server
-Supports direct use by Claude Desktop and other MCP clients
+Supports direct use by Claude Desktop and other MCP clients.
 
-v3.0 - StreamableHTTP Transport
-- Uses StreamableHTTPSessionManager instead of SSE
-- Based on best practices from examples
-- Supports stateful and stateless modes
-- Intelligent serialization engine
+Generated servers run on allbemcp FastMCP runtime (fastmcp>=3.0.0, mcp>=1.26.0),
+with support for stdio and streamable-http transports.
 """
 
 import json
@@ -174,8 +171,14 @@ if __name__ == "__main__":
 
 
 
-def generate_requirements(library_name: str = "library"):
+def generate_requirements(
+    library_name: str = "library",
+    use_fastmcp: bool = True,
+    use_fastmcp3: Optional[bool] = None,
+):
     """Generate requirements.txt"""
+    if use_fastmcp3 is not None:
+        use_fastmcp = use_fastmcp3
     
     # Check if library is a standard library module
     if sys.version_info >= (3, 10):
@@ -192,16 +195,21 @@ def generate_requirements(library_name: str = "library"):
         except:
             pass
 
+    mcp_deps = ["mcp>=1.26.0"]
+    if use_fastmcp:
+        mcp_deps.append("fastmcp>=3.0.0")
+    mcp_dependency_block = "\n".join(mcp_deps)
+
     if is_stdlib:
         requirements = f"""# MCP Server Requirements for {library_name}
-mcp>=1.0.0
+{mcp_dependency_block}
 starlette>=0.27.0
 uvicorn>=0.23.0
 # {library_name} is a standard library module
 """
     else:
         requirements = f"""# MCP Server Requirements for {library_name}
-mcp>=1.0.0
+{mcp_dependency_block}
 starlette>=0.27.0
 uvicorn>=0.23.0
 {library_name}
@@ -265,6 +273,23 @@ def main():
     parser.add_argument('-i', '--input', default=None, help='OpenAPI specification file (default: inferred from library name)')
     parser.add_argument('-o', '--output', default=None, help='Output file (default: <library_name>_mcp_server.py)')
     parser.add_argument('-l', '--library', default=None, help='Library name (used for file prefix)')
+    parser.add_argument(
+        '--fastmcp',
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help='Alias of --use-fastmcp (default: true)',
+    )
+    parser.add_argument(
+        '--use-fastmcp',
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help='Include fastmcp>=3.0.0 in generated requirements (default: true)',
+    )
+    parser.add_argument(
+        '--use-fastmcp3',
+        action='store_true',
+        help='Backward-compat alias for --use-fastmcp',
+    )
     
     args = parser.parse_args()
     
@@ -300,7 +325,10 @@ def main():
         sys.exit(1)
     
     generate_mcp_server(openapi_spec, args.output, library_name)
-    generate_requirements(library_name)
+    use_fastmcp = args.fastmcp and args.use_fastmcp
+    if args.use_fastmcp3:
+        use_fastmcp = True
+    generate_requirements(library_name, use_fastmcp=use_fastmcp)
 
 
 if __name__ == "__main__":

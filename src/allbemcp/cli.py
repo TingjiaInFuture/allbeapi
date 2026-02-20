@@ -104,7 +104,14 @@ def inspect(library_name: str):
 @app.command()
 def generate(
     library_name: str, 
-    output_dir: str = typer.Option(".", help="Directory to output generated files")
+    output_dir: str = typer.Option(".", help="Directory to output generated files"),
+    use_fastmcp: bool = typer.Option(
+        True,
+        "--fastmcp/--no-fastmcp",
+        "--use-fastmcp/--no-use-fastmcp",
+        "--use-fastmcp3",
+        help="Include fastmcp>=3.0.0 in generated requirements (default: enabled)",
+    ),
 ):
     """
     Generate MCP server code for a library.
@@ -128,7 +135,7 @@ def generate(
         # For now, we assume it writes to CWD and we move it if needed, 
         # or we just let it be since generate_requirements implementation is simple.
         # Let's check generate_requirements implementation... it writes to f"{library_name}_mcp_requirements.txt"
-        generate_requirements(library_name)
+        generate_requirements(library_name, use_fastmcp=use_fastmcp)
         
         req_file = Path(f"{library_name}_mcp_requirements.txt")
         if output_path != Path("."):
@@ -149,7 +156,15 @@ def start(
     library_name: str,
     port: int = typer.Option(8000, help="Port to bind the server to"),
     host: str = typer.Option("127.0.0.1", help="Host to bind the server to"),
-    rebuild: bool = typer.Option(False, help="Force regenerate server code")
+    rebuild: bool = typer.Option(False, help="Force regenerate server code"),
+    transport: str = typer.Option("streamable-http", "--transport", help="Transport: stdio or streamable-http"),
+    use_fastmcp: bool = typer.Option(
+        True,
+        "--fastmcp/--no-fastmcp",
+        "--use-fastmcp/--no-use-fastmcp",
+        "--use-fastmcp3",
+        help="Include fastmcp>=3.0.0 in generated requirements (default: enabled)",
+    ),
 ):
     """
     One-click start: Install, Generate, and Run the MCP server.
@@ -164,7 +179,7 @@ def start(
         try:
             analyzer, spec = _run_analysis(library_name)
             generate_mcp_server(spec, str(server_file), library_name)
-            generate_requirements(library_name)
+            generate_requirements(library_name, use_fastmcp=use_fastmcp)
         except Exception as e:
             console.print(f"[red]Generation failed: {e}[/red]")
             raise typer.Exit(code=1)
@@ -172,15 +187,26 @@ def start(
         console.print(f"[green][OK] Found existing server code: {server_file}[/green]")
 
     # Start the server
-    console.print(f"[bold green][START] Starting {library_name} MCP Server on http://{host}:{port}/mcp[/bold green]")
-    
+    if transport not in ("stdio", "streamable-http"):
+        console.print(f"[red]Invalid transport: {transport}. Use 'stdio' or 'streamable-http'.[/red]")
+        raise typer.Exit(code=1)
+
+    if transport == "streamable-http":
+        console.print(f"[bold green][START] Starting {library_name} MCP Server on http://{host}:{port}/mcp[/bold green]")
+    else:
+        console.print(f"[bold green][START] Starting {library_name} MCP Server with stdio transport[/bold green]")
+
     cmd = [
         sys.executable,
         str(server_file),
-        "--http",
-        "--host", host,
-        "--port", str(port)
+        "--transport",
+        transport,
     ]
+    if transport == "streamable-http":
+        cmd.extend([
+            "--host", host,
+            "--port", str(port)
+        ])
     
     try:
         # Use subprocess to run the server

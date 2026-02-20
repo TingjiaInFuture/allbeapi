@@ -8,7 +8,7 @@
 
 allbemcp is a high-performance bridge that instantly exposes any Python environment—whether standard PyPI libraries or your own custom code—as a Model Context Protocol (MCP) server. It enables Large Language Models (Claude, ChatGPT, etc.) to execute local functions, manipulate dataframes, manage stateful objects, and interact with your system safely and efficiently.
 
-Built on the latest **StreamableHTTP** protocol for maximum compatibility with Claude Desktop, LangChain, and Cursor.
+Built on the latest **FastMCP + StreamableHTTP** runtime for maximum compatibility with Claude Desktop, LangChain, and Cursor.
 
 ## Installation
 
@@ -26,6 +26,10 @@ Expose `pandas`, `numpy`, or any other installed library to your LLM with a sing
 ```bash
 # Install, generate, and serve in one go
 allbemcp start pandas
+
+# Explicit transport selection
+allbemcp start pandas --transport streamable-http
+allbemcp start pandas --transport stdio
 ```
 
 ### 2. Exposing Custom Code
@@ -67,6 +71,9 @@ def open_account(owner: str) -> BankAccount:
 ```bash
 # allbemcp detects the file in your current directory
 allbemcp start my_tools
+
+# FastMCP 3.x is enabled by default in generated requirements
+allbemcp generate my_tools --use-fastmcp
 ```
 
 The LLM can now call `calculate_bmi` directly. Furthermore, if the LLM calls `open_account`, allbemcp automatically manages the returned `BankAccount` instance, allowing the LLM to make subsequent calls to `deposit` on that specific object.

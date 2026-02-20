@@ -141,14 +141,21 @@ class SmartSerializer:
         # 2. Check custom type handlers
         type_name = type(obj).__name__
         full_type_name = f"{type(obj).__module__}.{type_name}"
+        matched_custom_handler = False
         
         if full_type_name in self.config.type_handlers:
+            matched_custom_handler = True
             handler_name = self.config.type_handlers[full_type_name]
             if hasattr(self, handler_name):
                 result = getattr(self, handler_name)(obj, context)
                 # Handler returns None means cannot handle, continue other processing flow
                 if result is not None:
                     return result
+        
+        # If a dedicated handler exists but chooses not to serialize directly
+        # (typically due to configured size limits), fallback to object reference.
+        if matched_custom_handler:
+            return self._store_object(obj, preview=str(obj)[:self.config.max_preview_length])
         
         # 3. Generator and Iterator -> Consume and serialize content
         if self._is_iterator_or_generator(obj):
@@ -394,7 +401,6 @@ class SmartSerializer:
         """Handle list and tuple"""
         # Recursively serialize each item
         serialized_items = []
-        total_size = 0
         has_complex = False
         
         for item in obj:
@@ -403,13 +409,12 @@ class SmartSerializer:
             
             if result.type != 'direct':
                 has_complex = True
-            
-            # Estimate size
-            try:
-                item_size = len(json.dumps(result.data).encode('utf-8'))
-                total_size += item_size
-            except:
-                has_complex = True
+
+        try:
+            total_json = json.dumps(serialized_items)
+            total_size = len(total_json.encode('utf-8'))
+        except Exception:
+            return self._store_object(obj, preview=str(obj)[:self.config.max_preview_length])
         
         # If total size is too large or contains complex objects, consider storing
         if total_size > self.config.max_direct_size or (has_complex and len(obj) > 100):
@@ -424,7 +429,6 @@ class SmartSerializer:
     def _handle_dict(self, obj: Dict, context: Dict) -> SerializationResult:
         """Handle dictionary"""
         serialized_dict = {}
-        total_size = 0
         has_complex = False
         
         for key, value in obj.items():
@@ -436,12 +440,12 @@ class SmartSerializer:
             
             if result.type != 'direct':
                 has_complex = True
-            
-            try:
-                item_size = len(json.dumps({str_key: result.data}).encode('utf-8'))
-                total_size += item_size
-            except:
-                has_complex = True
+
+        try:
+            total_json = json.dumps(serialized_dict)
+            total_size = len(total_json.encode('utf-8'))
+        except Exception:
+            return self._store_object(obj, preview=str(obj)[:self.config.max_preview_length])
         
         # Check total size
         if total_size > self.config.max_direct_size or (has_complex and len(obj) > 50):
@@ -457,78 +461,25 @@ class SmartSerializer:
         """Handle data container (DataFrame, ndarray, etc.)"""
         type_name = type(obj).__name__
         
-        # Try convert to simple format
+        # Keep this as a generic fallback for container-like objects not covered by
+        # configuration-driven handlers.
         try:
-            # pandas DataFrame/Series
-            if type_name == 'DataFrame':
-                # Check size
-                num_rows, num_cols = obj.shape
-                estimated_size = num_rows * num_cols * 8  # Rough estimate
-                
-                if estimated_size <= self.config.max_direct_size:
-                    # Handle MultiIndex columns which cause JSON serialization errors
-                    # because to_dict(orient='records') produces dicts with tuple keys
-                    export_df = obj
-                    columns_list = obj.columns.tolist()
-                    
-                    # Check if columns are MultiIndex (list of tuples)
-                    if len(columns_list) > 0 and isinstance(columns_list[0], tuple):
-                        # Create a copy to avoid modifying the original
-                        export_df = obj.copy()
-                        # Flatten columns to strings: "('A', 'B')" -> "('A', 'B')"
-                        export_df.columns = [str(col) for col in export_df.columns]
+            if hasattr(obj, 'to_dict') and callable(getattr(obj, 'to_dict')):
+                try:
+                    as_dict = obj.to_dict(orient='records')
+                except TypeError:
+                    as_dict = obj.to_dict()
 
-
-                    # Small data, serialize directly
-                    return SerializationResult(
-                        type='direct',
-                        data={
-                            '_type': 'pandas.DataFrame',
-                            'columns': columns_list,
-                            'data': export_df.to_dict(orient='records'),
-                            'shape': [num_rows, num_cols]
-                        },
-                        metadata={'size_estimate': estimated_size}
-                    )
-                else:
-                    # Large data, store object
-                    preview = f"DataFrame(shape={obj.shape}, columns={obj.columns.tolist()[:5]}...)"
-                    return self._store_object(obj, preview=preview)
-            
-            elif type_name == 'Series':
-                if len(obj) <= 1000:  # Small Series serialize directly
-                    return SerializationResult(
-                        type='direct',
-                        data={
-                            '_type': 'pandas.Series',
-                            'values': obj.tolist(),
-                            'index': [str(idx) for idx in obj.index],
-                            'name': obj.name
-                        }
-                    )
-                else:
-                    return self._store_object(obj, preview=f"Series(length={len(obj)}, name={obj.name})")
-            
-            # numpy ndarray
-            elif type_name == 'ndarray':
-                size = obj.nbytes
+                payload = {
+                    '_type': f"{type(obj).__module__}.{type_name}",
+                    'data': as_dict,
+                }
+                serialized = json.dumps(payload)
+                size = len(serialized.encode('utf-8'))
                 if size <= self.config.max_direct_size:
-                    return SerializationResult(
-                        type='direct',
-                        data={
-                            '_type': 'numpy.ndarray',
-                            'shape': obj.shape,
-                            'dtype': str(obj.dtype),
-                            'data': obj.tolist()
-                        },
-                        metadata={'size_bytes': size}
-                    )
-                else:
-                    return self._store_object(obj, preview=f"ndarray(shape={obj.shape}, dtype={obj.dtype})")
-            
-            # Other data containers, try generic handling
-            else:
-                return self._store_object(obj)
+                    return SerializationResult(type='direct', data=payload, metadata={'size_bytes': size})
+
+            return self._store_object(obj, preview=f"{type_name}({str(obj)[:80]})")
                 
         except Exception as e:
             # Conversion failed, store object
