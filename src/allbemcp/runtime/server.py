@@ -21,6 +21,7 @@ from typing import Any, Callable, Dict, List, Optional, Union, get_args, get_ori
 
 import mcp.types as types
 from fastmcp import Context, FastMCP
+from fastmcp.server.dependencies import transform_context_annotations
 from fastmcp.tools.function_tool import FunctionTool
 
 try:
@@ -120,9 +121,15 @@ class MCPServer:
                         )
                     ]
 
+            # transform_context_annotations must be called so FastMCP's DI
+            # system recognises ctx: Context and injects it automatically.
+            # Bypassing FunctionTool.from_function() skips this step, so
+            # we call it explicitly here.
+            transformed_wrapper = transform_context_annotations(wrapper)
+
             self.mcp.add_tool(
                 FunctionTool(
-                    fn=wrapper,
+                    fn=transformed_wrapper,
                     name=tool_name,
                     description=description,
                     parameters=input_schema,
