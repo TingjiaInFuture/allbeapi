@@ -134,6 +134,10 @@ class QualityMetrics:
             return True, 0.7
         if has_defaults:
             return True, 0.6
+
+        if total_params > 0 and param_coverage == 0.0 and not has_return_annotation and not doc_has_types:
+            return False, 0.1
+
         return False, 0.4
 
     @staticmethod
@@ -215,25 +219,93 @@ class QualityMetrics:
             penalty = (len(module_parts) - 2) * 0.2
             score = max(0.4, 1.0 - penalty)
 
+        if len(module_parts) > 2 and not func_info.class_name:
+            exposure_hits = 0
+            for i in range(1, len(module_parts)):
+                parent_name = '.'.join(module_parts[:i])
+                parent_module = sys.modules.get(parent_name)
+                if parent_module is None:
+                    continue
+
+                in_all = False
+                if hasattr(parent_module, '__all__'):
+                    try:
+                        in_all = func_info.name in (getattr(parent_module, '__all__', []) or [])
+                    except Exception:
+                        in_all = False
+
+                if in_all or hasattr(parent_module, func_info.name):
+                    exposure_hits += 1
+
+            if exposure_hits == 0:
+                score *= 0.6
+            elif exposure_hits == 1:
+                score *= 0.8
+
+        score = max(0.2, min(score, 1.0))
+
         return True, score
+
+    @staticmethod
+    def api_usability_score(func_info: FunctionInfo) -> Tuple[bool, float]:
+        score = 1.0
+        penalties = []
+
+        name = func_info.name or ''
+        lower_name = name.lower()
+        if len(name) <= 2:
+            penalties.append(0.5)
+
+        overly_generic_names = {
+            'run', 'do', 'go', 'call', 'exec', 'execute', 'process',
+            'handle', 'apply', 'main', 'init', 'setup', 'configure',
+        }
+        if lower_name in overly_generic_names and not func_info.doc:
+            penalties.append(0.3)
+
+        unclear_param_names = {
+            'x', 'y', 'z', 'a', 'b', 'c', 'v', 'k',
+            'arg', 'args', 'val', 'obj', 'data', 'input',
+        }
+        if func_info.parameters:
+            unclear_count = sum(
+                1
+                for p in func_info.parameters
+                if (p.get('name', '') or '').lower() in unclear_param_names
+            )
+            if unclear_count > 0 and not func_info.doc:
+                penalties.append(0.2 * unclear_count)
+
+        num_params = len(func_info.parameters or [])
+        if num_params > 8:
+            penalties.append(0.4)
+        elif num_params > 5:
+            penalties.append(0.2)
+
+        if func_info.is_constructor and not func_info.doc:
+            penalties.append(0.3)
+
+        total_penalty = min(sum(penalties), 0.9)
+        score = max(0.1, score - total_penalty)
+        return score >= 0.5, score
 
 
 class TypeParser:
     """Type Annotation Parser"""
 
     @staticmethod
-    def parse_annotation(annotation: Any, _depth: int = 0, _seen: Optional[Set[int]] = None) -> Dict[str, Any]:
+    def parse_annotation(annotation: Any, _depth: int = 0, _seen: Optional[Set[str]] = None) -> Dict[str, Any]:
         if _depth > 12:
             return {}
 
         if _seen is None:
             _seen = set()
 
-        annotation_id = id(annotation)
-        if annotation_id in _seen:
+        annotation_key = repr(annotation)
+        if annotation_key in _seen:
             return {}
 
-        _seen.add(annotation_id)
+        _seen.add(annotation_key)
 
         if annotation is None or annotation == inspect.Parameter.empty:
             return {}
@@ -315,7 +387,7 @@ class TypeParser:
         return {}
 
     @staticmethod
-    def _parse_dataclass(dc: type, _depth: int = 0, _seen: Optional[Set[int]] = None) -> Dict[str, Any]:
+    def _parse_dataclass(dc: type, _depth: int = 0, _seen: Optional[Set[str]] = None) -> Dict[str, Any]:
         properties = {}
         required = []
 

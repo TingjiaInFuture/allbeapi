@@ -21,529 +21,17 @@ try:
 except ImportError:
     docstring_parser = None
 from types import ModuleType
-from dataclasses import dataclass, asdict, is_dataclass, fields
+from dataclasses import asdict, is_dataclass
 from collections import defaultdict
 
-
-@dataclass
-class FunctionInfo:
-    """Function Information"""
-    name: str
-    module: str
-    class_name: Optional[str]  # Added: Explicitly record class name
-    qualname: str
-    signature: str
-    doc: Optional[str]
-    parameters: List[Dict]
-    return_type: Optional[str]
-    is_async: bool
-    http_method: str
-    path: str
-    returns_object: bool = False  # Whether it returns a complex object (needs state management)
-    object_methods: List[Dict] = None  # If returns object, list of available methods
-    # Added: Record raw annotation info for quality assessment
-    raw_param_annotations: List[Any] = None  # Raw parameter annotations
-    raw_return_annotation: Any = None  # Raw return annotation
-    target_name: Optional[str] = None  # Actual callable name in source module/class
-    is_constructor: bool = False  # Whether this function is a class-constructor factory tool
-
-
-class QualityMetrics:
-    """Function Quality Assessment Metrics - Universal Assessment Mechanism"""
-
-    _INTERNAL_PATTERN = re.compile(
-        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache)(\.|$)',
-        re.IGNORECASE,
-    )
-    
-    @staticmethod
-    def has_good_documentation(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """Documentation Quality Assessment"""
-        if not func_info.doc:
-            # If function name is standard/simple, give some credit even without doc
-            if func_info.name in ('make', 'create', 'run', 'build', 'generate'):
-                return True, 0.5
-            
-            # If function name is very descriptive, give a small bonus instead of 0
-            if len(func_info.name) > 10 or '_' in func_info.name:
-                return False, 0.2
-            return False, 0.0
-        
-        doc_len = len(func_info.doc.strip())
-        
-        # Try to use docstring_parser for structural analysis
-        if docstring_parser:
-            try:
-                parsed = docstring_parser.parse(func_info.doc)
-                has_desc = bool(parsed.short_description or parsed.long_description)
-                has_params = len(parsed.params) > 0
-                has_returns = bool(parsed.returns)
-                
-                # If structured info is present, give high score regardless of length
-                if has_desc and (has_params or has_returns):
-                    return True, 1.0
-                if has_desc:
-                    # If description is present, check if it's a "standard" function
-                    if func_info.name in ('make', 'create', 'run', 'build', 'generate'):
-                        return True, 0.9
-                    return True, 0.8
-            except:
-                pass
-        
-        # Scoring criteria (Fallback to length)
-        if doc_len > 200:  # Detailed documentation
-            return True, 1.0
-        elif doc_len > 100:  # Medium documentation
-            return True, 0.7
-        elif doc_len > 30:  # Short documentation
-            return True, 0.4
-        else:
-            # Very short documentation
-            # If function name is standard/simple, short doc is acceptable
-            if func_info.name in ('make', 'create', 'run', 'build', 'generate'):
-                return True, 0.6
-            return False, 0.2
-    
-    @staticmethod
-    def has_reasonable_params(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """Parameter Reasonableness Assessment"""
-        num_params = len(func_info.parameters)
-        
-        # Ideal parameter count: 1-5
-        if 1 <= num_params <= 5:
-            return True, 1.0
-        elif num_params == 0:  # No-param function might be a factory function
-            return True, 0.8
-        elif 6 <= num_params <= 8:
-            return True, 0.6
-        elif num_params > 10:  # Too many parameters usually indicate internal function
-            return False, 0.2
-        else:
-            return True, 0.5
-    
-    @staticmethod
-    def has_type_annotations(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """Type Annotation Completeness Assessment."""
-        doc_has_types = False
-        if docstring_parser and func_info.doc:
-            try:
-                parsed = docstring_parser.parse(func_info.doc)
-                doc_has_types = any(p.type_name for p in parsed.params) or bool(parsed.returns and parsed.returns.type_name)
-            except Exception:
-                doc_has_types = False
-
-        has_defaults = any(not p.get('required', True) for p in (func_info.parameters or []))
-
-        raw_param_annotations = getattr(func_info, 'raw_param_annotations', None) or []
-        raw_return_annotation = getattr(func_info, 'raw_return_annotation', None)
-        has_return_annotation = raw_return_annotation not in (None, inspect.Signature.empty)
-
-        if raw_param_annotations:
-            total_params = len(raw_param_annotations)
-            annotated_params = sum(1 for ann in raw_param_annotations if ann not in (None, inspect.Parameter.empty))
-            param_coverage = annotated_params / max(total_params, 1)
-        else:
-            total_params = len(func_info.parameters or [])
-            if total_params == 0:
-                param_coverage = 0.0
-            else:
-                annotated_params = sum(1 for p in func_info.parameters if p.get('schema', {}).get('type') != 'string')
-                param_coverage = annotated_params / total_params
-
-        if total_params == 0 and has_return_annotation:
-            return True, 1.0
-        if param_coverage >= 0.8 and has_return_annotation:
-            return True, 1.0
-        if param_coverage >= 0.5 and has_return_annotation:
-            return True, 0.8
-        if param_coverage >= 0.5 or has_return_annotation or doc_has_types:
-            return True, 0.7
-        if has_defaults:
-            return True, 0.6
-        return False, 0.4
-    
-    @staticmethod
-    def is_public_api(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """Determine if it is a public API - Universal Mechanism (Improved)"""
-        # 0. Skip test/internal/experimental modules regardless of __all__
-        if QualityMetrics._INTERNAL_PATTERN.search(func_info.module):
-            return False, 0.0
-
-        # 1. Name does not start with underscore
-        if func_info.name.startswith('_'):
-            return False, 0.0
-        
-        # 2. Check if in module's __all__
-        try:
-            module = sys.modules.get(func_info.module)
-            if module and hasattr(module, '__all__'):
-                if func_info.name in module.__all__:
-                    return True, 1.0
-                else:
-                    # Not in __all__, but if top-level module, still give higher score
-                    # Top-level module check: module name has one dot or is library name itself
-                    module_parts = func_info.module.split('.')
-                    is_top_level = len(module_parts) <= 2  # e.g. pdfkit or pdfkit.api
-                    
-                    if is_top_level and not func_info.class_name:
-                        # Direct function of top-level module, give higher score even if not in __all__
-                        return True, 0.8
-                    else:
-                        # Not in __all__, lower score
-                        return True, 0.5
-            else:
-                # No __all__ attribute, judge by module hierarchy
-                module_parts = func_info.module.split('.')
-                is_top_level = len(module_parts) <= 2
-                
-                if is_top_level and not func_info.class_name:
-                    # Direct function of top-level module
-                    return True, 0.9
-                else:
-                    return True, 0.7
-        except:
-            pass
-        
-        # 3. Check if module path contains internal/_ etc.
-        if re.search(r'(internal|_private|compat|testing)', func_info.module):
-            return False, 0.2
-        
-        return True, 0.7
-    
-    @staticmethod
-    def naming_quality(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """Naming Convention Assessment"""
-        name = func_info.name
-        
-        # Good naming patterns
-        good_patterns = [
-            r'^[a-z][a-z0-9_]*$',  # lowercase + underscore
-            r'^[A-Z][a-zA-Z0-9]*$',  # UpperCamelCase (Class name)
-        ]
-        
-        # Bad naming patterns
-        bad_patterns = [
-            r'.*\d+$',  # Ends with digit (e.g. func1, test2)
-            r'^(test|demo|example)_.*',  # Test/Example functions
-            r'^(bench|benchmark)_.*',  # Benchmark functions
-            r'.*_(internal|private|impl)$',  # Internal implementation
-        ]
-        
-        # Check bad patterns
-        for pattern in bad_patterns:
-            if re.match(pattern, name, re.IGNORECASE):
-                return False, 0.2
-        
-        # Check good patterns
-        for pattern in good_patterns:
-            if re.match(pattern, name):
-                return True, 1.0
-        
-        return True, 0.6
-
-    @staticmethod
-    def hierarchy_quality(func_info: FunctionInfo) -> Tuple[bool, float]:
-        """Hierarchy Quality Assessment - Universal Version"""
-        module_parts = func_info.module.split('.')
-        
-        # 0. Utility/helper/cache modules are often not intended as primary public APIs
-        if any(part.lower() in ('utils', 'util', 'helpers', 'helper', 'cache') for part in module_parts[1:]):
-            return True, 0.7
-
-        # 1. Private module detection (Universal convention)
-        # Any path component starting with _ usually indicates private
-        # tests/testing are also common non-production code directories
-        for part in module_parts:
-            if part.startswith('_') or part.lower() in ('tests', 'testing', 'test'):
-                return False, 0.0
-        
-        # 2. Depth scoring (Relative depth)
-        # Shallower is better, but no longer hardcoding core/common etc.
-        # Assume library name is root (depth 1)
-        # root.api (depth 2) -> 1.0
-        # root.sub.detail (depth 3) -> 0.8
-        # root.sub.detail.impl (depth 4) -> 0.6
-        
-        # Base score
-        score = 1.0
-        
-        # Depth penalty (Start from 3rd level, deduct 0.2 per level)
-        # pandas (1) -> 1.0
-        # pandas.io (2) -> 1.0
-        # pandas.core.frame (3) -> 0.8
-        # pandas.core.arrays.categorical (4) -> 0.6
-        if len(module_parts) > 2:
-            penalty = (len(module_parts) - 2) * 0.2
-            score = max(0.4, 1.0 - penalty)
-            
-        return True, score
-
-
-class TypeParser:
-    """Type Annotation Parser"""
-    
-    @staticmethod
-    def parse_annotation(annotation: Any, _depth: int = 0, _seen: Optional[Set[int]] = None) -> Dict[str, Any]:
-        """Convert Python type annotation to OpenAPI Schema"""
-        if _depth > 12:
-            return {}
-
-        if _seen is None:
-            _seen = set()
-
-        annotation_id = id(annotation)
-        if annotation_id in _seen:
-            return {}
-
-        _seen.add(annotation_id)
-
-        if annotation is None or annotation == inspect.Parameter.empty:
-            # Strategy 2: Map undetermined types to {} (Any)
-            return {}
-        
-        if isinstance(annotation, str):
-            return TypeParser._parse_string_annotation(annotation)
-        
-        # Strategy 3: Detection based on Abstract Base Classes (ABC)
-        try:
-            import os
-            if isinstance(annotation, type) and issubclass(annotation, os.PathLike):
-                return {"type": "string"}
-        except (ImportError, TypeError):
-            pass
-        
-        origin = get_origin(annotation)
-        args = get_args(annotation)
-        
-        type_map = {
-            int: {"type": "integer"},
-            float: {"type": "number"},
-            str: {"type": "string"},
-            bool: {"type": "boolean"},
-            bytes: {"type": "string", "format": "byte"},
-        }
-        
-        if annotation in type_map:
-            return type_map[annotation]
-        
-        if is_dataclass(annotation):
-            return TypeParser._parse_dataclass(annotation, _depth=_depth + 1, _seen=_seen)
-        
-        if origin in (list, List):
-            items = TypeParser.parse_annotation(args[0], _depth=_depth + 1, _seen=_seen) if args else {}
-            return {"type": "array", "items": items}
-        
-        if origin in (dict, Dict):
-            additional = TypeParser.parse_annotation(args[1], _depth=_depth + 1, _seen=_seen) if len(args) >= 2 else {}
-            return {"type": "object", "additionalProperties": additional or True}
-        
-        if origin in (tuple, Tuple):
-            return {"type": "array", "items": {"type": "string"}}
-        
-        if origin in (set, Set):
-            items = TypeParser.parse_annotation(args[0], _depth=_depth + 1, _seen=_seen) if args else {}
-            return {"type": "array", "uniqueItems": True, "items": items}
-        
-        # Strategy 1: Implement "Union Unwrapping"
-        if origin is Union:
-            schemas = []
-            has_none = False
-            for arg in args:
-                if arg is type(None):
-                    has_none = True
-                    continue
-                schemas.append(TypeParser.parse_annotation(arg, _depth=_depth + 1, _seen=_seen))
-            
-            if not schemas:
-                return {}
-                
-            if len(schemas) == 1:
-                schema = schemas[0]
-                if has_none:
-                    schema["nullable"] = True
-                return schema
-            
-            # Use anyOf to allow matching any subtype
-            result = {"anyOf": schemas}
-            if has_none:
-                result["nullable"] = True
-            return result
-        
-        try:
-            from typing import Literal
-            if origin is Literal:
-                return {"type": "string", "enum": list(args)}
-        except ImportError:
-            pass
-        
-        if annotation is Any:
-            return {}
-        
-        # Strategy 2: Fix "Any" type mapping semantics
-        # Map undetermined types to Empty Schema ({}) instead of "object"
-        return {}
-    
-    @staticmethod
-    def _parse_dataclass(dc: type, _depth: int = 0, _seen: Optional[Set[int]] = None) -> Dict[str, Any]:
-        """Parse dataclass"""
-        properties = {}
-        required = []
-        
-        try:
-            for field in fields(dc):
-                properties[field.name] = TypeParser.parse_annotation(field.type, _depth=_depth + 1, _seen=_seen)
-                # Fix: Use correct MISSING check
-                from dataclasses import MISSING
-                if field.default is MISSING and field.default_factory is MISSING:
-                    required.append(field.name)
-        except:
-            pass
-        
-        schema = {"type": "object", "properties": properties}
-        if required:
-            schema["required"] = required
-        return schema
-    
-    @staticmethod
-    def _parse_string_annotation(annotation: str) -> Dict[str, Any]:
-        """Parse string annotation"""
-        annotation = annotation.strip()
-        
-        basic = {
-            'int': {"type": "integer"},
-            'float': {"type": "number"},
-            'str': {"type": "string"},
-            'bool': {"type": "boolean"},
-            'Any': {}
-        }
-        
-        if annotation in basic:
-            return basic[annotation]
-        
-        if annotation.startswith(('List[', 'list[')):
-            inner = annotation[5:-1]
-            return {"type": "array", "items": TypeParser._parse_string_annotation(inner)}
-        
-        if annotation.startswith(('Dict[', 'dict[')):
-            return {"type": "object"}
-        
-        if annotation.startswith('Optional['):
-            inner = annotation[9:-1]
-            schema = TypeParser._parse_string_annotation(inner)
-            schema["nullable"] = True
-            return schema
-        
-        # Strategy 2: Unparsable string annotations fallback to {} (Any)
-        return {}
-
-
-class AnalysisCache:
-    """Simple incremental analysis cache keyed by library fingerprint and analyzer config."""
-
-    def __init__(self, cache_dir: str = ".allbemcp_cache"):
-        self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-
-    def _cache_file(self, cache_key: str) -> Path:
-        return self.cache_dir / f"{cache_key}.json"
-
-    def make_cache_key(self, library_name: str, config_signature: str, fingerprint: str) -> str:
-        raw = f"{library_name}|{config_signature}|{fingerprint}"
-        return hashlib.md5(raw.encode("utf-8")).hexdigest()
-
-    def load(self, cache_key: str) -> Optional[Dict[str, Any]]:
-        cache_file = self._cache_file(cache_key)
-        if not cache_file.exists():
-            return None
-        try:
-            return json.loads(cache_file.read_text(encoding="utf-8"))
-        except Exception:
-            return None
-
-    def save(self, cache_key: str, result: Dict[str, Any]) -> None:
-        cache_file = self._cache_file(cache_key)
-        try:
-            cache_file.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
-        except Exception:
-            pass
-
-
-class IncrementalCache:
-    """Module-level incremental cache for scanned function metadata."""
-
-    def __init__(self, cache_dir: str = ".allbemcp_cache"):
-        self.cache_dir = Path(cache_dir) / "modules"
-        self.cache_dir.mkdir(parents=True, exist_ok=True)
-
-    def _module_key(self, module_name: str, module_file: str, config_signature: str) -> str:
-        raw = f"{module_name}|{module_file}|{config_signature}"
-        return hashlib.md5(raw.encode("utf-8")).hexdigest()
-
-    def _module_fingerprint(self, module_file: str) -> Optional[str]:
-        try:
-            p = Path(module_file)
-            if not p.exists():
-                return None
-            st = p.stat()
-            return f"{st.st_mtime_ns}:{st.st_size}"
-        except Exception:
-            return None
-
-    def get_module_cache(self, module_name: str, module_file: str, config_signature: str) -> Optional[Dict[str, Any]]:
-        fingerprint = self._module_fingerprint(module_file)
-        if fingerprint is None:
-            return None
-
-        cache_key = self._module_key(module_name, module_file, config_signature)
-        cache_file = self.cache_dir / f"{cache_key}.json"
-        if not cache_file.exists():
-            return None
-
-        try:
-            data = json.loads(cache_file.read_text(encoding="utf-8"))
-            if data.get("fingerprint") != fingerprint:
-                return None
-            return data
-        except Exception:
-            return None
-
-    def save_module_cache(
-        self,
-        module_name: str,
-        module_file: str,
-        config_signature: str,
-        functions: List[Dict[str, Any]],
-        skipped: List[Dict[str, str]],
-    ) -> None:
-        fingerprint = self._module_fingerprint(module_file)
-        if fingerprint is None:
-            return
-
-        cache_key = self._module_key(module_name, module_file, config_signature)
-        cache_file = self.cache_dir / f"{cache_key}.json"
-        payload = {
-            "fingerprint": fingerprint,
-            "functions": functions,
-            "skipped": skipped,
-        }
-        try:
-            cache_file.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
-        except Exception:
-            pass
-
-
-try:
-    from allbemcp.analyzer_types import FunctionInfo, QualityMetrics, TypeParser
-    from allbemcp.analyzer_cache import AnalysisCache, IncrementalCache
-except Exception:
-    pass
-
+from allbemcp.analyzer_types import FunctionInfo, QualityMetrics, TypeParser
+from allbemcp.analyzer_cache import AnalysisCache, IncrementalCache
 
 class APIAnalyzer:
     """API Analyzer - Universal Intelligent Version"""
 
     INTERNAL_MODULE_PATTERN = re.compile(
-        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|cookies?|sessions?)(\.|$)',
+        r'(^|\.)(_?tests?|testing|testdata|benchmarks?|examples?|demos?|experimental|internal|_internal|private|_private|compat|legacy|deprecated|cache|cookies?|sessions?|conftest|fixtures?|mocks?|stubs?|_vendor|vendored|thirdparty|third_party|_typing|_decorators|_libs|_cython)(\.|$)',
         re.IGNORECASE
     )
     INTERNAL_PATH_PATTERN = re.compile(
@@ -616,6 +104,7 @@ class APIAnalyzer:
         self._ast_return_index_cache: Dict[str, Dict[int, str]] = {}
         self._ast_name_index_cache: Dict[str, Dict[str, str]] = {}
         self._module_all_cache: Dict[str, Optional[Set[str]]] = {}
+        self._signature_cache: Dict[int, inspect.Signature] = {}
         
         # Apply quality mode presets
         self._apply_quality_mode()
@@ -626,6 +115,7 @@ class APIAnalyzer:
         self.skipped_functions: List[Dict[str, str]] = []
         self.object_returning_functions: List[FunctionInfo] = []
         self.function_scores: Dict[str, float] = {}
+        self.function_score_breakdowns: Dict[str, Dict[str, Any]] = {}
         self.quality_stats: Dict[str, Any] = {}
     
     def _apply_quality_mode(self):
@@ -716,12 +206,20 @@ class APIAnalyzer:
             "adaptive_keep_ratio": self.adaptive_keep_ratio,
             "adaptive_min_keep": self.adaptive_min_keep,
             "adaptive_max_keep": self.adaptive_max_keep,
+            "quality_rules_version": "2026-02-quality-filter-v2",
         }
-        return hashlib.md5(json.dumps(payload, sort_keys=True).encode("utf-8")).hexdigest()
+        return hashlib.blake2b(
+            json.dumps(payload, sort_keys=True).encode("utf-8"),
+            digest_size=16,
+        ).hexdigest()
 
     def _compute_library_fingerprint(self, root_module: ModuleType) -> str:
         chunks: List[str] = []
         try:
+            version = getattr(root_module, "__version__", None)
+            if version:
+                chunks.append(f"version:{version}")
+
             root_file = getattr(root_module, "__file__", None)
             if root_file and Path(root_file).exists():
                 p = Path(root_file)
@@ -734,7 +232,7 @@ class APIAnalyzer:
                     base = Path(root_path)
                     if not base.exists():
                         continue
-                    for py in base.rglob("*.py"):
+                    for py in base.glob("*/__init__.py"):
                         try:
                             st = py.stat()
                             chunks.append(f"{py}:{st.st_mtime_ns}:{st.st_size}")
@@ -745,7 +243,19 @@ class APIAnalyzer:
 
         chunks.sort()
         payload = "|".join(chunks)
-        return hashlib.md5(payload.encode("utf-8")).hexdigest()
+        return hashlib.blake2b(payload.encode("utf-8"), digest_size=16).hexdigest()
+
+    def _get_signature_cached(self, func_obj: Any) -> Optional[inspect.Signature]:
+        key = id(func_obj)
+        cached = self._signature_cache.get(key)
+        if cached is not None:
+            return cached
+        try:
+            sig = inspect.signature(func_obj)
+        except (TypeError, ValueError):
+            return None
+        self._signature_cache[key] = sig
+        return sig
     
     def _apply_quality_filtering(self):
         """Apply quality filtering and deduplication."""
@@ -766,15 +276,39 @@ class APIAnalyzer:
             else:
                 self._module_all_cache[module_name] = None
 
+        module_all_signal_strength: Dict[str, float] = {}
+        for module_name, all_set in self._module_all_cache.items():
+            if all_set is None:
+                module_all_signal_strength[module_name] = 0.7
+                continue
+
+            size = len(all_set)
+            if size <= 10:
+                module_all_signal_strength[module_name] = 1.0
+            elif size <= 30:
+                module_all_signal_strength[module_name] = 0.8
+            elif size <= 50:
+                module_all_signal_strength[module_name] = 0.6
+            else:
+                module_all_signal_strength[module_name] = 0.3
+
         score_weights = self._get_adaptive_weights()
 
         for func in self.functions:
-            score = self.calculate_function_score(
+            score, breakdown = self.calculate_function_score_detailed(
                 func,
                 score_weights,
                 module_all=self._module_all_cache.get(func.module),
             )
+
+            signal = module_all_signal_strength.get(func.module, 0.7)
+            if signal < 0.5 and score > 80:
+                excess = score - 80
+                score = 80 + excess * signal
+
             self.function_scores[func.qualname] = score
+            breakdown['final_score'] = score
+            self.function_score_breakdowns[func.qualname] = breakdown
             
             if score >= self.min_quality_score:
                 scored_functions.append((func, score))
@@ -849,18 +383,18 @@ class APIAnalyzer:
         if remaining_budget <= 0:
             return heapq.nlargest(total_budget, kept, key=lambda x: x[1])
 
-        candidates: List[Tuple[float, int, str, Tuple[FunctionInfo, float]]] = []
+        all_candidates: List[Tuple[float, Tuple[FunctionInfo, float]]] = []
         for module, items in by_module.items():
             start = allocated[module]
             cap = min(self.adaptive_max_keep, len(items))
+            module_weight = module_weights.get(module, 1.0)
             for i in range(start, cap):
-                weighted_score = items[i][1] * module_weights.get(module, 1.0)
-                heapq.heappush(candidates, (-weighted_score, i, module, items[i]))
+                weighted_score = items[i][1] * module_weight
+                all_candidates.append((weighted_score, items[i]))
 
-        while remaining_budget > 0 and candidates:
-            _, _, _, item = heapq.heappop(candidates)
-            kept.append(item)
-            remaining_budget -= 1
+        if all_candidates:
+            top_items = heapq.nlargest(remaining_budget, all_candidates, key=lambda x: x[0])
+            kept.extend(item for _, item in top_items)
 
         return heapq.nlargest(total_budget, kept, key=lambda x: x[1])
 
@@ -903,14 +437,107 @@ class APIAnalyzer:
         ) / total
 
         dynamic = {
-            'documentation': 10 + 20 * doc_coverage,
+            'documentation': 10 + 15 * doc_coverage,
             'type_annotations': 10 + 15 * type_coverage,
             'public_api': 15 + 10 * all_coverage,
-            'naming': 10,
+            'naming': 10 + 5 * (1 - doc_coverage),
             'hierarchy': 15 + 10 * (1 - doc_coverage),
         }
         total_weight = sum(dynamic.values()) or 1.0
         return {k: (v * 100.0 / total_weight) for k, v in dynamic.items()}
+
+    def calculate_function_score_detailed(
+        self,
+        func_info: FunctionInfo,
+        weights: Optional[Dict[str, float]] = None,
+        module_all: Optional[Set[str]] = None,
+    ) -> Tuple[float, Dict[str, Any]]:
+        """Calculate quality score and return per-dimension score breakdown."""
+        score = 0.0
+        weights = weights or self._get_adaptive_weights()
+        breakdown: Dict[str, Any] = {
+            'weights': dict(weights),
+            'metrics': {},
+            'adjustments': {},
+        }
+
+        all_bonus = 0.0
+        if QualityMetrics._INTERNAL_PATTERN.search(func_info.module):
+            breakdown['adjustments']['rejected'] = 'internal_module'
+            return 0.0, breakdown
+
+        if func_info.name.startswith('_'):
+            breakdown['adjustments']['rejected'] = 'private_name'
+            return 0.0, breakdown
+
+        if module_all is not None and not func_info.class_name:
+            if func_info.name in module_all:
+                all_bonus = 15.0
+
+        _, doc_score = QualityMetrics.has_good_documentation(func_info)
+        doc_contrib = weights['documentation'] * doc_score
+        score += doc_contrib
+        breakdown['metrics']['documentation'] = {'metric': doc_score, 'contrib': doc_contrib}
+
+        _, type_score = QualityMetrics.has_type_annotations(func_info)
+        type_contrib = weights['type_annotations'] * type_score
+        score += type_contrib
+        breakdown['metrics']['type_annotations'] = {'metric': type_score, 'contrib': type_contrib}
+
+        if module_all is not None and not func_info.class_name:
+            public_score = 1.0 if func_info.name in module_all else 0.0
+        else:
+            module_parts = func_info.module.split('.')
+            is_top_level = len(module_parts) <= 2 and not func_info.class_name
+            if re.search(r'(internal|_private|compat|testing)', func_info.module):
+                breakdown['adjustments']['rejected'] = 'internal_path_heuristic'
+                return 0.0, breakdown
+            public_score = 0.9 if is_top_level else 0.7
+        public_contrib = weights['public_api'] * public_score
+        score += public_contrib
+        breakdown['metrics']['public_api'] = {'metric': public_score, 'contrib': public_contrib}
+
+        _, name_score = QualityMetrics.naming_quality(func_info)
+        name_contrib = weights['naming'] * name_score
+        score += name_contrib
+        breakdown['metrics']['naming'] = {'metric': name_score, 'contrib': name_contrib}
+
+        _, hierarchy_score = QualityMetrics.hierarchy_quality(func_info)
+        hierarchy_contrib = weights['hierarchy'] * hierarchy_score
+        score += hierarchy_contrib
+        breakdown['metrics']['hierarchy'] = {'metric': hierarchy_score, 'contrib': hierarchy_contrib}
+
+        _, usability_score = QualityMetrics.api_usability_score(func_info)
+        if usability_score < 0.5:
+            factor = 0.5 + 0.5 * usability_score
+            score *= factor
+            breakdown['adjustments']['usability_mode'] = 'low_soft_multiply'
+            breakdown['adjustments']['usability_factor'] = factor
+            breakdown['metrics']['usability'] = {'metric': usability_score, 'contrib': 0.0}
+        else:
+            usability_bonus = 5.0 * usability_score
+            score += usability_bonus
+            breakdown['adjustments']['usability_mode'] = 'high_bonus'
+            breakdown['adjustments']['usability_bonus'] = usability_bonus
+            breakdown['metrics']['usability'] = {'metric': usability_score, 'contrib': usability_bonus}
+
+        simple_return_bonus = 0.0
+        if not func_info.returns_object:
+            simple_return_bonus = 5.0
+            score += simple_return_bonus
+
+        score += all_bonus
+
+        constructor_penalty = 0.0
+        if func_info.is_constructor and doc_score < 0.5:
+            constructor_penalty = 10.0
+            score -= constructor_penalty
+
+        breakdown['adjustments']['simple_return_bonus'] = simple_return_bonus
+        breakdown['adjustments']['all_bonus'] = all_bonus
+        breakdown['adjustments']['constructor_penalty'] = constructor_penalty
+
+        return max(0.0, min(score, 100.0)), breakdown
 
     def calculate_function_score(
         self,
@@ -919,73 +546,26 @@ class APIAnalyzer:
         module_all: Optional[Set[str]] = None,
     ) -> float:
         """Calculate function quality score (0-100)."""
-        score = 0.0
-        weights = weights or self._get_adaptive_weights()
-
-        all_gate_bonus = False
-        if QualityMetrics._INTERNAL_PATTERN.search(func_info.module):
-            return 0.0
-
-        if func_info.name.startswith('_'):
-            return 0.0
-
-        if module_all is not None and not func_info.class_name:
-            if func_info.name in module_all:
-                all_gate_bonus = True
-            else:
-                return 0.0
-        
-        # 1. Documentation quality
-        _, doc_score = QualityMetrics.has_good_documentation(func_info)
-        score += weights['documentation'] * doc_score
-        
-        # 2. Type annotations
-        _, type_score = QualityMetrics.has_type_annotations(func_info)
-        score += weights['type_annotations'] * type_score
-        
-        # 3. Public API
-        if module_all is not None and not func_info.class_name:
-            public_score = 1.0 if func_info.name in module_all else 0.0
-        else:
-            module_parts = func_info.module.split('.')
-            is_top_level = len(module_parts) <= 2 and not func_info.class_name
-            if re.search(r'(internal|_private|compat|testing)', func_info.module):
-                return 0.0
-            public_score = 0.9 if is_top_level else 0.7
-        score += weights['public_api'] * public_score
-        
-        # 4. Naming convention
-        _, name_score = QualityMetrics.naming_quality(func_info)
-        score += weights['naming'] * name_score
-        
-        # 5. Hierarchy quality
-        _, hierarchy_score = QualityMetrics.hierarchy_quality(func_info)
-        score += weights['hierarchy'] * hierarchy_score
-        
-        # Extra points
-        # - Returns simple type instead of object (+5)
-        if not func_info.returns_object:
-            score += 5
-
-        final_score = min(score, 100.0)
-        if all_gate_bonus:
-            return max(90.0, final_score)
-        return final_score
+        score, _ = self.calculate_function_score_detailed(func_info, weights=weights, module_all=module_all)
+        return score
     
     def _normalize_function_purpose(self, func_name: str) -> str:
         """Extract core semantic purpose of the function"""
-        # Remove common prefixes
         name = func_name.lower()
-        prefixes = ['get_', 'fetch_', 'query_', 'find_', 'search_',
-                   'create_', 'add_', 'insert_', 'make_',
-                   'update_', 'modify_', 'edit_', 'set_',
-                   'delete_', 'remove_', 'del_']
-        
-        for prefix in prefixes:
-            if name.startswith(prefix):
-                return name[len(prefix):]
-        
-        return name
+        verb_categories = {
+            'read': ['get_', 'fetch_', 'query_', 'find_', 'search_', 'list_', 'load_', 'read_'],
+            'write': ['create_', 'add_', 'insert_', 'make_', 'save_', 'write_'],
+            'update': ['update_', 'modify_', 'edit_', 'set_', 'patch_'],
+            'delete': ['delete_', 'remove_', 'del_', 'drop_'],
+        }
+
+        for category, prefixes in verb_categories.items():
+            for prefix in prefixes:
+                if name.startswith(prefix):
+                    core = name[len(prefix):] or name
+                    return f"{category}:{core}"
+
+        return f"other:{name}"
     
     def _deduplicate_similar_functions(self, functions: List[FunctionInfo]) -> List[FunctionInfo]:
         """Remove redundant functions with similar functionality"""
@@ -1022,6 +602,7 @@ class APIAnalyzer:
     
     def _collect_quality_stats(self, scored_functions: List[Tuple[FunctionInfo, float]]):
         """收集质量统计信息"""
+        top_scored = sorted(scored_functions, key=lambda x: x[1], reverse=True)[:10]
         self.quality_stats = {
             'total_modules_scanned': len(self.analyzed),
             'total_functions_found': len(self.function_scores),
@@ -1034,8 +615,12 @@ class APIAnalyzer:
                 '60-69': len([s for _, s in scored_functions if 60 <= s < 70]),
             },
             'top_10_functions': [
-                {'name': f.qualname, 'score': round(s, 1)}
-                for f, s in scored_functions[:10]
+                {
+                    'name': f.qualname,
+                    'score': round(s, 1),
+                    'breakdown': self.function_score_breakdowns.get(f.qualname, {}),
+                }
+                for f, s in top_scored
             ]
         }
     
@@ -1115,7 +700,7 @@ class APIAnalyzer:
 
                     elif inspect.isclass(obj) and not name.startswith('_'):
                         self._scan_class(obj, module)
-            except:
+            except Exception:
                 pass
 
             if (
@@ -1152,8 +737,8 @@ class APIAnalyzer:
                 submodules: List[ModuleType] = []
                 use_parallel = (
                     self._import_executor is not None
-                    and len(submodule_names) > 3
-                    and depth <= 1
+                    and len(submodule_names) > max(3, self.parallel_scan_workers)
+                    and depth <= self.max_depth - 1
                 )
                 if use_parallel:
                     for sub in self._import_executor.map(self._safe_import_submodule, submodule_names):
@@ -1167,7 +752,7 @@ class APIAnalyzer:
 
                 for sub in submodules:
                     self._scan_module(sub, depth + 1)
-            except:
+            except Exception:
                 pass
 
     def _safe_import_submodule(self, subname: str) -> Optional[ModuleType]:
@@ -1183,6 +768,12 @@ class APIAnalyzer:
 
         p = Path(file_path)
         if p.suffix != '.py':
+            return
+
+        try:
+            if p.stat().st_size > 512 * 1024:
+                return
+        except OSError:
             return
 
         file_key = str(p.resolve())
@@ -1245,6 +836,39 @@ class APIAnalyzer:
     
     def _scan_class(self, cls: type, module: ModuleType):
         """Scan class and expose constructor factory + static/class methods."""
+        try:
+            if not isinstance(cls, type):
+                return
+        except Exception:
+            return
+
+        try:
+            if issubclass(cls, BaseException):
+                return
+        except TypeError:
+            pass
+
+        try:
+            import abc
+            if issubclass(cls, abc.ABC) and getattr(cls, '__abstractmethods__', None):
+                return
+        except (TypeError, ImportError):
+            pass
+
+        cls_name = getattr(cls, '__name__', '')
+        if not cls_name or cls_name.startswith('_'):
+            return
+
+        if cls_name.endswith(('Mixin', 'Base', 'Abstract', 'Meta', 'Interface')) and cls_name not in ('DataFrame', 'DataBase'):
+            return
+
+        public_methods = [
+            name for name in dir(cls)
+            if not name.startswith('_') and callable(getattr(cls, name, None))
+        ]
+        if len(public_methods) == 0:
+            return
+
         # Constructor factory: create_<class> that returns object_id through runtime object storage.
         try:
             init_obj = getattr(cls, '__init__', None)
@@ -1259,10 +883,20 @@ class APIAnalyzer:
                     is_constructor=True,
                 )
                 if constructor_info and self._is_suitable_for_api(constructor_info, init_obj):
-                    constructor_info.returns_object = True
-                    constructor_info.object_methods = self._extract_object_methods(cls)
-                    self.functions.append(constructor_info)
-                    self.object_returning_functions.append(constructor_info)
+                    has_any_doc = bool(constructor_info.doc)
+                    raw_annotations = constructor_info.raw_param_annotations or []
+                    has_any_annotation = any(
+                        ann not in (None, inspect.Parameter.empty)
+                        for ann in raw_annotations
+                    )
+
+                    if not has_any_doc and not has_any_annotation and len(constructor_info.parameters) == 0:
+                        pass
+                    else:
+                        constructor_info.returns_object = True
+                        constructor_info.object_methods = self._extract_object_methods(cls)
+                        self.functions.append(constructor_info)
+                        self.object_returning_functions.append(constructor_info)
         except Exception:
             pass
         
@@ -1284,7 +918,10 @@ class APIAnalyzer:
             # Case 2: Function (could be instance method or static method)
             elif inspect.isfunction(member):
                 try:
-                    sig = inspect.signature(member)
+                    sig = self._get_signature_cached(member)
+                    if sig is None:
+                        should_extract = False
+                        continue
                     params = list(sig.parameters.keys())
                     
                     # Signature introspection filtering
@@ -1300,7 +937,7 @@ class APIAnalyzer:
                     else:
                         # Other cases -> static method -> keep
                         should_extract = True
-                except (ValueError, TypeError):
+                except Exception:
                     # Cannot get signature -> conservatively skip
                     should_extract = False
             
@@ -1325,14 +962,14 @@ class APIAnalyzer:
     
     def _should_include(self, name: str, obj: Any, module: ModuleType = None, is_method: bool = False) -> bool:
         """Determine whether to include - Universal Intelligent Version"""
-        checks = [
-            lambda: callable(obj) and not name.startswith('_'),
-            lambda: not module or not self._is_internal_module(module.__name__, getattr(module, '__file__', None)),
-            lambda: self._belongs_to_library(obj),
-            lambda: self._passes_all_check(name, module, is_method),
-            lambda: self._passes_definition_check(obj, module, is_method),
-        ]
-        return all(check() for check in checks)
+        return (
+            callable(obj)
+            and not name.startswith('_')
+            and (not module or not self._is_internal_module(module.__name__, getattr(module, '__file__', None)))
+            and self._belongs_to_library(obj)
+            and self._passes_all_check(name, module, is_method)
+            and self._passes_definition_check(obj, module, is_method)
+        )
 
     def _belongs_to_library(self, obj: Any) -> bool:
         obj_module = getattr(obj, '__module__', None)
@@ -1347,6 +984,8 @@ class APIAnalyzer:
             return True
 
         if hasattr(module, '__all__'):
+            if not self.enable_quality_filter:
+                return True
             return name in module.__all__
 
         return True
@@ -1463,7 +1102,7 @@ class APIAnalyzer:
                         # Try to get definition of that type (if possible)
                         # Here we cannot easily get the class object, so just mark as object
                         return
-        except:
+        except Exception:
             pass
     
     def _extract_object_methods(self, obj_type: Any) -> List[Dict]:
@@ -1494,9 +1133,9 @@ class APIAnalyzer:
                             'params': params,
                             'doc': inspect.getdoc(method) or ''
                         })
-                    except:
+                    except Exception:
                         pass
-        except:
+        except Exception:
             pass
         
         return methods[:20]  # Limit quantity
@@ -1562,7 +1201,11 @@ class APIAnalyzer:
     def _check_input_complexity(self, func_obj: Any) -> bool:
         """Input complexity filter: Only allow functions accepting basic types or container types"""
         try:
-            sig = inspect.signature(func_obj)
+            sig = self._get_signature_cached(func_obj)
+            if sig is None:
+                return True
+            unannotated_required_count = 0
+            total_required_count = 0
             for name, param in sig.parameters.items():
                 # Ignore self, cls
                 if name in ('self', 'cls'):
@@ -1574,17 +1217,22 @@ class APIAnalyzer:
                 
                 # Check type annotation
                 annotation = param.annotation
+                total_required_count += 1
                 
-                # If no annotation, treat as Any (Safe), unless we want to be very strict
-                # But for compatibility, we assume no annotation is safe (or undetermined)
                 if annotation == inspect.Parameter.empty:
+                    unannotated_required_count += 1
                     continue
 
                 if not self._is_safe_input_type(annotation):
                     return False
+
+            if unannotated_required_count > 3:
+                return False
+            if total_required_count >= 2 and unannotated_required_count == total_required_count:
+                return False
             
             return True
-        except:
+        except Exception:
             # If cannot get signature, conservatively keep (or discard?)
             # Usually functions without signature might not be Python functions
             return True
@@ -1639,7 +1287,7 @@ class APIAnalyzer:
             import os
             if isinstance(annotation, type) and issubclass(annotation, os.PathLike):
                 return True
-        except:
+        except Exception:
             pass
 
         return False
@@ -1647,7 +1295,9 @@ class APIAnalyzer:
     def _suitable_for_api_via_signature(self, func_info: FunctionInfo, func_obj: Any) -> bool:
         """Check if function is suitable for API via signature"""
         try:
-            sig = inspect.signature(func_obj)
+            sig = self._get_signature_cached(func_obj)
+            if sig is None:
+                return False
             for param_name, param in sig.parameters.items():
                 if param_name in ('self', 'cls'):
                     continue
@@ -1660,7 +1310,7 @@ class APIAnalyzer:
                 if param.default != inspect.Parameter.empty:
                     if not self._is_value_serializable(param.default):
                         return False
-        except:
+        except Exception:
             return False
         
         # 2. If state management enabled, functions returning objects are also accepted
@@ -1720,7 +1370,9 @@ class APIAnalyzer:
         
         # Check parameters
         try:
-            sig = inspect.signature(func_obj)
+            sig = self._get_signature_cached(func_obj)
+            if sig is None:
+                return "Unable to inspect function signature"
             for param_name, param in sig.parameters.items():
                 if param_name in ('self', 'cls'):
                     continue
@@ -1728,7 +1380,7 @@ class APIAnalyzer:
                 if not self._is_type_serializable(param.annotation):
                     param_type = self._get_type_name(param.annotation)
                     reasons.append(f"Parameter '{param_name}' type not serializable ({param_type})")
-        except:
+        except Exception:
             pass
         
         # Check return type annotation
@@ -1767,7 +1419,7 @@ class APIAnalyzer:
                 parsed_doc = docstring_parser.parse(doc_string)
                 for p in parsed_doc.params:
                     param_docs[p.arg_name] = p
-            except:
+            except Exception:
                 pass
         return doc_string, parsed_doc, param_docs
 
@@ -1871,8 +1523,10 @@ class APIAnalyzer:
     ) -> Optional[FunctionInfo]:
         """Extract function information"""
         try:
-            sig = inspect.signature(obj)
-        except:
+            sig = self._get_signature_cached(obj)
+            if sig is None:
+                return None
+        except Exception:
             return None
         
         # Parse docstring and parameters
@@ -1981,7 +1635,7 @@ class APIAnalyzer:
         
         try:
             return str(value)
-        except:
+        except Exception:
             return None
     
     def _classify_param(self, param_name: str, func_name: str) -> str:

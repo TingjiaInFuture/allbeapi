@@ -11,6 +11,7 @@ import importlib
 import inspect
 import json
 import logging
+import threading
 import time
 import types as py_types
 from concurrent.futures import ThreadPoolExecutor
@@ -64,6 +65,7 @@ class MCPServer:
         self._object_store: Dict[str, Any] = {}
         self._object_methods: Dict[str, set[str]] = {}
         self._class_instance_cache: Dict[str, Any] = {}
+        self._class_instance_lock = threading.Lock()
         self._call_stats = defaultdict(lambda: {"count": 0, "total_time": 0.0, "errors": 0})
         self._executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="mcp-tool-")
 
@@ -275,8 +277,14 @@ class MCPServer:
         return coerced
 
     def _coerce_value(self, annotation: Any, value: Any) -> Any:
-        if isinstance(value, str) and value in self._object_store:
-            return self._object_store[value]
+        if (
+            isinstance(value, str)
+            and annotation not in (inspect.Parameter.empty, str)
+            and self._has_stored_object(value)
+        ):
+            resolved_obj = self._get_stored_object(value)
+            if resolved_obj is not None:
+                return resolved_obj
 
         if annotation is inspect.Parameter.empty:
             return value
@@ -320,7 +328,7 @@ class MCPServer:
         args = arguments.get("args", [])
         kwargs = arguments.get("kwargs", {})
 
-        if object_id not in self._object_store:
+        if not self._has_stored_object(object_id):
             raise ValueError(f"Object {object_id} not found")
 
         if not isinstance(method_name, str) or not method_name:
@@ -328,7 +336,9 @@ class MCPServer:
         if method_name.startswith("_"):
             raise ValueError("Access to private/dunder methods is not allowed")
 
-        obj = self._object_store[object_id]
+        obj = self._get_stored_object(object_id)
+        if obj is None:
+            raise ValueError(f"Object {object_id} not found")
         if not hasattr(obj, method_name):
             raise ValueError(f"Method '{method_name}' not found on object")
 
@@ -368,8 +378,6 @@ class MCPServer:
             serialization_result = self.serializer.serialize(result)
             if serialization_result.type == "object_ref":
                 obj_id = serialization_result.data["object_id"]
-                obj = self.serializer.get_object(obj_id)
-                self._object_store[obj_id] = obj
                 available = serialization_result.data.get("available_methods", [])
                 self._object_methods[obj_id] = {
                     m.get("name") for m in available if isinstance(m, dict) and m.get("name")
@@ -436,19 +444,20 @@ class MCPServer:
             method = getattr(cls, method_name)
             method_signature = inspect.signature(method)
 
-            shared_instance = None
-            try:
-                shared_instance = cls()
-            except Exception:
-                shared_instance = None
-
             def wrapper(**kwargs: Any):
-                instance = shared_instance
+                instance = self._class_instance_cache.get(tool_name)
                 if instance is None:
-                    instance = self._class_instance_cache.get(tool_name)
-                    if instance is None:
-                        instance = cls()
-                        self._class_instance_cache[tool_name] = instance
+                    with self._class_instance_lock:
+                        instance = self._class_instance_cache.get(tool_name)
+                        if instance is None:
+                            try:
+                                instance = cls()
+                            except Exception as exc:
+                                raise RuntimeError(
+                                    f"Cannot create instance of {cls.__name__}: {exc}. "
+                                    "This class may require constructor arguments; use constructor tool first."
+                                ) from exc
+                            self._class_instance_cache[tool_name] = instance
                 method = getattr(instance, method_name)
                 return method(**kwargs)
 
@@ -472,7 +481,6 @@ class MCPServer:
             serialized = self.serializer.serialize(obj)
             if serialized.type == "object_ref":
                 object_id = serialized.data["object_id"]
-                self._object_store[object_id] = self.serializer.get_object(object_id)
                 available = serialized.data.get("available_methods", [])
                 self._object_methods[object_id] = {
                     m.get("name") for m in available if isinstance(m, dict) and m.get("name")
@@ -497,11 +505,32 @@ class MCPServer:
         }
 
     def _is_json_serializable(self, obj: Any) -> bool:
-        try:
-            json.dumps(obj)
+        if obj is None or isinstance(obj, (bool, int, float, str)):
             return True
-        except (TypeError, ValueError):
-            return False
+
+        if isinstance(obj, (list, tuple)):
+            return all(self._is_json_serializable(item) for item in obj[:10])
+
+        if isinstance(obj, dict):
+            sample_items = list(obj.items())[:10]
+            return all(isinstance(key, str) and self._is_json_serializable(value) for key, value in sample_items)
+
+        return False
+
+    def _get_stored_object(self, object_id: Any) -> Any:
+        if not isinstance(object_id, str):
+            return None
+        if self.serializer and SERIALIZATION_ENGINE_AVAILABLE:
+            try:
+                serializer_obj = self.serializer.get_object(object_id)
+                if serializer_obj is not None:
+                    return serializer_obj
+            except Exception:
+                pass
+        return self._object_store.get(object_id)
+
+    def _has_stored_object(self, object_id: Any) -> bool:
+        return self._get_stored_object(object_id) is not None
 
     def run(self, transport: str = "stdio", **run_kwargs: Any) -> None:
         self.mcp.run(transport=transport, **run_kwargs)

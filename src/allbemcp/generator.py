@@ -132,6 +132,8 @@ def generate_mcp_server(openapi_spec: Dict[str, Any], output: str = "mcp_server.
 
     tools_json = json.dumps(tools, ensure_ascii=False)
     function_map_json = json.dumps(function_map, ensure_ascii=False)
+    title_literal = repr(openapi_spec["info"]["title"])
+    library_literal = repr(library_name)
     
     # Generate MCP Server code
     server_code = f'''#!/usr/bin/env python3
@@ -163,10 +165,10 @@ FUNCTION_MAP = json.loads({function_map_json!r})
 
 if __name__ == "__main__":
     serve(
-        title="{openapi_spec["info"]["title"]}",
+        title={title_literal},
         tools=TOOLS,
         function_map=FUNCTION_MAP,
-        library_name="{library_name}"
+        library_name={library_literal}
     )
 '''
     

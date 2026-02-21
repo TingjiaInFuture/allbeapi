@@ -42,10 +42,16 @@ class ConfigDrivenHandlers:
         """Get all registered type names from configuration"""
         return list(self.handlers_config.get("handlers", {}).keys())
     
-    def _get_handler_config(self, type_name: str) -> Optional[Dict[str, Any]]:
+    def _get_handler_config(self, type_name: str, _stack: Optional[set[str]] = None) -> Optional[Dict[str, Any]]:
         """Get handler configuration for a type, resolving extends if needed"""
         if type_name in self._resolved_configs:
             return self._resolved_configs[type_name]
+
+        if _stack is None:
+            _stack = set()
+        if type_name in _stack:
+            return None
+        _stack.add(type_name)
         
         handlers = self.handlers_config.get("handlers", {})
         handler_config = handlers.get(type_name)
@@ -56,7 +62,7 @@ class ConfigDrivenHandlers:
         # Handle inheritance via 'extends'
         if "extends" in handler_config:
             parent_type = handler_config["extends"]
-            parent_config = self._get_handler_config(parent_type)
+            parent_config = self._get_handler_config(parent_type, _stack)
             if parent_config:
                 # Deep merge parent and child config
                 resolved = self._deep_merge(parent_config, handler_config)
@@ -70,7 +76,31 @@ class ConfigDrivenHandlers:
             resolved = handler_config
         
         self._resolved_configs[type_name] = resolved
+        _stack.discard(type_name)
         return resolved
+
+    def _handle_processing(self, obj: Any, data: Dict[str, Any], handler_config: Dict[str, Any],
+                           lib_config: Dict[str, Any], context: Dict[str, Any]) -> None:
+        """Handle post-extraction processing configured by handler processing block."""
+        processing = handler_config.get("processing", {})
+        if not processing:
+            return
+
+        proc_type = processing.get("type")
+        if proc_type == "image_thumbnail":
+            try:
+                import io
+                import base64
+                thumb_size = lib_config.get(processing.get("size_config", "thumbnail_size"), [200, 200])
+                img_format = lib_config.get(processing.get("format_config", "image_format"), "PNG")
+
+                thumb = obj.copy()
+                thumb.thumbnail(tuple(thumb_size))
+                buf = io.BytesIO()
+                thumb.save(buf, format=img_format)
+                data["thumbnail_base64"] = base64.b64encode(buf.getvalue()).decode('ascii')
+            except Exception:
+                data["thumbnail_base64"] = None
     
     def _deep_merge(self, base: Dict, override: Dict) -> Dict:
         """Deep merge two dictionaries"""
@@ -508,6 +538,9 @@ class ConfigDrivenHandlers:
             
             # Handle conditional fields
             self._handle_conditional_fields(obj, data, handler_config, lib_config)
+
+            # Handle post-processing (e.g. image thumbnails)
+            self._handle_processing(obj, data, handler_config, lib_config, local_context)
             
             # Build metadata
             metadata = self._build_metadata(obj, data, handler_config, lib_config, local_context)

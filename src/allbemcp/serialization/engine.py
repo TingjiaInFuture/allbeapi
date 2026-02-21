@@ -15,6 +15,7 @@ import uuid
 import importlib
 import threading
 import time
+import atexit
 from typing import Any, Dict, Optional, Tuple, List
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -100,6 +101,7 @@ class SmartSerializer:
         self.object_store = self._object_store
         self.metadata_store: Dict[str, ObjectMetadata] = {}
         self.resource_store: Dict[str, Any] = {}  # resource_id -> data
+        self._resource_timestamps: Dict[str, float] = {}
         self._ref_timestamps: Dict[str, float] = {}
         self._type_dispatch: Dict[type, Any] = {}
         self._dispatch_cache: Dict[type, Tuple[Optional[Any], bool]] = {}
@@ -109,7 +111,8 @@ class SmartSerializer:
         self._stop_cleanup = threading.Event()
         self._cleanup_started = False
         self._max_objects = max(1, int(self.config.max_stored_objects))
-        self._lock = threading.Lock()
+        self._read_lock = threading.RLock()
+        self._write_lock = threading.Lock()
         self._id_lock = threading.Lock()
         self._id_counter = 0
         
@@ -117,6 +120,10 @@ class SmartSerializer:
         self._load_library_handlers()
         self._build_type_dispatch()
         self._schedule_cleanup()
+        try:
+            atexit.register(self.close)
+        except Exception:
+            pass
     
     def _load_library_handlers(self):
         """Dynamically load library-specific handlers"""
@@ -207,6 +214,10 @@ class SmartSerializer:
             worker.join(timeout=1.0)
         self._cleanup_thread = None
         self._cleanup_started = False
+        try:
+            atexit.unregister(self.close)
+        except Exception:
+            pass
 
     def __del__(self):
         try:
@@ -463,11 +474,13 @@ class SmartSerializer:
             return self._store_object(obj, error=str(e))
         
         # Store to resource store
-        self.resource_store[resource_id] = {
-            'content': content,
-            'content_type': content_type,
-            'original_object': obj
-        }
+        with self._write_lock:
+            self.resource_store[resource_id] = {
+                'content': content,
+                'content_type': content_type,
+                'original_object': obj
+            }
+            self._resource_timestamps[resource_id] = time.time()
         
         # Return Resource URI
         uri = f"{self.config.resource_base_url}/{resource_id}"
@@ -608,7 +621,7 @@ class SmartSerializer:
         )
         
         # Store
-        with self._lock:
+        with self._write_lock:
             if len(self._object_store) >= self._max_objects:
                 oldest_id, _ = self._object_store.popitem(last=False)
                 self.metadata_store.pop(oldest_id, None)
@@ -681,7 +694,7 @@ class SmartSerializer:
     
     def get_object(self, object_id: str) -> Optional[Any]:
         """Get stored object"""
-        with self._lock:
+        with self._write_lock:
             obj = self._object_store.get(object_id)
             if obj is not None:
                 self._object_store.move_to_end(object_id)
@@ -690,28 +703,43 @@ class SmartSerializer:
     
     def get_metadata(self, object_id: str) -> Optional[ObjectMetadata]:
         """Get object metadata"""
-        return self.metadata_store.get(object_id)
+        with self._read_lock:
+            return self.metadata_store.get(object_id)
     
     def get_resource(self, resource_id: str) -> Optional[Dict]:
         """Get Resource data"""
-        return self.resource_store.get(resource_id)
+        with self._read_lock:
+            return self.resource_store.get(resource_id)
     
     def cleanup_objects(self, max_age_seconds: int = 3600):
         """Cleanup old objects"""
         now = time.time()
-        to_remove = []
+        with self._write_lock:
+            object_ts_snapshot = list(self._ref_timestamps.items())
+            resource_ts_snapshot = list(self._resource_timestamps.items())
 
-        with self._lock:
-            for object_id, ts in list(self._ref_timestamps.items()):
-                if now - ts > max_age_seconds:
-                    to_remove.append(object_id)
-        
-            for object_id in to_remove:
+        expired_object_ids = [
+            object_id for object_id, ts in object_ts_snapshot
+            if now - ts > max_age_seconds
+        ]
+        expired_resource_ids = [
+            resource_id for resource_id, ts in resource_ts_snapshot
+            if now - ts > max_age_seconds
+        ]
+
+        if not expired_object_ids and not expired_resource_ids:
+            return 0
+
+        with self._write_lock:
+            for object_id in expired_object_ids:
                 self._object_store.pop(object_id, None)
                 self.metadata_store.pop(object_id, None)
                 self._ref_timestamps.pop(object_id, None)
-        
-        return len(to_remove)
+            for resource_id in expired_resource_ids:
+                self.resource_store.pop(resource_id, None)
+                self._resource_timestamps.pop(resource_id, None)
+
+        return len(expired_object_ids) + len(expired_resource_ids)
 
 
 # Global serializer instance (can be used in MCP server)

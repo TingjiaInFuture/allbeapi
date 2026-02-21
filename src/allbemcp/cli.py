@@ -17,7 +17,7 @@ sys.path.append(os.getcwd())
 try:
     from allbemcp.analyzer import APIAnalyzer
     from allbemcp.generator import generate_mcp_server, generate_requirements
-    from allbemcp.utils.installer import install_dependency
+    from allbemcp.utils.installer import install_dependency, is_dependency_installed
 except ImportError as e:
     print(f"Error importing allbemcp modules: {e}")
     print("Please ensure you are running this from the root of the project or have allbemcp installed.")
@@ -28,9 +28,19 @@ console = Console()
 
 def _ensure_library_installed(library_name: str):
     """Helper to ensure library is installed"""
+    if is_dependency_installed(library_name):
+        console.print(f"[green][OK] Library {library_name} is ready[/green]")
+        return
+
+    auto_install_env = os.environ.get("ALLBEMCP_AUTO_INSTALL", "").strip().lower()
+    auto_install = auto_install_env in ("1", "true", "yes", "y")
+    if not auto_install:
+        if not typer.confirm(f"Dependency '{library_name}' is missing. Install it now?"):
+            raise typer.Exit(code=1)
+
     with console.status(f"[bold green]Checking library {library_name}...[/bold green]"):
         try:
-            install_dependency(library_name)
+            install_dependency(library_name, auto_confirm=True)
             console.print(f"[green][OK] Library {library_name} is ready[/green]")
         except Exception as e:
             console.print(f"[red][ERROR] Failed to install {library_name}: {e}[/red]")
@@ -57,8 +67,8 @@ def _run_analysis(library_name: str) -> APIAnalyzer:
         
     return analyzer, spec
 
-@app.command()
-def inspect(library_name: str):
+@app.command("inspect")
+def inspect_library(library_name: str):
     """
     Analyze a library and show API quality report without generating files.
     """

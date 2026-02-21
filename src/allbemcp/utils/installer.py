@@ -51,7 +51,12 @@ def _is_installed(import_name: str) -> bool:
     except (ImportError, AttributeError, ValueError):
         return False
 
-def install_dependency(import_name: str):
+
+def is_dependency_installed(import_name: str) -> bool:
+    """Public helper to check whether dependency can be imported."""
+    return _is_installed(import_name)
+
+def install_dependency(import_name: str, auto_confirm: bool = True):
     """
     Checks for the existence of a library and installs it via pip if missing.
     
@@ -69,6 +74,14 @@ def install_dependency(import_name: str):
     if not re.match(r'^[a-zA-Z0-9_\-]+$', target_package):
         logger.error(f"Invalid package name: '{target_package}'. Installation aborted.")
         raise ValueError(f"Invalid package name: {target_package}")
+
+    if not auto_confirm:
+        try:
+            response = input(f"Install missing dependency '{target_package}' for import '{import_name}'? [y/N]: ").strip().lower()
+        except EOFError:
+            response = ""
+        if response not in ("y", "yes"):
+            raise RuntimeError(f"User declined installation for package '{target_package}'")
     
     print(f"[INSTALL] Missing dependency: '{import_name}'. Installing package: '{target_package}'...")
     logger.info(f"Missing dependency: '{import_name}'. Installing package: '{target_package}'...")

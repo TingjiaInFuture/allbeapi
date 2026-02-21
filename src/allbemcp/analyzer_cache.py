@@ -18,7 +18,7 @@ class AnalysisCache:
 
     def make_cache_key(self, library_name: str, config_signature: str, fingerprint: str) -> str:
         raw = f"{library_name}|{config_signature}|{fingerprint}"
-        return hashlib.md5(raw.encode("utf-8")).hexdigest()
+        return hashlib.blake2b(raw.encode("utf-8"), digest_size=16).hexdigest()
 
     def load(self, cache_key: str) -> Optional[Dict[str, Any]]:
         cache_file = self._cache_file(cache_key)
@@ -46,7 +46,7 @@ class IncrementalCache:
 
     def _module_key(self, module_name: str, module_file: str, config_signature: str) -> str:
         raw = f"{module_name}|{module_file}|{config_signature}"
-        return hashlib.md5(raw.encode("utf-8")).hexdigest()
+        return hashlib.blake2b(raw.encode("utf-8"), digest_size=16).hexdigest()
 
     def _module_fingerprint(self, module_file: str) -> Optional[str]:
         try:
