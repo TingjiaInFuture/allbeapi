@@ -28,8 +28,18 @@ dependencies = [
   "docstring-parser>=0.16.0",
 ]
 
+[project.optional-dependencies]
+test = [
+  "pytest>=8.2.0",
+  "pytest-asyncio>=0.24.0",
+]
+
 [project.scripts]
 allbemcp = "allbemcp.cli:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/allbemcp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

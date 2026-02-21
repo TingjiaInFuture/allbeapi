@@ -176,8 +176,9 @@ if __name__ == "__main__":
     with open(output, 'w', encoding='utf-8') as f:
         f.write(server_code)
     
-    # Generate documentation
-    generate_readme(tools, library_name, openapi_spec)
+    # Generate documentation near output file
+    output_dir = Path(output).resolve().parent
+    generate_readme(tools, library_name, openapi_spec, output_dir=output_dir)
     
 
 
@@ -186,6 +187,7 @@ def generate_requirements(
     library_name: str = "library",
     use_fastmcp: bool = True,
     use_fastmcp3: Optional[bool] = None,
+    output_dir: Optional[str] = None,
 ):
     """Generate requirements.txt"""
     if use_fastmcp3 is not None:
@@ -226,12 +228,19 @@ uvicorn>=0.23.0
 {library_name}
 """
     
-    requirements_file = f"{library_name}_mcp_requirements.txt"
+    output_path = Path(output_dir) if output_dir else Path('.')
+    output_path.mkdir(parents=True, exist_ok=True)
+    requirements_file = output_path / f"{library_name}_mcp_requirements.txt"
     with open(requirements_file, 'w', encoding='utf-8') as f:
         f.write(requirements)
 
 
-def generate_readme(tools: List[Dict[str, Any]], library_name: str, openapi_spec: Dict[str, Any]):
+def generate_readme(
+    tools: List[Dict[str, Any]],
+    library_name: str,
+    openapi_spec: Dict[str, Any],
+    output_dir: Optional[Path] = None,
+):
     """Generate README.md for the MCP server"""
     
     title = openapi_spec.get("info", {}).get("title", f"{library_name} MCP Server")
@@ -272,7 +281,9 @@ def generate_readme(tools: List[Dict[str, Any]], library_name: str, openapi_spec
             
         md.append("---\n")
         
-    readme_file = f"{library_name}_MCP_README.md"
+    target_dir = output_dir or Path('.')
+    target_dir.mkdir(parents=True, exist_ok=True)
+    readme_file = target_dir / f"{library_name}_MCP_README.md"
     with open(readme_file, 'w', encoding='utf-8') as f:
         f.write("\n".join(md))
 

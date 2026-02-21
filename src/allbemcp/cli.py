@@ -141,18 +141,7 @@ def generate(
         
         # Generate Requirements
         console.print("Generating requirements...")
-        # Note: generate_requirements currently writes to CWD, we might need to move it
-        # For now, we assume it writes to CWD and we move it if needed, 
-        # or we just let it be since generate_requirements implementation is simple.
-        # Let's check generate_requirements implementation... it writes to f"{library_name}_mcp_requirements.txt"
-        generate_requirements(library_name, use_fastmcp=use_fastmcp)
-        
-        req_file = Path(f"{library_name}_mcp_requirements.txt")
-        if output_path != Path("."):
-            if req_file.exists():
-                target_req = output_path / req_file.name
-                req_file.rename(target_req)
-                console.print(f"Moved requirements to {target_req}")
+        generate_requirements(library_name, use_fastmcp=use_fastmcp, output_dir=str(output_path))
 
         console.print(f"[bold green][OK] Successfully generated MCP server for {library_name}[/bold green]")
         console.print(f"Run it with: [bold]python {server_file}[/bold]")
@@ -189,7 +178,7 @@ def start(
         try:
             analyzer, spec = _run_analysis(library_name)
             generate_mcp_server(spec, str(server_file), library_name)
-            generate_requirements(library_name, use_fastmcp=use_fastmcp)
+            generate_requirements(library_name, use_fastmcp=use_fastmcp, output_dir=".")
         except Exception as e:
             console.print(f"[red]Generation failed: {e}[/red]")
             raise typer.Exit(code=1)

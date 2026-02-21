@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import base64
 import importlib
 import inspect
 import json
@@ -86,6 +87,7 @@ class MCPServer:
         self._preload_functions()
         self._register_tools()
         self._register_special_tools()
+        self._register_primitives()
 
     def _preload_functions(self) -> None:
         for tool_name in self.function_map.keys():
@@ -168,45 +170,231 @@ class MCPServer:
 
         @self.mcp.tool(name="list-objects", description="List currently stored stateful objects.")
         async def list_objects(_: Context):
-            payload = []
-            if self.serializer and SERIALIZATION_ENGINE_AVAILABLE:
-                for object_id, metadata in self.serializer.metadata_store.items():
-                    payload.append(
-                        {
-                            "object_id": object_id,
-                            "object_type": metadata.object_type,
-                            "created_at": metadata.created_at,
-                            "preview": metadata.preview,
-                            "available_methods": metadata.available_methods,
-                        }
-                    )
-            else:
-                for object_id, obj in self._object_store.items():
-                    payload.append(
-                        {
-                            "object_id": object_id,
-                            "object_type": f"{type(obj).__module__}.{type(obj).__name__}",
-                            "preview": str(obj)[:200],
-                        }
-                    )
-            return payload
+            return self._list_objects()
+
+        @self.mcp.tool(name="list-resources", description="List currently cached resources.")
+        async def list_resources(_: Context):
+            return self._list_resources()
+
+        @self.mcp.tool(
+            name="read-resource",
+            description="Read a cached resource by resource_id or resource URI.",
+        )
+        async def read_resource(_: Context, resource: str, as_base64: bool = False):
+            return self._read_resource(resource, as_base64=as_base64)
 
         @self.mcp.tool(name="get-call-stats", description="Get per-tool runtime call statistics.")
         async def get_call_stats(_: Context):
             return self.get_call_stats()
+
+    def _register_primitives(self) -> None:
+        @self.mcp.resource(
+            "allbemcp://objects",
+            name="allbemcp-objects",
+            description="Current stateful objects stored by allbemcp runtime.",
+            mime_type="application/json",
+        )
+        def objects_resource() -> str:
+            return json.dumps(self._list_objects(), ensure_ascii=False, indent=2, default=str)
+
+        @self.mcp.resource(
+            "allbemcp://resources",
+            name="allbemcp-resources",
+            description="Current cached resources available in allbemcp runtime.",
+            mime_type="application/json",
+        )
+        def resources_resource() -> str:
+            return json.dumps(self._list_resources(), ensure_ascii=False, indent=2, default=str)
+
+        @self.mcp.resource(
+            "allbemcp://call-stats",
+            name="allbemcp-call-stats",
+            description="Per-tool runtime statistics (count, errors, latency).",
+            mime_type="application/json",
+        )
+        def call_stats_resource() -> str:
+            return json.dumps(self.get_call_stats(), ensure_ascii=False, indent=2, default=str)
+
+        @self.mcp.resource(
+            "mcp://resources/{resource_id}",
+            name="allbemcp-resource-by-id",
+            description="Read a cached runtime resource by resource ID.",
+        )
+        def cached_resource(resource_id: str):
+            payload = self._read_resource(resource_id, as_base64=False)
+            if "content" in payload:
+                return payload["content"]
+            if "content_base64" in payload:
+                return base64.b64decode(payload["content_base64"])
+            return json.dumps(payload, ensure_ascii=False, indent=2, default=str)
+
+        @self.mcp.prompt(
+            name="allbemcp-tool-usage",
+            description="Guide the model to choose and call allbemcp tools effectively.",
+        )
+        def tool_usage_prompt(user_goal: str = "") -> str:
+            tool_names = [tool.get("name") for tool in self.tools if tool.get("name")]
+            goal = user_goal.strip() if isinstance(user_goal, str) else ""
+            goal_line = f"User goal: {goal}" if goal else "User goal: (not provided)"
+            return (
+                "Use available tools in a minimal, safe sequence. "
+                "Prefer direct function tools first; when you receive object_id, continue with call-object-method.\n"
+                f"{goal_line}\n"
+                f"Available tools: {', '.join(tool_names)}\n"
+                "If extra context is needed, read allbemcp://objects or allbemcp://resources resources."
+            )
+
+        @self.mcp.prompt(
+            name="allbemcp-object-workflow",
+            description="Guide an object-centric multi-step workflow using object_id.",
+        )
+        def object_workflow_prompt(object_id: str, intent: str = "") -> str:
+            usage_intent = intent.strip() if isinstance(intent, str) else ""
+            intent_line = f"Intent: {usage_intent}" if usage_intent else "Intent: inspect and continue"
+            return (
+                "You are operating on a stored runtime object.\n"
+                f"Target object_id: {object_id}\n"
+                f"{intent_line}\n"
+                "First inspect object metadata from allbemcp://objects, then call call-object-method with explicit args/kwargs."
+            )
+
+    def _list_objects(self) -> List[Dict[str, Any]]:
+        payload: List[Dict[str, Any]] = []
+        if self.serializer and SERIALIZATION_ENGINE_AVAILABLE:
+            for object_id, metadata in self.serializer.metadata_store.items():
+                payload.append(
+                    {
+                        "object_id": object_id,
+                        "object_type": metadata.object_type,
+                        "created_at": metadata.created_at,
+                        "preview": metadata.preview,
+                        "available_methods": metadata.available_methods,
+                    }
+                )
+            return payload
+
+        for object_id, obj in self._object_store.items():
+            payload.append(
+                {
+                    "object_id": object_id,
+                    "object_type": f"{type(obj).__module__}.{type(obj).__name__}",
+                    "preview": str(obj)[:200],
+                }
+            )
+        return payload
+
+    def _resource_base_url(self) -> str:
+        if self.serializer and SERIALIZATION_ENGINE_AVAILABLE:
+            try:
+                base_url = getattr(getattr(self.serializer, "config", None), "resource_base_url", None)
+                if isinstance(base_url, str) and base_url:
+                    return base_url.rstrip("/")
+            except Exception:
+                pass
+        return "mcp://resources"
+
+    def _extract_resource_id(self, resource: str) -> str:
+        if not isinstance(resource, str) or not resource:
+            return ""
+
+        normalized = resource.strip()
+        base_url = self._resource_base_url()
+        if normalized.startswith(f"{base_url}/"):
+            return normalized[len(base_url) + 1 :]
+        if normalized.startswith("mcp://resources/"):
+            return normalized[len("mcp://resources/") :]
+        return normalized
+
+    def _get_resource(self, resource: str) -> tuple[str, Optional[Dict[str, Any]]]:
+        resource_id = self._extract_resource_id(resource)
+        if not resource_id:
+            return "", None
+
+        if self.serializer and SERIALIZATION_ENGINE_AVAILABLE:
+            try:
+                return resource_id, self.serializer.get_resource(resource_id)
+            except Exception:
+                return resource_id, None
+
+        return resource_id, None
+
+    def _list_resources(self) -> List[Dict[str, Any]]:
+        if not (self.serializer and SERIALIZATION_ENGINE_AVAILABLE):
+            return []
+
+        resources: List[Dict[str, Any]] = []
+        try:
+            resource_store = getattr(self.serializer, "resource_store", {})
+            base_url = self._resource_base_url()
+            for resource_id, item in resource_store.items():
+                content = item.get("content") if isinstance(item, dict) else None
+                size = 0
+                if isinstance(content, bytes):
+                    size = len(content)
+                elif isinstance(content, str):
+                    size = len(content.encode("utf-8"))
+
+                resources.append(
+                    {
+                        "resource_id": resource_id,
+                        "uri": f"{base_url}/{resource_id}",
+                        "content_type": (item.get("content_type") if isinstance(item, dict) else None)
+                        or "application/octet-stream",
+                        "size": size,
+                    }
+                )
+        except Exception as exc:
+            logger.warning("Failed to list resources: %s", exc)
+            return []
+
+        return resources
+
+    def _read_resource(self, resource: str, as_base64: bool = False) -> Dict[str, Any]:
+        resource_id, data = self._get_resource(resource)
+        if not resource_id or not isinstance(data, dict):
+            raise ValueError(f"Resource '{resource}' not found")
+
+        base_url = self._resource_base_url()
+        content_type = data.get("content_type") or "application/octet-stream"
+        content = data.get("content")
+
+        response: Dict[str, Any] = {
+            "success": True,
+            "resource_id": resource_id,
+            "uri": f"{base_url}/{resource_id}",
+            "content_type": content_type,
+        }
+
+        if isinstance(content, str):
+            response["content"] = content
+            response["size"] = len(content.encode("utf-8"))
+            return response
+
+        if isinstance(content, bytes):
+            response["size"] = len(content)
+            if as_base64 or not content_type.startswith("text/"):
+                response["content_base64"] = base64.b64encode(content).decode("ascii")
+                return response
+
+            response["content"] = content.decode("utf-8", errors="replace")
+            return response
+
+        response["content"] = self._fallback_serialize(content)
+        return response
 
     async def _execute_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Dict[str, Any]:
         start = time.perf_counter()
         stats = self._call_stats[tool_name]
         try:
             result = await self._do_execute(tool_name, arguments)
-            elapsed = time.perf_counter() - start
-            stats["count"] += 1
-            stats["total_time"] += elapsed
             return result
         except Exception:
             stats["errors"] += 1
             raise
+        finally:
+            elapsed = time.perf_counter() - start
+            stats["count"] += 1
+            stats["total_time"] += elapsed
 
     async def _do_execute_tool_call(self, func: Callable[..., Any], coerced_arguments: Dict[str, Any], is_async: bool) -> Any:
         if is_async:
@@ -415,6 +603,14 @@ class MCPServer:
                         type="image",
                         data=payload["content_base64"],
                         mimeType=content_type,
+                    )
+                ]
+
+            if "content" in payload and content_type and content_type.startswith("text/"):
+                return [
+                    types.TextContent(
+                        type="text",
+                        text=str(payload["content"]),
                     )
                 ]
 
